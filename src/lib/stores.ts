@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 /** The online stores a shop can save drafts to. A shop may connect more than one. */
-export const STORE_KINDS = ["woo", "shopify"] as const;
+export const STORE_KINDS = ["shopify", "woo"] as const;
 export const StoreKind = z.enum(STORE_KINDS);
 export type StoreKind = z.infer<typeof StoreKind>;
 

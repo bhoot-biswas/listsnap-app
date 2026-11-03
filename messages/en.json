@@ -80,7 +80,7 @@
     "justLooking": "Just looking?",
     "tryDemo": "Try the demo shop",
     "startingDemo": "Opening the demo shop…",
-    "terms": "By continuing you agree to use ListSnap for products you're allowed to sell.",
+    "terms": "By continuing you agree to the <terms>Terms</terms> and the <privacy>Privacy policy</privacy>, and to list only products you're allowed to sell.",
     "devMailNote": "Development: the link is printed in the server console.",
     "errorGeneric": "Something went wrong. Try again in a moment.",
     "errorExpired": "That link has expired. Send a new one.",
@@ -368,7 +368,7 @@
     "plan": {
       "title": "Your plan",
       "free": "Free",
-      "limits": "{listings, number} listings, {photos, number} AI photos and {reels, number} reels a day, WooCommerce and Shopify, English and বাংলা.",
+      "limits": "{listings, number} listings, {photos, number} AI photos and {reels, number} reels a day, Shopify and WooCommerce, English and বাংলা.",
       "pro": "Pro is coming soon: pay per listing and bigger bulk uploads.",
       "pricing": "See pricing"
     },
@@ -636,6 +636,22 @@
           "q": "How do I sell one product in several colors?",
           "a": "Lay every color side by side and take one photo. ListSnap finds each one; at “Several items found”, choose “One product, color options”. You get one listing, with a photo, price and stock for each color."
         },
+        "voice": {
+          "q": "Can I tell ListSnap the price and stock by voice?",
+          "a": "Yes. On Snap, press the mic and say the price, sizes and how many you have, in Bangla or English; you see the words as you speak. ListSnap fills them in, and Review shows what it heard so you can check it. A price it only heard, not read, is left for you to confirm."
+        },
+        "assistant": {
+          "q": "What can the Assistant do?",
+          "a": "Ask it in Bangla or English, typed or spoken: which listings need review, change a title or price, make photos or a reel, start a listing from a photo, or save drafts to your store. Anything that goes to your store or your Page waits for you to press yes on a card first."
+        },
+        "reels": {
+          "q": "How do reels work?",
+          "a": "On Review, open Extras and make a reel in English or Bangla: a 12-second video from your ticked photos, title and price. With Facebook connected, Post this reel shows the caption and where it goes; nothing is posted until you press Post reel."
+        },
+        "facebook": {
+          "q": "I don't have a website. Can I still use ListSnap?",
+          "a": "Yes. Connect your Facebook Page in Connections, and ListSnap writes each listing, makes its photos and reels, and posts reels to your Page and its Instagram account. Export gives you the text and photos for Marketplace too. You can connect a store later."
+        },
         "labels": {
           "q": "What do the AI labels mean?",
           "a": "AI background: your real product photo on a background made by AI. AI scene: the whole picture is an AI edit around your product, so check it still looks like what you sell."
@@ -661,8 +677,8 @@
     },
     "about": {
       "title": "About ListSnap",
-      "body": "Built for the Meta AI Developer Hackathon with Muse Spark, SAM 3.1 and Muse Image.",
-      "contact": "Found a problem or have an idea? <link>Tell us on GitHub.</link>"
+      "body": "ListSnap turns a phone photo, a voice note or a short video into store drafts, studio photos and reels, in English and Bangla, with Meta's Muse Spark, SAM 3.1 and Muse Image.",
+      "contact": "A question, a problem or an idea? Write to <link>{email}</link>."
     },
     "export": {
       "title": "Sell on Facebook Marketplace and other sites",
@@ -670,7 +686,7 @@
       "steps": {
         "kit": "On Review, press Export and choose Listing kit. On a phone, Share photos sends them straight to the Facebook app and copies the text.",
         "post": "In Marketplace, create a listing, add the photos, and copy each block of listing-en.txt or listing-bn.txt into the matching field.",
-        "many": "To export many at once, tick them on Listings and press Export: you get a kit for each, plus CSV files for a Facebook catalog, WooCommerce and Shopify.",
+        "many": "To export many at once, tick them on Listings and press Export: you get a kit for each, plus CSV files for a Facebook catalog, Shopify and WooCommerce.",
         "shopify": "When you import the Shopify file, untick \"Publish new products to all sales channels\" in Shopify's Import window. The products arrive as drafts either way.",
         "website": "The Facebook catalog file needs your shop's website or Facebook Page, set in Settings."
       },
@@ -1469,7 +1485,7 @@
       "to": {
         "woo": "To WooCommerce",
         "shopify": "To Shopify",
-        "both": "To WooCommerce and Shopify"
+        "both": "To Shopify and WooCommerce"
       },
       "suggested": "suggested",
       "noPrice": "no price yet"
@@ -1724,6 +1740,109 @@
       "colours": "Colours",
       "tags": "Tags",
       "note": "Facebook says Marketplace is for personal items. A business should sell through a Facebook Shop or ads."
+    }
+  },
+  "legal": {
+    "updated": "Last updated {date}",
+    "contactLine": "Questions? Write to <link>{email}</link>",
+    "nav": {
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "deletion": "Delete your data"
+    },
+    "privacy": {
+      "title": "Privacy policy",
+      "intro": "ListSnap (getlistsnap.com) turns a seller's product photos, voice notes and videos into listings, photos and reels. This page says what we keep, why, who it goes to, and how to delete it.",
+      "sections": {
+        "collect": {
+          "h": "What we keep",
+          "p": "Your account: your name and email, and your Google profile picture if you sign in with Google.\n\nYour shop: its name, settings and brand kit.\n\nWhat you upload and what is made from it: product photos, voice notes, videos and chat messages, and the listings, photos and reels made from them.\n\nYour connections: the access tokens for Shopify and Facebook, and your WooCommerce store's address and keys, all stored encrypted; the names and ids of your Facebook Page and Instagram account.\n\nHow the service is used: a log of each AI call (the step, the time and the cost, never your photos), and the daily counts behind the limits. For demo shops, a salted hash of your internet address to cap free use, never the address itself."
+        },
+        "use": {
+          "h": "What we use it for",
+          "p": "To make your listings, photos and reels; to save drafts to your store, post where you ask and save to your Facebook catalog; to sign you in; and to keep the daily limits and the service working.\n\nWe don't sell your data, we don't show ads, and we don't use your photos or listings to train AI models."
+        },
+        "share": {
+          "h": "Who it goes to",
+          "p": "Meta's Model API (Muse Spark, SAM, Muse Image and Muse Voice Transcribe) receives your photos, voice notes, videos and text to make each listing. Baseten runs Meta's open Muse Spark model to read prices from what you said and to watch product videos.\n\nYour own store (Shopify or WooCommerce) and Meta (your Facebook Page, Instagram account and catalog) receive what you choose to save or post there. Google is involved only if you sign in with it. Sign-in links are sent by email.\n\nEverything else stays on our server. We give your data to no one else, unless the law requires it."
+        },
+        "keep": {
+          "h": "How long we keep it",
+          "p": "Your account, shop and listings: until you delete them. Videos: 7 days after their listings are made (30 days if watching the video failed). Logs of AI calls and events: one year. Demo shops: one day. Backups of all of it: 7 days."
+        },
+        "delete": {
+          "h": "Deleting your data",
+          "p": "Delete your account in Profile: it removes your shop, listings, photos, chats and connections at once, and backups age out within 7 days. Drafts in your store and posts on Facebook or Instagram are yours there; delete them there. The \"Delete your data\" page has the steps, including how to ask by email."
+        },
+        "security": {
+          "h": "Keeping it safe",
+          "p": "Store keys and access tokens are encrypted on our server and never sent to your browser. Your photos open only for your signed-in account, or through links that expire, which your store and Facebook use to fetch them."
+        },
+        "changes": {
+          "h": "Changes",
+          "p": "When this policy changes, the date at the top changes, and anything important is said in the app first. ListSnap is for people running a business, not for children."
+        }
+      }
+    },
+    "terms": {
+      "title": "Terms of use",
+      "intro": "These terms are the agreement between you and ListSnap when you use getlistsnap.com.",
+      "sections": {
+        "service": {
+          "h": "The service",
+          "p": "ListSnap writes listings and makes photos and reels from what you upload, and saves or posts them where you ask. The free plan has daily limits, shown in the app. We may change or end features, and we say so in the app first when it affects your work."
+        },
+        "account": {
+          "h": "Your account",
+          "p": "Keep your sign-in to yourself. You're responsible for what's done in your shop. Connect only stores and Pages you're allowed to manage."
+        },
+        "content": {
+          "h": "Your content",
+          "p": "Your photos, voice notes, videos and listings stay yours. You let us process them only to provide the service. Upload only photos you have the right to use, of products you have the right to sell."
+        },
+        "ai": {
+          "h": "What the AI makes",
+          "p": "Listings, prices, translations and photos are made by AI and can be wrong. Check each one before you save or post it. Photos that are AI scenes are marked as such. Store products are always saved as drafts; you decide what goes live."
+        },
+        "rules": {
+          "h": "Fair use",
+          "p": "Don't use ListSnap for anything illegal, for counterfeit or banned products, to copy other sellers' photos, or to get around the limits. We may pause a shop that does."
+        },
+        "others": {
+          "h": "Other services",
+          "p": "Your store, Facebook and Instagram have their own terms, which apply to what you save or post there."
+        },
+        "liability": {
+          "h": "No guarantee",
+          "p": "ListSnap is provided as it is. As far as the law allows, we aren't liable for lost sales or for content you saved or posted without checking."
+        },
+        "ending": {
+          "h": "Ending",
+          "p": "You can delete your account at any time in Profile. These terms follow the laws of Bangladesh."
+        }
+      }
+    },
+    "deletion": {
+      "title": "Delete your data",
+      "intro": "You can delete everything ListSnap keeps about you, yourself, at any time. Here is how, and what happens.",
+      "sections": {
+        "account": {
+          "h": "Delete your whole account",
+          "p": "Sign in, open Profile and press Delete account. Your account, shop, listings, photos, videos, voice notes, chats and connections are deleted at once. Copies in our backups are gone within 7 days."
+        },
+        "email": {
+          "h": "Or ask us",
+          "p": "If you can't sign in, email {email} from the address on your account, saying you want your data deleted. We delete it within 30 days and reply when it's done."
+        },
+        "facebook": {
+          "h": "Only Facebook and Instagram",
+          "p": "To remove just Facebook: open Connections, then Facebook and Instagram, and press Disconnect. The access tokens we kept are deleted. You can also remove ListSnap in Facebook's settings, under Business integrations."
+        },
+        "stays": {
+          "h": "What stays",
+          "p": "Drafts already in your Shopify or WooCommerce store, and posts on your Facebook Page or Instagram, belong to your store and Page. Delete them there."
+        }
+      }
     }
   }
 }

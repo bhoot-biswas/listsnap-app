@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getTranslations } from "next-intl/server";
@@ -31,10 +32,10 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
   return (
     <main className="mx-auto flex min-h-svh w-full max-w-sm flex-col justify-center gap-8 px-4 py-10">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
+        <Link href="/" className="flex min-h-11 items-center gap-2">
           <Logo className="size-8" />
           <span className="font-heading text-xl font-semibold">ListSnap</span>
-        </div>
+        </Link>
         <LanguageSwitch />
       </div>
       <h1 className="text-2xl font-semibold">{t("title")}</h1>
@@ -46,7 +47,20 @@ export default async function SignInPage({ searchParams }: PageProps<"/sign-in">
         error={error}
         next={next}
       />
-      <p className="text-xs text-muted-foreground">{t("terms")}</p>
+      <p className="text-xs text-muted-foreground">
+        {t.rich("terms", {
+          terms: (chunks) => (
+            <Link href="/terms" className="underline underline-offset-2 hover:text-foreground">
+              {chunks}
+            </Link>
+          ),
+          privacy: (chunks) => (
+            <Link href="/privacy" className="underline underline-offset-2 hover:text-foreground">
+              {chunks}
+            </Link>
+          ),
+        })}
+      </p>
     </main>
   );
 }
