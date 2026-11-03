@@ -1725,5 +1725,108 @@
       "tags": "Tags",
       "note": "Facebook says Marketplace is for personal items. A business should sell through a Facebook Shop or ads."
     }
+  },
+  "legal": {
+    "updated": "Last updated {date}",
+    "contactLine": "Questions? Write to <link>{email}</link>",
+    "nav": {
+      "privacy": "Privacy",
+      "terms": "Terms",
+      "deletion": "Delete your data"
+    },
+    "privacy": {
+      "title": "Privacy policy",
+      "intro": "ListSnap (getlistsnap.com) turns a seller's product photos, voice notes and videos into listings, photos and reels. This page says what we keep, why, who it goes to, and how to delete it.",
+      "sections": {
+        "collect": {
+          "h": "What we keep",
+          "p": "Your account: your name and email, and your Google profile picture if you sign in with Google.\n\nYour shop: its name, settings and brand kit.\n\nWhat you upload and what is made from it: product photos, voice notes, videos and chat messages, and the listings, photos and reels made from them.\n\nYour connections: your WooCommerce store's address and keys, and the access tokens for Shopify and Facebook, all stored encrypted; the names and ids of your Facebook Page and Instagram account.\n\nHow the service is used: a log of each AI call (the step, the time and the cost, never your photos), and the daily counts behind the limits. For demo shops, a salted hash of your internet address to cap free use, never the address itself."
+        },
+        "use": {
+          "h": "What we use it for",
+          "p": "To make your listings, photos and reels; to save drafts to your store, post where you ask and save to your Facebook catalog; to sign you in; and to keep the daily limits and the service working.\n\nWe don't sell your data, we don't show ads, and we don't use your photos or listings to train AI models."
+        },
+        "share": {
+          "h": "Who it goes to",
+          "p": "Meta's Model API (Muse Spark, SAM, Muse Image and Muse Voice Transcribe) receives your photos, voice notes, videos and text to make each listing. Baseten runs Meta's open Muse Spark model to read prices from what you said and to watch product videos.\n\nYour own store (WooCommerce or Shopify) and Meta (your Facebook Page, Instagram account and catalog) receive what you choose to save or post there. Google is involved only if you sign in with it. Sign-in links are sent by email.\n\nEverything else stays on our server. We give your data to no one else, unless the law requires it."
+        },
+        "keep": {
+          "h": "How long we keep it",
+          "p": "Your account, shop and listings: until you delete them. Videos: 7 days after their listings are made (30 days if watching the video failed). Logs of AI calls and events: one year. Demo shops: one day. Backups of all of it: 7 days."
+        },
+        "delete": {
+          "h": "Deleting your data",
+          "p": "Delete your account in Profile: it removes your shop, listings, photos, chats and connections at once, and backups age out within 7 days. Drafts in your store and posts on Facebook or Instagram are yours there; delete them there. The \"Delete your data\" page has the steps, including how to ask by email."
+        },
+        "security": {
+          "h": "Keeping it safe",
+          "p": "Store keys and access tokens are encrypted on our server and never sent to your browser. Your photos open only for your signed-in account, or through links that expire, which your store and Facebook use to fetch them."
+        },
+        "changes": {
+          "h": "Changes",
+          "p": "When this policy changes, the date at the top changes, and anything important is said in the app first. ListSnap is for people running a business, not for children."
+        }
+      }
+    },
+    "terms": {
+      "title": "Terms of use",
+      "intro": "These terms are the agreement between you and ListSnap when you use getlistsnap.com.",
+      "sections": {
+        "service": {
+          "h": "The service",
+          "p": "ListSnap writes listings and makes photos and reels from what you upload, and saves or posts them where you ask. The free plan has daily limits, shown in the app. We may change or end features, and we say so in the app first when it affects your work."
+        },
+        "account": {
+          "h": "Your account",
+          "p": "Keep your sign-in to yourself. You're responsible for what's done in your shop. Connect only stores and Pages you're allowed to manage."
+        },
+        "content": {
+          "h": "Your content",
+          "p": "Your photos, voice notes, videos and listings stay yours. You let us process them only to provide the service. Upload only photos you have the right to use, of products you have the right to sell."
+        },
+        "ai": {
+          "h": "What the AI makes",
+          "p": "Listings, prices, translations and photos are made by AI and can be wrong. Check each one before you save or post it. Photos that are AI scenes are marked as such. Store products are always saved as drafts; you decide what goes live."
+        },
+        "rules": {
+          "h": "Fair use",
+          "p": "Don't use ListSnap for anything illegal, for counterfeit or banned products, to copy other sellers' photos, or to get around the limits. We may pause a shop that does."
+        },
+        "others": {
+          "h": "Other services",
+          "p": "Your store, Facebook and Instagram have their own terms, which apply to what you save or post there."
+        },
+        "liability": {
+          "h": "No guarantee",
+          "p": "ListSnap is provided as it is. As far as the law allows, we aren't liable for lost sales or for content you saved or posted without checking."
+        },
+        "ending": {
+          "h": "Ending",
+          "p": "You can delete your account at any time in Profile. These terms follow the laws of Bangladesh."
+        }
+      }
+    },
+    "deletion": {
+      "title": "Delete your data",
+      "intro": "You can delete everything ListSnap keeps about you, yourself, at any time. Here is how, and what happens.",
+      "sections": {
+        "account": {
+          "h": "Delete your whole account",
+          "p": "Sign in, open Profile and press Delete account. Your account, shop, listings, photos, videos, voice notes, chats and connections are deleted at once. Copies in our backups are gone within 7 days."
+        },
+        "email": {
+          "h": "Or ask us",
+          "p": "If you can't sign in, email {email} from the address on your account, saying you want your data deleted. We delete it within 30 days and reply when it's done."
+        },
+        "facebook": {
+          "h": "Only Facebook and Instagram",
+          "p": "To remove just Facebook: open Connections, then Facebook and Instagram, and press Disconnect. The access tokens we kept are deleted. You can also remove ListSnap in Facebook's settings, under Business integrations."
+        },
+        "stays": {
+          "h": "What stays",
+          "p": "Drafts already in your WooCommerce or Shopify store, and posts on your Facebook Page or Instagram, belong to your store and Page. Delete them there."
+        }
+      }
+    }
   }
 }
