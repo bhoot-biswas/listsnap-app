@@ -22,14 +22,23 @@ import { ArchiveButton } from "@/components/app/archive-button";
 const SAVABLE = new Set(["ready", "needs_review"]);
 const EDITABLE = new Set(["ready", "needs_review", "in_store", "posted"]);
 
-export function JobView({ initial, archived }: { initial: JobState; archived: boolean }) {
+export function JobView({
+  initial,
+  archived,
+  hasStore,
+}: {
+  initial: JobState;
+  archived: boolean;
+  /** The shop has a store new drafts go to; without one, Save all would only fail. */
+  hasStore: boolean;
+}) {
   const t = useTranslations("job");
   const tArchive = useTranslations("archive");
   const tCommon = useTranslations("common");
   const { state, offline, stalled, retry, choose, resume } = useJobRunner(initial);
   const photo = state.photos[0];
   const finished = state.status === "ready";
-  const savable = finished ? state.listings.filter((l) => SAVABLE.has(l.status)) : [];
+  const savable = finished && hasStore ? state.listings.filter((l) => SAVABLE.has(l.status)) : [];
   const inStore = state.listings.some((l) => l.status === "in_store" || l.status === "posted");
   // compare the photo with the first listing's studio scene, or its cutout until that's made
   const first = state.listings[0];
@@ -108,7 +117,7 @@ export function JobView({ initial, archived }: { initial: JobState; archived: bo
               {finished && state.listings.some((l) => l.status !== "failed") && (
                 <div className="space-y-1">
                   <h2 className="text-xl font-semibold">{t("doneTitle", { count: state.listings.length })}</h2>
-                  <p className="text-sm text-muted-foreground">{t("doneBody")}</p>
+                  <p className="text-sm text-muted-foreground">{t(hasStore ? "doneBody" : "doneBodyNoStore")}</p>
                 </div>
               )}
               <ul className="grid gap-4 sm:grid-cols-2">
@@ -161,7 +170,7 @@ export function JobView({ initial, archived }: { initial: JobState; archived: bo
                       <div className="flex flex-wrap gap-2">
                         <ButtonLink
                           href={`/job/${state.id}/review?l=${l.id}`}
-                          variant={finished ? "outline" : "default"}
+                          variant={finished && hasStore ? "outline" : "default"}
                           className="h-11 md:h-10"
                         >
                           {finished ? t("review") : t("reviewNow")}
@@ -188,7 +197,11 @@ export function JobView({ initial, archived }: { initial: JobState; archived: bo
                       {t("seeSaved")}
                     </ButtonLink>
                   )}
-                  <ButtonLink href="/snap" variant={savable.length || inStore ? "ghost" : "default"} size="lg">
+                  <ButtonLink
+                    href="/snap"
+                    variant={savable.length || inStore || !hasStore ? "ghost" : "default"}
+                    size="lg"
+                  >
                     {t("newListing")}
                   </ButtonLink>
                 </div>

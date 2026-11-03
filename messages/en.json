@@ -197,7 +197,7 @@
   },
   "onboarding": {
     "title": "Set up your shop",
-    "body": "Two quick steps: name your shop, then connect your online store.",
+    "body": "Two quick steps: name your shop, then choose where your listings go.",
     "shopName": "Shop name",
     "shopNamePlaceholder": "Rupkotha Crafts",
     "continue": "Continue",
@@ -206,9 +206,10 @@
     "storeTitle": "Connect your online store",
     "storeBody": "ListSnap saves every listing to your store as a draft. Nothing is published without you.",
     "back": "Back",
-    "noStoreTitle": "No online store yet?",
-    "noStoreBody": "Use our test store for now: your drafts go there, so you can try everything. Connect your own store any time in Connections.",
+    "noStoreTitle": "No website?",
+    "noStoreBody": "Sell on Facebook and Instagram: connect your Page, and ListSnap writes each listing, makes its photos and reels and posts them there. Or try saving drafts in our test store. You can connect your own store any time in Connections.",
     "useTestStore": "Use the test store",
+    "sellOnFacebook": "I sell on Facebook",
     "woo": "WooCommerce",
     "shopify": "Shopify"
   },
@@ -218,7 +219,7 @@
     "storeConnected": "Store connected",
     "storeMissing": "No store connected yet",
     "storeDemo": "Demo store",
-    "storeBroken": "Your WooCommerce store isn't connecting. New listings can't be saved to it.",
+    "storeBroken": "Your {kind, select, shopify {Shopify} other {WooCommerce}} store isn't connecting. New listings can't be saved to it.",
     "facebookBroken": "Facebook stopped accepting ListSnap's access, so reels can't be posted. Connect it again.",
     "fixConnection": "Fix connection",
     "recent": "Recent listings",
@@ -262,8 +263,9 @@
       "title": "Get started",
       "progress": "{count}/{total}",
       "done": "Done:",
-      "store": "Connect your store",
+      "store": "Connect your store or Facebook Page",
       "listing": "Make your first listing",
+      "reel": "Post your first reel",
       "bulk": "Try a bulk upload",
       "colors": "Sell one product in several colors"
     },
@@ -274,8 +276,8 @@
     "activity": {
       "title": "Activity",
       "sent_to_store": "Draft “{title}” saved to the store",
-      "saved": "{kind, select, instagram {Instagram connected} shopify {Shopify connected} woo {WooCommerce connected} other {Store connected}}",
-      "removed": "{kind, select, instagram {Instagram disconnected} shopify {Shopify disconnected} woo {WooCommerce disconnected} other {Store disconnected}}",
+      "saved": "{kind, select, meta {Facebook connected} instagram {Instagram connected} shopify {Shopify connected} woo {WooCommerce connected} other {Store connected}}",
+      "removed": "{kind, select, meta {Facebook disconnected} instagram {Instagram disconnected} shopify {Shopify disconnected} woo {WooCommerce disconnected} other {Store disconnected}}",
       "untitled": "Untitled listing"
     },
     "ask": {
@@ -619,6 +621,10 @@
           "q": "Can I edit after saving to the store?",
           "a": "Yes. Change anything on Review and press Update store draft: the same draft is updated, never copied."
         },
+        "colors": {
+          "q": "How do I sell one product in several colors?",
+          "a": "Lay every color side by side and take one photo. ListSnap finds each one; at “Several items found”, choose “One product, color options”. You get one listing, with a photo, price and stock for each color."
+        },
         "labels": {
           "q": "What do the AI labels mean?",
           "a": "AI background: your real product photo on a background made by AI. AI scene: the whole picture is an AI edit around your product, so check it still looks like what you sell."
@@ -742,6 +748,7 @@
     "suggested": "Suggested",
     "doneTitle": "{count, plural, one {Your listing is made} other {Your # listings are made}}",
     "doneBody": "Check the text, then save it to your store. Products are always saved as drafts.",
+    "doneBodyNoStore": "Check the text, then post it: make a reel and post it to your Facebook Page, or export it for Marketplace.",
     "review": "Review",
     "newListing": "Snap another",
     "listing": "Listing {n}",
@@ -1138,6 +1145,7 @@
     "saveInvalid": "Couldn’t save this. Check the price, stock and text lengths.",
     "offline": "Offline, will save",
     "saveToStore": "Save draft to store",
+    "postOnFacebook": "Post on Facebook",
     "updateStore": "Update store draft",
     "storeBehindIn": "Out of date in {stores}. Update to send your changes.",
     "storeMissing": "Not in {stores} yet. Update to save it there too.",

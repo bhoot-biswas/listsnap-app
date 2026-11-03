@@ -12,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 const TIPS = ["clutter", "distance", "light"] as const;
 const EXPORT_STEPS = ["kit", "post", "many", "shopify", "website"] as const;
-const FAQ = ["keys", "draft", "edit", "labels", "limits", "missed", "data"] as const;
+const FAQ = ["keys", "draft", "edit", "colors", "labels", "limits", "missed", "data"] as const;
 const REPO = "https://github.com/bhoot-biswas/listsnap";
 
 /** S17 Help: photo tips, selling on Marketplace with an export, answers to the usual questions, shortcuts, and where to get in touch. */
@@ -53,7 +53,8 @@ export default async function HelpPage() {
         <FormSection id="faq" title={t("faq.title")}>
           <div className="divide-y rounded-xl border bg-card">
             {FAQ.map((k) => (
-              <details key={k} className="group">
+              // an id, so Get started can link to one answer
+              <details key={k} id={`faq-${k}`} className="group scroll-mt-20">
                 <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-sm font-medium [&::-webkit-details-marker]:hidden">
                   {t(`faq.items.${k}.q`)}
                   <ChevronDown
