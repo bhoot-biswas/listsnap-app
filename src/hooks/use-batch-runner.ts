@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { BatchState } from "@/lib/batch-state";
+import { pace } from "@/lib/step-pacing";
 import { loadState } from "./load-state";
 import { useDoneCue } from "./use-done-cue";
 import { useWakeLock } from "./use-wake-lock";
@@ -61,6 +62,18 @@ export function useBatchRunner(initial: BatchState, autoStart: boolean) {
     setRunning(true);
     try {
       let s = await load();
+      let errors = 0;
+      // the answers of one round: a pause, or a stop with Try again after too many errors
+      const settle = async (statuses: number[]) => {
+        const p = pace(statuses, errors);
+        errors = p.errors;
+        if (p.stall) {
+          if (alive.current) setStalled(true);
+          return false;
+        }
+        if (p.wait) await sleep(p.wait);
+        return true;
+      };
       while (alive.current && wanted.current && s) {
         if (!navigator.onLine) {
           setOffline(true);
@@ -75,7 +88,7 @@ export function useBatchRunner(initial: BatchState, autoStart: boolean) {
             router.push("/sign-in");
             return;
           }
-          if (st === 202 || st === 422 || st === 0) await sleep(2000);
+          if (!(await settle([st]))) return;
           s = await load();
           continue;
         }
@@ -94,8 +107,7 @@ export function useBatchRunner(initial: BatchState, autoStart: boolean) {
           router.push("/sign-in");
           return;
         }
-        // 202: another tab holds the step; 422 or a dropped request: wait, then ask again
-        if (statuses.some((st) => st === 202 || st === 422 || st === 0)) await sleep(1500);
+        if (!(await settle(statuses))) return;
         s = await load();
       }
     } finally {

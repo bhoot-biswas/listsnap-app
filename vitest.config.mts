@@ -10,7 +10,7 @@ export default defineConfig({
     },
   },
   test: {
-    include: ["src/**/*.test.ts", "tests/**/*.test.ts"],
+    include: ["src/**/*.test.{ts,tsx}", "tests/**/*.test.ts"],
     environment: "node",
     // the *.db tests drive whole jobs against a database other test files use at the same
     // time; under that load a job can pass the 5 s default, and a beforeAll that makes the
@@ -21,7 +21,7 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: ["src/**/*.{ts,tsx}"],
-      exclude: ["src/**/*.test.ts", "src/components/ui/**"],
+      exclude: ["src/**/*.test.{ts,tsx}", "src/components/ui/**"],
       reporter: ["text-summary", "html"],
       thresholds: { statements: 45, branches: 35, functions: 41, lines: 45 },
     },

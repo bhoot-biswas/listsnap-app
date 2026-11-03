@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { JobState, StepView } from "@/lib/job-state";
+import { pace } from "@/lib/step-pacing";
 import { loadState } from "./load-state";
 import { useDoneCue } from "./use-done-cue";
 import { useWakeLock } from "./use-wake-lock";
@@ -50,6 +51,7 @@ export function useJobRunner(initial: JobState) {
     busy.current = true;
     try {
       let s = await load();
+      let errors = 0;
       while (alive.current && s && s.next.length) {
         if (!navigator.onLine) {
           setOffline(true);
@@ -66,13 +68,13 @@ export function useJobRunner(initial: JobState) {
           router.push("/sign-in");
           return;
         }
-        // 202: another request holds the lock; 422 or a network error: retry after a pause
-        const pause = statuses.some((st) => st === 202)
-          ? 1500
-          : statuses.some((st) => st === 422 || st === 0)
-            ? 2000
-            : 0;
-        if (pause) await sleep(pause);
+        const p = pace(statuses, errors);
+        errors = p.errors;
+        if (p.stall) {
+          if (alive.current) setStalled(true);
+          return;
+        }
+        if (p.wait) await sleep(p.wait);
         s = await load();
       }
     } finally {
