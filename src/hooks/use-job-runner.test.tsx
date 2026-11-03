@@ -60,3 +60,30 @@ describe("job runner when a step keeps failing", () => {
     expect(posts).toBe(6);
   });
 });
+
+describe("job runner when the server's worker works the job", () => {
+  it("makes no step calls and only reads the state, until nothing is left", async () => {
+    let gets = 0;
+    let left = 3;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (_url: string, init?: RequestInit) => {
+        if (init?.method === "POST") {
+          posts++;
+          return new Response(null, { status: 200 });
+        }
+        gets++;
+        // the worker finishes the job after a few looks
+        const next = --left > 0 ? state.next : [];
+        return new Response(JSON.stringify({ ...state, next }), { status: 200 });
+      }),
+    );
+    renderHook(() => useJobRunner(state, true));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(30_000);
+    });
+    expect(posts).toBe(0);
+    // it stopped reading once nothing was left
+    expect(gets).toBe(3);
+  });
+});

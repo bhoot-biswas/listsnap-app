@@ -20,16 +20,23 @@ const EXPORTABLE = new Set(["ready", "needs_review", "in_store", "posted"]);
 export function BatchView({
   initial,
   autoStart,
+  watchOnly,
   hasWebsite,
 }: {
   initial: BatchState;
   autoStart: boolean;
+  /** The server's worker works this batch: the page only reads its progress. */
+  watchOnly: boolean;
   /** The shop has a website set, which an exported Facebook catalog needs. */
   hasWebsite: boolean;
 }) {
   const t = useTranslations("bulk");
   const tCommon = useTranslations("common");
-  const { state, running, paused, offline, stalled, resume, pause, reload } = useBatchRunner(initial, autoStart);
+  const { state, running, paused, offline, stalled, resume, pause, reload } = useBatchRunner(
+    initial,
+    autoStart,
+    watchOnly,
+  );
   const [selected, setSelected] = useState<Set<string>>(new Set());
 
   const rows = state.rows;

@@ -27,8 +27,11 @@ export function JobView({
   initial,
   archived,
   hasStore,
+  watchOnly,
 }: {
   initial: JobState;
+  /** The server's worker works this job: the page only reads its progress. */
+  watchOnly: boolean;
   archived: boolean;
   /** The shop has a store new drafts go to; without one, Save all would only fail. */
   hasStore: boolean;
@@ -36,7 +39,7 @@ export function JobView({
   const t = useTranslations("job");
   const tArchive = useTranslations("archive");
   const tCommon = useTranslations("common");
-  const { state, offline, stalled, retry, choose, resume } = useJobRunner(initial);
+  const { state, offline, stalled, retry, choose, resume } = useJobRunner(initial, watchOnly);
   const photo = state.photos[0];
   const finished = state.status === "ready";
   const savable = finished && hasStore ? state.listings.filter((l) => SAVABLE.has(l.status)) : [];

@@ -7,6 +7,7 @@ import { pace } from "@/lib/step-pacing";
 import { loadState } from "./load-state";
 import { useDoneCue } from "./use-done-cue";
 import { useWakeLock } from "./use-wake-lock";
+import { WATCH_MS } from "./use-job-runner";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -24,7 +25,7 @@ export const JOBS_AT_ONCE = 2;
  * Losing the connection, or the state, isn't a pause: it carries on by itself once the
  * connection or the tab is back, and says what's happening meanwhile.
  */
-export function useBatchRunner(initial: BatchState, autoStart: boolean) {
+export function useBatchRunner(initial: BatchState, autoStart: boolean, watchOnly = false) {
   const router = useRouter();
   const [state, setState] = useState(initial);
   const [running, setRunning] = useState(false);
@@ -89,6 +90,13 @@ export function useBatchRunner(initial: BatchState, autoStart: boolean) {
           setOffline(true);
           return;
         }
+        // the server's worker watches the video and works the jobs: this page only follows along
+        if (watchOnly) {
+          if (!hasWork(s)) break;
+          await sleep(WATCH_MS);
+          s = await load();
+          continue;
+        }
         // a video batch has no jobs until its video is watched, which makes them
         if (s.watch?.url) {
           const st = await fetch(s.watch.url, { method: "POST" })
@@ -124,7 +132,7 @@ export function useBatchRunner(initial: BatchState, autoStart: boolean) {
       busy.current = false;
       if (alive.current) setRunning(false);
     }
-  }, [load, router]);
+  }, [load, router, watchOnly]);
 
   useEffect(() => {
     alive.current = true;
