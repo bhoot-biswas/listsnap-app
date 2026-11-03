@@ -2,7 +2,7 @@
 
 import type { Route } from "next";
 import Link from "next/link";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { ArrowRight, Check, ExternalLink, Square, Store, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -179,6 +179,7 @@ function Approval({
 }) {
   const t = useTranslations("chat.approval");
   const tReels = useTranslations("review.reels");
+  const locale = useLocale();
   const args = item.args as {
     lang?: "en" | "bn";
     destination?: "facebook" | "instagram";
@@ -288,6 +289,11 @@ function Approval({
           )}
         >
           {t(item.state)}
+          {item.state === "failed" && item.reason && (
+            <span lang={locale} className="block font-normal">
+              {item.reason[locale === "bn" ? "bn" : "en"]}
+            </span>
+          )}
         </p>
       )}
       <Made item={item.media?.video ? { ...item, media: undefined } : item} />

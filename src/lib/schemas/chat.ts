@@ -111,6 +111,8 @@ export type ChatItem =
       args: Record<string, unknown>;
       state: "pending" | "approved" | "declined" | "failed";
       preview?: ToolCall["preview"];
+      /** Why a failed card failed, in both languages, when the step said. */
+      reason?: { en: string; bn: string };
     } & ToolExtras);
 
 /**
