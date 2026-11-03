@@ -19,6 +19,8 @@ export interface Viewer {
     image: string | null;
     isDemo: boolean;
     uiLang: string | null;
+    /** light, dark or system, as last chosen on any device; null until one is. */
+    theme: string | null;
   };
   workspace: Workspace;
 }
@@ -32,7 +34,11 @@ const loadViewer = cache(async (): Promise<ViewerResult> => {
   if (!session) return { viewer: null, reason: "signed_out" };
   const workspace = await workspaceForUser(session.user.id);
   if (!workspace) return { viewer: null, reason: "no_workspace" };
-  const u = session.user as typeof session.user & { isAnonymous?: boolean | null; uiLang?: string | null };
+  const u = session.user as typeof session.user & {
+    isAnonymous?: boolean | null;
+    uiLang?: string | null;
+    theme?: string | null;
+  };
   return {
     viewer: {
       user: {
@@ -44,6 +50,7 @@ const loadViewer = cache(async (): Promise<ViewerResult> => {
         image: u.image ?? null,
         isDemo: !!u.isAnonymous,
         uiLang: u.uiLang ?? null,
+        theme: u.theme ?? null,
       },
       workspace,
     },

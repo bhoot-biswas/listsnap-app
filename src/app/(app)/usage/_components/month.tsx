@@ -47,16 +47,21 @@ export async function MonthChart({ days, totals }: { days: UsageDay[]; totals: {
   );
 }
 
-/** Each day with any activity, newest first, folded away by default; the CSV has all 30. */
-/** Each day's listings and photos; what they cost is in Behind the scenes and the CSV. */
+/**
+ * Each day with any activity, newest first, folded away by default: its listings and
+ * photos. What they cost is in Behind the scenes, and the CSV has all 30 days.
+ */
 export async function DayTable({ days }: { days: UsageDay[] }) {
   const t = await getTranslations("usage.days");
   const format = await getFormatter();
   const active = days.filter((d) => d.listings || d.photos || d.calls).reverse();
   return (
     <details className="group rounded-xl border bg-card">
-      <summary className="flex min-h-12 cursor-pointer items-center justify-between gap-3 px-4 text-base font-semibold md:px-5">
+      {/* only the title in the summary: a link inside it would also open and close the table */}
+      <summary className="flex min-h-12 cursor-pointer items-center px-4 text-base font-semibold md:px-5">
         {t("title")}
+      </summary>
+      <div className="px-4 pb-2 md:px-5">
         <a
           href="/api/usage/csv"
           download
@@ -64,7 +69,7 @@ export async function DayTable({ days }: { days: UsageDay[] }) {
         >
           {t("csv")}
         </a>
-      </summary>
+      </div>
       {active.length === 0 ? (
         <p className="px-4 pb-4 text-sm text-muted-foreground md:px-5">{t("empty")}</p>
       ) : (

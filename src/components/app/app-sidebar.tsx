@@ -55,6 +55,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { authClient } from "@/lib/auth-client";
 import { Logo } from "./logo";
+import { saveTheme } from "@/server/actions/profile";
 
 export interface SidebarData {
   workspaceName: string;
@@ -235,7 +236,14 @@ function ProfileMenu({ data, onNavigate }: { data: SidebarData; onNavigate: () =
             {t("theme")}
           </DropdownMenuSubTrigger>
           <DropdownMenuSubContent>
-            <DropdownMenuRadioGroup value={theme ?? "system"} onValueChange={(v) => setTheme(String(v))}>
+            <DropdownMenuRadioGroup
+              value={theme ?? "system"}
+              onValueChange={(v) => {
+                // saved to the account too, like Profile's switch, so other devices follow
+                setTheme(String(v));
+                void saveTheme(String(v));
+              }}
+            >
               <DropdownMenuRadioItem value="light">
                 <Sun />
                 {t("themeLight")}

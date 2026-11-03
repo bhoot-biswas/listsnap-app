@@ -114,12 +114,17 @@ export function useJobRunner(initial: JobState, watchOnly = false) {
     };
   }, [drive]);
 
-  /** "Try again" on a step that ran out of attempts. A dropped request leaves the button ready to tap again. */
+  /**
+   * "Try again" on steps that ran out of attempts: every one a row stands for (a listing
+   * step summed over three listings is three), then the job runs on once. A dropped
+   * request leaves the button ready to tap again.
+   */
   const retry = useCallback(
-    async (step: StepView) => {
-      const res = await fetch(retryUrl(id, step), { method: "POST" }).catch(() => null);
-      if (res?.status === 401) return router.push("/sign-in");
-      if (!res) setStalled(navigator.onLine);
+    async (steps: StepView | StepView[]) => {
+      const list = Array.isArray(steps) ? steps : [steps];
+      const results = await Promise.all(list.map((s) => fetch(retryUrl(id, s), { method: "POST" }).catch(() => null)));
+      if (results.some((r) => r?.status === 401)) return router.push("/sign-in");
+      if (results.some((r) => !r)) setStalled(navigator.onLine);
       await drive();
     },
     [id, drive, router],

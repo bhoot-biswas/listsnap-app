@@ -83,7 +83,7 @@ export function ChooseItems({
             role="radio"
             aria-checked={mode === m}
             variant={mode === m ? "default" : "outline"}
-            size="sm"
+            className="h-11"
 
             onClick={() => setMode(m)}
           >

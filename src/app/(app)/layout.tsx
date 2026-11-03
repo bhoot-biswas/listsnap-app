@@ -3,6 +3,7 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app/app-sidebar";
 import { DemoBanner } from "@/components/app/demo-banner";
 import { KeyboardShortcuts } from "@/components/app/keyboard-shortcuts";
+import { AccountTheme } from "@/components/app/account-theme";
 import { OfflineBanner } from "@/components/app/offline-banner";
 import { PhoneNav } from "@/components/app/phone-nav";
 import { requireWorkspace } from "@/server/auth/session";
@@ -38,6 +39,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <PhoneNav needsReview={counts.needsReview} />
       </SidebarInset>
       <KeyboardShortcuts />
+      <AccountTheme theme={viewer.user.theme} />
     </SidebarProvider>
   );
 }

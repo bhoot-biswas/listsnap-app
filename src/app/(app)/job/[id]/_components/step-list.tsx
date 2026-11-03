@@ -14,6 +14,8 @@ type Row = {
   status: StepView["status"];
   detail?: string | null;
   step?: StepView;
+  /** Every failed step a summed row stands for, so Try again retries them all. */
+  failedAll?: StepView[];
   active?: boolean;
 };
 
@@ -22,7 +24,13 @@ type Row = {
  * of what the AI decided. Listing steps are summed across listings so a three-item job
  * reads as three lines, not nine.
  */
-export function StepList({ state, onRetry }: { state: JobState; onRetry: (s: StepView) => Promise<void> }) {
+export function StepList({
+  state,
+  onRetry,
+}: {
+  state: JobState;
+  onRetry: (s: StepView | StepView[]) => Promise<void>;
+}) {
   const t = useTranslations("job");
   const find = (step: string, target = "-") => state.steps.find((s) => s.step === step && s.target === target);
   const nextKeys = new Set(state.next.map((n) => n.key.split(":")[0]));
@@ -47,7 +55,8 @@ export function StepList({ state, onRetry }: { state: JobState; onRetry: (s: Ste
   if (state.listings.length) {
     const sum = (step: string, targets: string[]) => {
       const views = targets.map((tg) => find(step, tg));
-      const failed = views.find((v) => v?.status === "failed");
+      const failedAll = views.filter((v): v is StepView => v?.status === "failed");
+      const failed = failedAll[0];
       const done = views.filter((v) => v?.status === "done").length;
       const status: StepView["status"] = failed
         ? "failed"
@@ -56,7 +65,14 @@ export function StepList({ state, onRetry }: { state: JobState; onRetry: (s: Ste
           : views.some((v) => v?.status === "running")
             ? "running"
             : "pending";
-      return { status, failed, done, total: targets.length, detail: views.length === 1 ? views[0]?.detail : null };
+      return {
+        status,
+        failed,
+        failedAll,
+        done,
+        total: targets.length,
+        detail: views.length === 1 ? views[0]?.detail : null,
+      };
     };
     const ids = state.listings.map((l) => l.id);
     const write = sum("write", ids);
@@ -66,6 +82,7 @@ export function StepList({ state, onRetry }: { state: JobState; onRetry: (s: Ste
       status: write.status,
       detail: write.detail,
       step: write.failed,
+      failedAll: write.failedAll,
       active: nextKeys.has("write"),
     });
     if (state.translate) {
@@ -76,6 +93,7 @@ export function StepList({ state, onRetry }: { state: JobState; onRetry: (s: Ste
         status: tr.status,
         detail: tr.detail,
         step: tr.failed,
+        failedAll: tr.failedAll,
         active: nextKeys.has("translate"),
       });
     }
@@ -88,20 +106,28 @@ export function StepList({ state, onRetry }: { state: JobState; onRetry: (s: Ste
       label: `${t("steps.render")} (${renders.done}/${renders.total})`,
       status: renders.status,
       step: renders.failed,
+      failedAll: renders.failedAll,
       active: nextKeys.has("render"),
     });
   }
 
+  // one short line for screen readers, rather than the whole list read out on every change
+  const now = rows.find((r) => r.status === "running" || (r.status === "pending" && r.active));
   return (
-    <ol className="space-y-3" aria-live="polite">
-      {rows.map((r) => (
-        <StepRow key={r.key} row={r} onRetry={onRetry} />
-      ))}
-    </ol>
+    <>
+      <ol className="space-y-3">
+        {rows.map((r) => (
+          <StepRow key={r.key} row={r} onRetry={onRetry} />
+        ))}
+      </ol>
+      <p className="sr-only" aria-live="polite">
+        {now?.label ?? ""}
+      </p>
+    </>
   );
 }
 
-function StepRow({ row, onRetry }: { row: Row; onRetry: (s: StepView) => Promise<void> }) {
+function StepRow({ row, onRetry }: { row: Row; onRetry: (s: StepView | StepView[]) => Promise<void> }) {
   const t = useTranslations();
   const [retrying, setRetrying] = useState(false);
   const working = row.status === "running" || (row.status === "pending" && row.active);
@@ -148,7 +174,7 @@ function StepRow({ row, onRetry }: { row: Row; onRetry: (s: StepView) => Promise
                     onClick={async () => {
                       setRetrying(true);
                       try {
-                        await onRetry(row.step!);
+                        await onRetry((row.failedAll ?? [row.step!]).filter((s) => s.exhausted));
                       } finally {
                         setRetrying(false);
                       }

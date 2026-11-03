@@ -78,7 +78,15 @@ export async function WooDetail({
                 {hint && <span className="ml-2 font-normal text-muted-foreground">{t("keyHint", { hint })}</span>}
               </summary>
               <div className="pt-3">
-                <WooConnectForm next="connections" />
+                <WooConnectForm
+                  next="connections"
+                  initialUrl={row?.base_url ?? ""}
+                  initialCategory={
+                    settings.defaultCategoryId && settings.defaultCategoryName
+                      ? { id: settings.defaultCategoryId, name: settings.defaultCategoryName }
+                      : null
+                  }
+                />
               </div>
             </details>
           </DetailSection>

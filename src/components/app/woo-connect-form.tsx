@@ -15,12 +15,21 @@ const EMPTY: Values = { url: "", key: "", secret: "" };
 /**
  * Store address and REST keys, a live test, then save. Used in onboarding and on
  * Connections. Save unlocks only after a passing test of exactly what is typed now;
- * the server tests again before storing anything.
+ * the server tests again before storing anything. Replacing the keys of a connected
+ * store starts from its address and keeps its default category chosen.
  */
-export function WooConnectForm({ next }: { next: "onboarding" | "connections" }) {
+export function WooConnectForm({
+  next,
+  initialUrl = "",
+  initialCategory = null,
+}: {
+  next: "onboarding" | "connections";
+  initialUrl?: string;
+  initialCategory?: { id: number; name: string } | null;
+}) {
   const t = useTranslations("connect");
   const [state, action, pending] = useActionState<ConnectState, FormData>(connectWoo, { result: null, error: null });
-  const [values, setValues] = useState<Values>(EMPTY);
+  const [values, setValues] = useState<Values>({ ...EMPTY, url: initialUrl });
   const [tested, setTested] = useState<Values | null>(null);
   const [intent, setIntent] = useState<"test" | "save">("test");
 
@@ -80,7 +89,11 @@ export function WooConnectForm({ next }: { next: "onboarding" | "connections" })
           <select
             id="woo-category"
             name="defaultCategory"
-            defaultValue=""
+            defaultValue={
+              initialCategory && state.result!.categories.some((c) => c.id === initialCategory.id)
+                ? `${initialCategory.id}:${initialCategory.name}`
+                : ""
+            }
             className="h-11 w-full rounded-md border bg-background px-3 text-sm"
           >
             <option value="">{t("createCategories")}</option>
