@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { requireWorkspace } from "@/server/auth/session";
 import { loadBatchState } from "@/server/pipeline/batch-state";
 import { BatchView } from "./_components/batch-view";
+import { workerCovers } from "@/server/worker/covers";
 import { requestLocale } from "@/server/step-text";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -20,6 +21,7 @@ export default async function BatchPage({ params, searchParams }: PageProps<"/bu
     <BatchView
       initial={state}
       autoStart={(await searchParams).start === "1"}
+      watchOnly={await workerCovers(viewer.workspace, "batch", id)}
       hasWebsite={!!viewer.workspace.settings.website}
     />
   );

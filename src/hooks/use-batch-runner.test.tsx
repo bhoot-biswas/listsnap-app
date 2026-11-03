@@ -84,4 +84,13 @@ describe("bulk runner and the batch's Pause", () => {
     });
     expect(posts).toContain('/api/batches/b/pause {"paused":false}');
   });
+
+  it("only reads the state when the server's worker works the batch", async () => {
+    server = batch(false);
+    renderHook(() => useBatchRunner(batch(false), true, true));
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(10_000);
+    });
+    expect(posts).toEqual([]);
+  });
 });

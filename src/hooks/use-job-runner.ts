@@ -9,6 +9,8 @@ import { useDoneCue } from "./use-done-cue";
 import { useWakeLock } from "./use-wake-lock";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+/** How often a page reads the state while the server works the job (`watchOnly`). */
+export const WATCH_MS = 2500;
 
 /**
  * Drives a job through its steps from the browser. The server says what to
@@ -16,8 +18,12 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
  * nothing is left. Because every decision comes from saved state, a refresh or a
  * second tab simply picks up where things are: finished steps aren't repeated, and a
  * step another tab is running answers 202 until it's done.
+ *
+ * When the server's own worker works the job (`watchOnly`), the page makes no step calls:
+ * it reads the state every couple of seconds while steps are left. Try again and Choose
+ * items still go from here, since those are the seller's.
  */
-export function useJobRunner(initial: JobState) {
+export function useJobRunner(initial: JobState, watchOnly = false) {
   const router = useRouter();
   const [state, setState] = useState(initial);
   const [offline, setOffline] = useState(false);
@@ -57,6 +63,12 @@ export function useJobRunner(initial: JobState) {
           setOffline(true);
           return;
         }
+        // the server's worker makes these calls: this page only watches it happen
+        if (watchOnly) {
+          await sleep(WATCH_MS);
+          s = await load();
+          continue;
+        }
         const statuses = await Promise.all(
           s.next.map((c) =>
             fetch(c.url, { method: "POST" })
@@ -80,7 +92,7 @@ export function useJobRunner(initial: JobState) {
     } finally {
       busy.current = false;
     }
-  }, [load, router]);
+  }, [load, router, watchOnly]);
 
   useEffect(() => {
     alive.current = true;

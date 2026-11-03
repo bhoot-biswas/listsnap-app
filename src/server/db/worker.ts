@@ -56,6 +56,29 @@ export function dueWatches(opts: { workspaceId?: string; maxAttempts: number }):
   );
 }
 
+/**
+ * What decides whether the worker would pick a job or batch up: how old it is, its kept
+ * visitor, and whether it is (or belongs to) a video batch. Scoped to the shop, like a request.
+ */
+export async function workerFacts(
+  workspaceId: string,
+  kind: "job" | "batch",
+  id: string,
+): Promise<{ recent: boolean; visitor_key: string | null; from_video: boolean } | null> {
+  const [row] = await select<{ recent: 0 | 1; visitor_key: string | null; from_video: 0 | 1 }>(
+    kind === "job"
+      ? `SELECT x.created_at > UTC_TIMESTAMP(3) - ${MAX_AGE} AS recent, x.visitor_key,
+                (b.video_media_id IS NOT NULL) AS from_video
+           FROM jobs x LEFT JOIN batches b ON b.id = x.batch_id
+          WHERE x.id = ? AND x.workspace_id = ?`
+      : `SELECT x.created_at > UTC_TIMESTAMP(3) - ${MAX_AGE} AS recent, x.visitor_key,
+                (x.video_media_id IS NOT NULL) AS from_video
+           FROM batches x WHERE x.id = ? AND x.workspace_id = ?`,
+    [id, workspaceId],
+  );
+  return row ? { recent: !!row.recent, visitor_key: row.visitor_key, from_video: !!row.from_video } : null;
+}
+
 /** Seconds to wait after a failed attempt before the worker tries again: 5 s, 30 s, then 2 min. */
 export const backoffSeconds = (attempts: number) => (attempts <= 1 ? 5 : attempts === 2 ? 30 : 120);
 const backoffSql = "(CASE WHEN s.attempts <= 1 THEN 5 WHEN s.attempts = 2 THEN 30 ELSE 120 END)";
