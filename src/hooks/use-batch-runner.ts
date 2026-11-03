@@ -17,8 +17,9 @@ export const JOBS_AT_ONCE = 2;
  * Drives a bulk batch from the browser, two photos at a time, after watching its video
  * when it comes from one. Like the single-job
  * runner it only makes the calls the server lists as next, so pausing, a refresh or a
- * second tab never repeats finished work. Closing the tab pauses the batch; it starts
- * by itself only right after the upload (`autoStart`), otherwise it waits for Resume.
+ * second tab never repeats finished work. It starts by itself right after the upload
+ * (`autoStart`) and whenever the batch is opened again, unless the seller pressed Pause:
+ * that is remembered in this browser until they press Resume.
  * Losing the connection, or the state, isn't a pause: it carries on by itself once the
  * connection or the tab is back, and says what's happening meanwhile.
  */
@@ -139,15 +140,50 @@ export function useBatchRunner(initial: BatchState, autoStart: boolean) {
   const resume = useCallback(() => {
     wanted.current = true;
     setPaused(false);
+    remember(id, false);
     void drive();
-  }, [drive]);
+  }, [drive, id]);
 
   const pause = useCallback(() => {
     wanted.current = false;
     setPaused(true);
+    remember(id, true);
+  }, [id]);
+
+  // opened again later: carry on, unless it was the seller who paused it. Read after the
+  // first render, since the server can't know what this browser remembers.
+  useEffect(() => {
+    if (autoStart) {
+      // a refresh shouldn't count as "just uploaded" again
+      router.replace(`/bulk/${id}`, { scroll: false });
+      return;
+    }
+    if (pausedHere(id) || !hasWork(initial)) return;
+    const start = setTimeout(resume, 0);
+    return () => clearTimeout(start);
+    // only on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return { state, running, paused, offline, stalled, resume, pause, reload: load };
+}
+
+const pauseKey = (id: string) => `listsnap:batch-paused:${id}`;
+
+/** The seller's Pause, kept per batch in this browser; storage can be blocked, which counts as not paused. */
+function remember(id: string, paused: boolean) {
+  try {
+    if (paused) localStorage.setItem(pauseKey(id), "1");
+    else localStorage.removeItem(pauseKey(id));
+  } catch {}
+}
+
+function pausedHere(id: string): boolean {
+  try {
+    return localStorage.getItem(pauseKey(id)) === "1";
+  } catch {
+    return false;
+  }
 }
 
 /** Whether the runner still has calls to make: a video to watch, or a photo with steps left. */

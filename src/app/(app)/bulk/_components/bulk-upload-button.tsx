@@ -41,9 +41,10 @@ export function BulkUploadButton({
     const files = all.filter((_, i) => !heic[i]);
     if (heic.some(Boolean)) toast.error(tSnap("heic"));
     if (!files.length) return;
+    // too many: keep the first ones that fit and say so, rather than refusing the whole pick
     if (files.length > max)
-      return toast.error(max < MAX_BULK ? tLimits("left", { count: max }) : t("tooMany", { max: MAX_BULK }));
-    setPicked(files);
+      toast(max < MAX_BULK ? tLimits("left", { count: max }) : t("trimmed", { count: files.length - max, max }));
+    setPicked(files.slice(0, max));
   };
 
   const start = async (files: File[]) => {

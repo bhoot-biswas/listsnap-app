@@ -1331,6 +1331,7 @@
     "choose": "Choose photos",
     "uploading": "Uploading {done} of {total}…",
     "tooMany": "Up to {max} photos per bulk upload.",
+    "trimmed": "{count, plural, one {# photo was left out: up to {max} at a time.} other {# photos were left out: up to {max} at a time.}}",
     "uploadFailed": "The upload didn't go through. Check your connection and try again.",
     "someFailed": "{count, plural, one {# photo couldn't be uploaded.} other {# photos couldn't be uploaded.}}",
     "empty": "No bulk uploads yet.",
