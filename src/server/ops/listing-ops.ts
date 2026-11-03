@@ -57,7 +57,7 @@ export const getListingSummary = defineOp({
 
 /**
  * Review's autosave: the whole edit each time. Only scene media of this listing can be
- * selected, and colours can only name its own items.
+ * selected, the main photo must be one of those, and colours can only name its own items.
  */
 export const saveListingEdit = defineOp({
   name: "saveListingEdit",
@@ -73,10 +73,15 @@ export const saveListingEdit = defineOp({
     const items = new Set(listing.item_ids_json);
     const variants = edit.variants?.filter((v) => items.has(v.itemId)) ?? null;
     if (variants && !variants.some((v) => v.on)) return { ok: false, error: "invalid" };
+    const selectedMediaIds = edit.selectedMediaIds.filter((id) => own.has(id));
     await ws.saveListingEdits(listingId, {
       ...edit,
-      selectedMediaIds: edit.selectedMediaIds.filter((id) => own.has(id)),
+      selectedMediaIds,
       variants,
+      // the main photo is one of this listing's own, and one the seller kept
+      ...(edit.coverMediaId !== undefined && {
+        coverMediaId: edit.coverMediaId && selectedMediaIds.includes(edit.coverMediaId) ? edit.coverMediaId : null,
+      }),
     });
     return { ok: true, value: { saved: true }, listingId, summary: "full edit", undo: before };
   },

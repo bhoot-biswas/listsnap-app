@@ -30,6 +30,11 @@ export const ListingEdit = z.object({
   stockQty: z.number().int().min(0).max(1_000_000).nullable(),
   /** Scene media to send to the store; the main image always goes. */
   selectedMediaIds: z.array(z.string().uuid()).max(20),
+  /**
+   * The photo the seller made the main one, first in the store and catalog; null keeps the
+   * white cutout first. Undefined leaves it as saved (older clients don't send it).
+   */
+  coverMediaId: z.string().uuid().nullable().optional(),
   /** Colour variants, for a listing of one design in several colours; otherwise null. */
   variants: Variants.nullable(),
 });
