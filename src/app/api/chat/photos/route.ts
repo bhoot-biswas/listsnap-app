@@ -3,6 +3,7 @@ import { forWorkspace } from "@/server/db/scope";
 import { fail, ok, unauthorized } from "@/server/http";
 import { mediaUrl, saveMedia } from "@/server/media/store";
 import { photoFileProblem, readPhotoFile, unreadablePhoto } from "@/server/media/upload";
+import { clientIp, takeDemoAllowance } from "@/server/limits";
 
 /** Photos a shop may attach in a day without making listings of them; past this it's not a chat. */
 const LOOSE_PER_DAY = 40;
@@ -29,8 +30,13 @@ export async function POST(request: Request) {
 
   const ws = forWorkspace(viewer.workspace.id);
   if ((await ws.loosePhotosToday()) >= LOOSE_PER_DAY) return fail(429, "limit", "chatPhotoLimit");
+  const release = await takeDemoAllowance(viewer.workspace, clientIp(request), "uploads");
+  if (!release) return fail(429, "limit", "chatPhotoLimit");
   const photo = await readPhotoFile(file);
-  if (!photo) return unreadablePhoto(file);
+  if (!photo) {
+    await release();
+    return unreadablePhoto(file);
+  }
   const media = await saveMedia(ws.id, "original", photo.data, {
     mime: "image/jpeg",
     width: photo.width,

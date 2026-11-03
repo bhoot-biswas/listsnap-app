@@ -2,6 +2,7 @@ import "server-only";
 import { StepError } from "./run-step";
 import type { ListingStepContext } from "./listing-steps";
 import { readMedia, saveMedia } from "@/server/media/store";
+import { takeDemoAllowance } from "@/server/limits";
 import { video } from "@/server/providers";
 import { pickPhotos, reelVariables } from "@/server/reels/inputs";
 import { REEL_LANGS, type ReelLang, type ReelResult, type ReelTemplate } from "@/lib/schemas/reels";
@@ -48,6 +49,12 @@ export async function reelStep(ctx: ListingStepContext, lang: ReelLang, template
   });
 
   if (!(await ws.reserveReel())) throw new StepError("reelsUsedUp", { permanent: true });
+  // a new demo shop's seeded listings can make reels at once, so the visitor's count spans shops
+  const releaseVisitor = await takeDemoAllowance(workspace, ctx.ip, "reels");
+  if (!releaseVisitor) {
+    await ws.releaseReel();
+    throw new StepError("reelsUsedUp", { permanent: true });
+  }
   const reel = await video()
     .renderReel(
       { workspaceId: ws.id, jobId: listing.job_id, step: "reel" },
@@ -55,6 +62,7 @@ export async function reelStep(ctx: ListingStepContext, lang: ReelLang, template
     )
     .catch(async (err: unknown) => {
       await ws.releaseReel();
+      await releaseVisitor();
       throw err;
     });
   const saved = await saveMedia(ws.id, "reel", reel.data, {

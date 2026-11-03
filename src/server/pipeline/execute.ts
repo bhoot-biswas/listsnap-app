@@ -158,6 +158,7 @@ export async function executeReelStep(
   lang: ReelLang,
   template: ReelTemplate,
   force = false,
+  ip?: string,
 ): Promise<ExecuteResult | { found: true; invalid: string }> {
   const ws = forWorkspace(workspace.id);
   const listing = await ws.getListing(listingId);
@@ -167,7 +168,7 @@ export async function executeReelStep(
     sqlStepStore(ws.id),
     { jobId: listing.job_id, step: "reel", target: `${listingId}:${template}:${lang}` },
     { lockMs: REEL_LOCK_MS, force, redo: force },
-    () => reelStep({ ws, workspace, listing }, lang, template),
+    () => reelStep({ ws, workspace, listing, ip }, lang, template),
   );
   return { found: true, outcome };
 }

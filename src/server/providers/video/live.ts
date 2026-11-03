@@ -6,6 +6,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 import sharp from "sharp";
 import { env } from "@/server/env";
+import { StepError } from "@/server/pipeline/run-step";
 import { logged } from "../log";
 import type { ReelPhotoFiles, VideoProvider } from "../types";
 
@@ -42,14 +43,25 @@ const TIMEOUT_MS = 240_000;
 
 /*
  * One render at a time per server: each one starts several Chrome workers, and two at
- * once would only make both slower and could run a small server out of memory.
+ * once would only make both slower and could run a small server out of memory. A render
+ * takes about a minute, so a request waiting behind more than a couple of others would
+ * pass Nginx's five minutes; it is turned away at once instead, and costs no attempt.
  */
-let queue: Promise<unknown> = Promise.resolve();
-function oneAtATime<T>(fn: () => Promise<T>): Promise<T> {
-  const next = queue.then(fn);
-  queue = next.catch(() => undefined);
-  return next;
+const MAX_IN_LINE = 3;
+
+/** One job at a time, with at most `max` running or waiting. */
+export function renderLine(max: number) {
+  let queue: Promise<unknown> = Promise.resolve();
+  let inLine = 0;
+  return <T>(fn: () => Promise<T>): Promise<T> => {
+    if (inLine >= max) return Promise.reject(new StepError("reelsBusy", { notAttempted: true }));
+    inLine++;
+    const next = queue.then(fn).finally(() => inLine--);
+    queue = next.catch(() => undefined);
+    return next;
+  };
 }
+const oneAtATime = renderLine(MAX_IN_LINE);
 
 async function stage(dir: string, template: string, photos: ReelPhotoFiles) {
   await copyFile(fromRoot("src/server/reels/templates", template, "index.html"), path.join(dir, "index.html"));

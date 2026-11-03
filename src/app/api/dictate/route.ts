@@ -8,6 +8,7 @@ import {
   removeDictation,
 } from "@/server/dictation/sessions";
 import { fail, unauthorized } from "@/server/http";
+import { clientIp, takeDemoAllowance } from "@/server/limits";
 import { SHOP_WORDS } from "@/server/media/voice";
 import { meta } from "@/server/providers";
 import type { LiveTranscription } from "@/server/providers/types";
@@ -22,13 +23,16 @@ export const maxDuration = 120;
  * heard, then `final` (or `failed`, and the browser sends the recording whole instead).
  * Like /api/transcribe, the words only fill the box; the seller reads them and sends.
  */
-export async function POST() {
+export async function POST(request: Request) {
   const viewer = await apiViewer();
   if (!viewer) return unauthorized();
   const ws = forWorkspace(viewer.workspace.id);
   if ((await ws.dictationsToday()) >= DICTATIONS_PER_DAY) return fail(429, "limit", "dictateLimit");
   // no room: the browser quietly sends the recording whole when the seller stops
   if (!hasRoom(ws.id)) return fail(503, "busy", "sendRecording");
+  // live minutes are paid for: a demo visitor's count spans all their demo shops
+  if (!(await takeDemoAllowance(viewer.workspace, clientIp(request), "ai_calls")))
+    return fail(429, "limit", "dictateLimit");
 
   const id = newDictationId();
   const encoder = new TextEncoder();

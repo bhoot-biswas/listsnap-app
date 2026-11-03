@@ -1,6 +1,7 @@
 import { apiViewer } from "@/server/auth/session";
 import { ops } from "@/server/ops";
 import { fail, notFound, stepResponse, unauthorized } from "@/server/http";
+import { clientIp } from "@/server/limits";
 import { ReelLang } from "@/lib/schemas/reels";
 
 // Lives at `reel/[language]`: under `reels/` (with `[lang]` or `[language]`) Next 16.3.8's dev
@@ -14,7 +15,11 @@ export async function POST(request: Request, ctx: RouteContext<"/api/listings/[i
   const { id, language: lang } = await ctx.params;
   if (!ReelLang.safeParse(lang).success) return fail(404, "unknown_language", "unknownLanguage");
   const retry = new URL(request.url).searchParams.get("retry") === "1";
-  const r = await ops.makeReel.call(viewer.workspace, { listingId: id, lang, retry }, { via: "ui" });
+  const r = await ops.makeReel.call(
+    viewer.workspace,
+    { listingId: id, lang, retry },
+    { via: "ui", clientIp: clientIp(request) },
+  );
   if (r.ok) return stepResponse(r.value.outcome);
   if (r.error === "not_found") return notFound();
   if (r.error === "not_ready") return fail(409, "not_ready", "notFinished");

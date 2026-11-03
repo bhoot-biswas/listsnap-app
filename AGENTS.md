@@ -24,7 +24,7 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build   # what CI runs
 
 1. `src/app` holds routes only. `(public)` and `(app)` route groups give the public pages and the sidebar shell their own layouts. Route-only components live in a private `_components` folder next to the route.
 2. Server Components by default. `"use client"` only on small interactive leaves.
-3. `src/proxy.ts` (Next 16's renamed middleware) only does an optimistic cookie check. It never touches the database.
+3. `src/proxy.ts` (Next 16's renamed middleware) only does an optimistic cookie check, and refuses `/api` calls that change something from another origin. It never touches the database.
 4. Real auth is in the Data Access Layer: every page, Route Handler and Server Action calls `requireWorkspace()` (pages, actions) or `apiViewer()` (routes) itself. Never rely on a layout for auth.
 5. Route Handlers for what the browser calls as an API (pipeline steps, uploads, `/media/[id]`). Server Actions for form saves. Server Components read through the DAL, never via our own Route Handlers.
 6. `cacheComponents` stays off; pages are per-user and dynamic.
