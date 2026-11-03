@@ -337,7 +337,7 @@ ListSnap also runs as a Hostinger **Node.js web app** on the Business or Cloud p
 
 - **App settings:** application type `next`, build script `build`, output `.next`, Node 24.
 - **Variables:** the same as above, set in hPanel, with `MEDIA_DIR` an absolute path in your home folder.
-- **Migrations:** they run in the build when the database is reachable from it. If not, run the `db/migrations` files in order in phpMyAdmin and add their names to `listsnap_migrations`.
+- **Migrations:** run `node --env-file=<settings file> scripts/db-migrate.mjs` from a machine that reaches the database; `pnpm build` doesn't migrate. If none can, run the `db/migrations` files in order in phpMyAdmin and add their names to `listsnap_migrations`.
 
 Hostinger doesn't publish request-time or memory limits for these apps, so test a full listing early. Studio photos take about 30 seconds.
 
