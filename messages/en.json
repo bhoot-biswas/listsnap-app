@@ -1364,6 +1364,8 @@
     "photosMissing": "{count, plural, one {# photo missing} other {# photos missing}}",
     "moreListings": "+{count} more",
     "edited": "Saved",
+    "editFailed": "Not saved. Leave the box again to retry.",
+    "selectedCount": "{count, plural, one {# selected} other {# selected}}",
     "cost": {
       "title": "{count, plural, one {Upload # photo?} other {Upload # photos?}}",
       "uses": "This starts {listings, plural, one {# listing} other {# listings}} and makes about {photos, plural, one {# AI photo} other {# AI photos}}.",
