@@ -13,6 +13,8 @@ import { shopifyOffered } from "@/server/stores/shopify-connect";
 import { cn } from "@/lib/utils";
 import { requireWorkspace } from "@/server/auth/session";
 import { OnboardingForm } from "./_components/onboarding-form";
+import { sellOnFacebook } from "@/server/actions/onboarding";
+import { Button } from "@/components/ui/button";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("onboarding"))("title") };
@@ -21,7 +23,10 @@ export async function generateMetadata(): Promise<Metadata> {
 // what /api/shopify/callback reports back with ?shopify=
 const SHOPIFY_ERRORS = ["shop", "demo", "denied", "expired", "scopes", "taken", "failed"] as const;
 
-/** S2 Onboarding: 1) name the shop, 2) connect WooCommerce or Shopify. Full-screen, no navigation. */
+/**
+ * S2 Onboarding: 1) name the shop, 2) connect WooCommerce or Shopify, or go on with Facebook
+ * alone. Full-screen, no navigation.
+ */
 export default async function OnboardingPage({ searchParams }: PageProps<"/onboarding">) {
   const viewer = await requireWorkspace({ allowOnboarding: true });
   if (viewer.workspace.onboarded) redirect("/dashboard");
@@ -75,20 +80,25 @@ export default async function OnboardingPage({ searchParams }: PageProps<"/onboa
               <ShopifyConnectForm next="onboarding" />
             </div>
           )}
-          {/* the way through for a seller without a store yet, so it isn't a small link beside Back */}
-          {(platform === "woo" || shopifyDemo) && (
-            <section aria-labelledby="no-store" className="space-y-3 rounded-lg border bg-muted/40 p-4">
-              <h2 id="no-store" className="text-sm font-medium">
-                {t("noStoreTitle")}
-              </h2>
-              <p className="text-sm text-muted-foreground">{t("noStoreBody")}</p>
+          {/* the ways through for a seller without a store, so they aren't a small link beside Back */}
+          <section aria-labelledby="no-store" className="space-y-3 rounded-lg border bg-muted/40 p-4">
+            <h2 id="no-store" className="text-sm font-medium">
+              {t("noStoreTitle")}
+            </h2>
+            <p className="text-sm text-muted-foreground">{t("noStoreBody")}</p>
+            <div className="flex flex-wrap gap-2">
+              <form action={sellOnFacebook}>
+                <Button type="submit" className="h-11">
+                  {t("sellOnFacebook")}
+                </Button>
+              </form>
               {platform === "woo" ? (
                 <DemoStoreButton next="onboarding" label={t("useTestStore")} variant="outline" />
               ) : (
-                <ShopifyDemoButton next="onboarding" label={t("useTestStore")} variant="outline" />
+                shopifyDemo && <ShopifyDemoButton next="onboarding" label={t("useTestStore")} variant="outline" />
               )}
-            </section>
-          )}
+            </div>
+          </section>
           <div className="border-t pt-4">
             <ButtonLink href="/onboarding" variant="ghost">
               {t("back")}

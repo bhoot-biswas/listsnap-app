@@ -197,7 +197,7 @@
   },
   "onboarding": {
     "title": "Set up your shop",
-    "body": "Two quick steps: name your shop, then connect your online store.",
+    "body": "Two quick steps: name your shop, then choose where your listings go.",
     "shopName": "Shop name",
     "shopNamePlaceholder": "Rupkotha Crafts",
     "continue": "Continue",
@@ -206,9 +206,10 @@
     "storeTitle": "Connect your online store",
     "storeBody": "ListSnap saves every listing to your store as a draft. Nothing is published without you.",
     "back": "Back",
-    "noStoreTitle": "No online store yet?",
-    "noStoreBody": "Use our test store for now: your drafts go there, so you can try everything. Connect your own store any time in Connections.",
+    "noStoreTitle": "No website?",
+    "noStoreBody": "Sell on Facebook and Instagram: connect your Page, and ListSnap writes each listing, makes its photos and reels and posts them there. Or try saving drafts in our test store. You can connect your own store any time in Connections.",
     "useTestStore": "Use the test store",
+    "sellOnFacebook": "I sell on Facebook",
     "woo": "WooCommerce",
     "shopify": "Shopify"
   },
