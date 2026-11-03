@@ -52,7 +52,8 @@ type Found = { found: false } | { found: true; invalid: string } | { found: true
 export async function saveToCatalog(
   workspace: Workspace,
   listingId: string,
-  opts: { update?: boolean } = {},
+  /** `check: false` sends without waiting for Meta to check the items, as archiving does. */
+  opts: { update?: boolean; check?: boolean } = {},
   wait = (ms: number) => new Promise((r) => setTimeout(r, ms)),
 ): Promise<Found> {
   const ws = forWorkspace(workspace.id);
@@ -65,9 +66,27 @@ export async function saveToCatalog(
   if (opts.update) await reopenDoneStep(ws.id, key);
   // pressing the button again is the seller's "Try again"
   const outcome = await runStep(sqlStepStore(ws.id), key, { lockMs: LOCK_MS, force: true }, () =>
-    send(workspace, listing, wait, before),
+    send(workspace, listing, wait, before, opts.check ?? true),
   );
   return { found: true, outcome };
+}
+
+/**
+ * Archiving a listing takes it off sale in the catalog, and restoring puts it back: the
+ * same items sent again, out of stock while archived. Only for a listing already in the
+ * catalog. Never fails the archive itself; the catalog card can be saved again by hand.
+ */
+export async function syncCatalogArchive(workspace: Workspace, listingId: string): Promise<void> {
+  const ws = forWorkspace(workspace.id);
+  const listing = await ws.getListing(listingId);
+  if (!listing || !(await ws.stepResult<CatalogResult>(listing.job_id, "catalog", listingId))) return;
+  try {
+    const r = await saveToCatalog(workspace, listingId, { update: true, check: false });
+    if (r.found && "outcome" in r && r.outcome.state === "failed")
+      console.warn(`[catalog] archive sync for ${listingId} failed: ${r.outcome.error}`);
+  } catch (err) {
+    console.warn(`[catalog] archive sync for ${listingId} failed`, err);
+  }
 }
 
 async function send(
@@ -75,6 +94,7 @@ async function send(
   listing: ListingRow,
   wait: (ms: number) => Promise<unknown>,
   before: CatalogResult | null,
+  check: boolean,
 ): Promise<CatalogResult> {
   const ws = forWorkspace(workspace.id);
   const conn = await metaConnection(ws);
@@ -88,7 +108,9 @@ async function send(
   if (!workspace.settings.website) throw new StepError("catalogNeedsWebsite");
 
   const product = await listingProduct(ws, workspace, listing);
-  const items = catalogItems([product], await csvShop(workspace, [{ product, bn: null }], CATALOG_LINK_TTL_S));
+  const written = catalogItems([product], await csvShop(workspace, [{ product, bn: null }], CATALOG_LINK_TTL_S));
+  // an archived listing stays in the catalog, but nobody can buy it there
+  const items = listing.archived_at ? written.map((i) => ({ ...i, availability: "out of stock" as const })) : written;
   if (!items.length) throw new StepError("addPriceFirst");
 
   const ctx = { workspaceId: ws.id, jobId: listing.job_id, step: "catalog" };
@@ -106,7 +128,7 @@ async function send(
   });
   try {
     const handle = await facebook().saveCatalogItems(ctx, { catalogId: catalog.id, userToken, items, removeIds });
-    for (let i = 0; i < STATUS_TRIES; i++) {
+    for (let i = 0; check && i < STATUS_TRIES; i++) {
       const batch = await facebook().catalogBatch(ctx, { catalogId: catalog.id, userToken, handle });
       if (batch.done) {
         const refused = refusedItems(batch.errors, removeIds);

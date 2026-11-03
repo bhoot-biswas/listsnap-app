@@ -159,4 +159,25 @@ describe.skipIf(!enabled)("Facebook catalog (MariaDB)", async () => {
     send.mockRestore();
     checked.mockRestore();
   });
+  it("takes an archived listing off sale in the catalog, and puts it back on restore", async () => {
+    const { ops } = await import("@/server/ops");
+    const send = vi.spyOn(mockFacebook, "saveCatalogItems");
+    const status = vi.spyOn(mockFacebook, "catalogBatch");
+    const availability = () => send.mock.calls.at(-1)![1].items.map((i) => i.availability);
+
+    await ops.archiveListing.call(a.workspace, { listingId, archived: true }, { via: "ui" });
+    expect(availability().every((x) => x === "out of stock")).toBe(true);
+    // archiving doesn't wait for Meta to check the items
+    expect(status).not.toHaveBeenCalled();
+
+    await ops.archiveListing.call(a.workspace, { listingId, archived: false }, { via: "ui" });
+    expect(availability().every((x) => x === "in stock")).toBe(true);
+    expect(send).toHaveBeenCalledTimes(2);
+
+    // a listing never saved to the catalog isn't sent there by archiving
+    await ops.archiveListing.call(noSite.workspace, { listingId: otherListing, archived: true }, { via: "ui" });
+    expect(send).toHaveBeenCalledTimes(2);
+    send.mockRestore();
+    status.mockRestore();
+  });
 });
