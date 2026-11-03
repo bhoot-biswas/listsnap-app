@@ -13,6 +13,7 @@ import { DayTable, MonthChart } from "./_components/month";
 import { StepCosts } from "./_components/step-costs";
 import { relativeTime } from "@/lib/relative-time";
 import { REELS_PER_DAY } from "@/server/db/limits";
+import { callSummary, requestLocale } from "@/server/step-text";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("nav"))("usage") };
@@ -30,6 +31,7 @@ export default async function UsagePage() {
   const t = await getTranslations("usage");
   const format = await getFormatter();
   const ws = forWorkspace(viewer.workspace.id);
+  const locale = await requestLocale();
   const [days, today, steps, calls, used] = await Promise.all([
     ws.usageDays(),
     ws.callsToday(),
@@ -118,7 +120,10 @@ export default async function UsagePage() {
               </div>
             </dl>
             <StepCosts steps={steps} money={money} />
-            <CallLog calls={calls} money={money} />
+            <CallLog
+              calls={calls.map((c) => ({ ...c, summary: callSummary(!!c.ok, c.summary, locale) }))}
+              money={money}
+            />
           </div>
         </details>
       </div>

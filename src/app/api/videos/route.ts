@@ -34,7 +34,10 @@ export async function POST(request: Request) {
 
   const data = await readCapped(request, max);
   if (!data) return refuse(fail(413, "too_large", "videoTooLarge", { mb: VIDEO_MAX_MB }));
-  const video = await openVideo(data);
+  const video = await openVideo(data).catch(async (err: unknown) => {
+    await release();
+    throw err;
+  });
   let seconds: number | null;
   try {
     seconds = await video.seconds();
@@ -45,8 +48,15 @@ export async function POST(request: Request) {
   // a second over is a rounding of the phone's own limit, not a longer video
   if (seconds > VIDEO_MAX_S + 1) return refuse(fail(400, "too_long", "videoTooLong", { minutes: VIDEO_MAX_S / 60 }));
 
-  const media = await saveMedia(ws.id, "video", data, { mime: type, width: 0, height: 0, selected: false });
-  const batchId = await ws.createVideoBatch(media.id);
+  let batchId: string;
+  try {
+    const media = await saveMedia(ws.id, "video", data, { mime: type, width: 0, height: 0, selected: false });
+    batchId = await ws.createVideoBatch(media.id);
+  } catch (err) {
+    // nothing was made, so the visitor's video for today is given back
+    await release();
+    throw err;
+  }
   return ok({ batchId }, 201);
 }
 
