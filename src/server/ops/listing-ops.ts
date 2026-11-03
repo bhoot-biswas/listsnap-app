@@ -2,6 +2,7 @@ import "server-only";
 import { z } from "zod";
 import type { ListingSnapshot } from "@/server/db/scope";
 import { ListingEdit, suggestedPrice } from "@/lib/schemas/review";
+import { BanglaText } from "@/lib/schemas/pipeline";
 import { defineOp } from "./define-op";
 
 /** Ids are opaque here; an unknown or foreign one is "not found", not "invalid". */
@@ -80,43 +81,74 @@ export const saveListingEdit = defineOp({
   },
 });
 
-/** Inline edits from the bulk table: title, category and price only; the rest stays. */
+/**
+ * Field edits from the bulk table and the chat: only the fields given change. Bangla can
+ * be changed only on a listing that has its Bangla, since half a Bangla version would
+ * leave Review without one.
+ */
 export const editListingFields = defineOp({
   name: "editListingFields",
   description:
-    "Change a listing's English title, category or price (in taka). Give only the fields to change; everything else stays as it is. Can be undone.",
+    "Change some of a listing's fields: the English title, short description, category or tags, the Bangla " +
+    "title or short description (write them in Bangla script), the price in taka, or the stock count (null " +
+    "stops counting stock). Give only the fields to change; everything else stays as it is. Can be undone.",
   input: z.object({
     listingId: ListingId,
     title: z.string().trim().min(1).max(200).optional(),
+    shortDescription: z.string().trim().max(600).optional(),
     category: z.string().trim().max(120).optional(),
+    tags: z.array(z.string().trim().min(1).max(60)).max(30).optional(),
+    titleBn: z.string().trim().min(1).max(200).optional(),
+    shortDescriptionBn: z.string().trim().max(600).optional(),
     priceBdt: z.number().int().min(0).max(10_000_000).nullable().optional(),
+    stockQty: z.number().int().min(0).max(1_000_000).nullable().optional(),
   }),
   effect: "edits_draft",
-  async run({ ws }, { listingId, title, category, priceBdt }) {
+  async run({ ws }, input) {
+    const { listingId, priceBdt, stockQty } = input;
     const listing = await ws.getListing(listingId);
     const before = listing ? await ws.listingSnapshot(listingId) : null;
     if (!listing || !before) return { ok: false, error: "not_found" };
+    const en = pick({
+      title: input.title,
+      short_description: input.shortDescription,
+      category: input.category,
+      tags: input.tags,
+    });
+    const bn = pick({ title: input.titleBn, short_description: input.shortDescriptionBn });
+    if (Object.keys(bn).length && !BanglaText.safeParse(listing.fields_json?.bn).success)
+      return { ok: false, error: "not_ready", message: "This listing has no Bangla version to change yet." };
     await ws.saveListingEdits(listingId, {
-      en: { ...(title !== undefined ? { title } : {}), ...(category !== undefined ? { category } : {}) },
-      bn: null,
+      en,
+      bn: Object.keys(bn).length ? bn : null,
       priceBdt: priceBdt !== undefined ? priceBdt : listing.price_bdt,
-      stockQty: listing.stock_qty,
+      stockQty: stockQty !== undefined ? stockQty : listing.stock_qty,
       selectedMediaIds: before.selectedMediaIds,
     });
     const changed = [
-      title !== undefined && "title",
-      category !== undefined && "category",
+      ...Object.keys(en),
+      ...Object.keys(bn).map((k) => `${k} (Bangla)`),
       priceBdt !== undefined && "price",
+      stockQty !== undefined && "stock",
     ];
     return {
       ok: true,
       value: { saved: true },
       listingId,
-      summary: changed.filter(Boolean).join(", ") || "nothing",
+      summary:
+        changed
+          .filter(Boolean)
+          .join(", ")
+          .replace(/short_description/g, "short description") || "nothing",
       undo: before,
     };
   },
 });
+
+/** The fields that were given, so an edit leaves the rest as they are. */
+function pick<T extends Record<string, unknown>>(fields: T): Partial<T> {
+  return Object.fromEntries(Object.entries(fields).filter(([, v]) => v !== undefined)) as Partial<T>;
+}
 
 export const undoLast = defineOp({
   name: "undoLast",

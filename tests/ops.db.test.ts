@@ -187,6 +187,31 @@ describe.skipIf(!enabled)("ops (MariaDB)", async () => {
     });
   });
 
+  it("changes only the fields given, Bangla and stock included, and undoes them", async () => {
+    const original = await A.listingSnapshot(listingId);
+    const r = await ops.editListingFields.call(
+      a.workspace,
+      { listingId, titleBn: "লাল জামদানি শাড়ি", shortDescription: "A red saree.", stockQty: 4, tags: ["saree"] },
+      { via: "chat" },
+    );
+    expect(r).toMatchObject({ ok: true });
+    const listing = (await A.getListing(listingId))!;
+    const fields = listing.fields_json as { en: Record<string, unknown>; bn: Record<string, unknown> };
+    expect(fields.bn.title).toBe("লাল জামদানি শাড়ি");
+    // the rest of the Bangla stays
+    expect(fields.bn.description).toBe((original!.fields as typeof fields).bn.description);
+    expect(fields.en).toMatchObject({
+      title: (original!.fields as typeof fields).en.title,
+      short_description: "A red saree.",
+      tags: ["saree"],
+    });
+    expect(listing.stock_qty).toBe(4);
+    expect((await A.opRuns(listingId)).at(-1)!.summary).toBe("short description, tags, title (Bangla), stock");
+
+    await ops.undoLast.call(a.workspace, { listingId }, { via: "chat" });
+    expect(await A.listingSnapshot(listingId)).toEqual(original);
+  });
+
   it("records who ran what without the seller's text", async () => {
     await ops.editListingFields.call(a.workspace, { listingId, title: "Secret wording" }, { via: "chat" });
     const runs = await A.opRuns(listingId);
