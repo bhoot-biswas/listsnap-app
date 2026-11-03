@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Check } from "lucide-react";
+import { Check, Star } from "lucide-react";
 import { ConfidenceDots } from "@/components/app/confidence-dots";
 import type { ListingStatus } from "@/components/app/status-badge";
 import { setListingChecked } from "@/server/actions/review";
@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { lookOf } from "@/lib/schemas/looks";
 import { sized } from "@/lib/media-size";
 import { MediaImg } from "@/components/app/media-img";
+import { PhotoViewer } from "./photo-viewer";
 
 export interface ReviewPhoto {
   id: string;
@@ -28,12 +29,17 @@ export function ReviewPhotos({
   title,
   selected,
   onToggle,
+  cover,
+  onCover,
 }: {
   photos: ReviewPhoto[];
   /** The listing's title, which describes the main photo for screen readers. */
   title: string;
   selected: Set<string>;
   onToggle: (id: string) => void;
+  /** The photo the seller made the main one; null while the white cutout leads. */
+  cover: string | null;
+  onCover: (id: string | null) => void;
 }) {
   const t = useTranslations("review");
   const tCommon = useTranslations("common");
@@ -42,15 +48,18 @@ export function ReviewPhotos({
     const look = lookOf(p.kind);
     if (look) return t(`looks.names.${look}`);
     if (p.kind === "angle") return t("angle");
+    // once another photo leads, the cutout is just the white one
     return p.kind === "main"
-      ? t("mainImage")
+      ? t(cover ? "whitePhoto" : "mainImage")
       : p.kind in { studio: 1, lifestyle: 1, banner: 1 }
         ? tScenes(p.kind)
         : p.kind;
   };
   // lifestyle and looks redraw the product; studio and banner keep its real pixels
   const aiScene = (p: ReviewPhoto) => p.kind === "lifestyle" || lookOf(p.kind) !== null;
-  const main = photos[0];
+  // the large photo is the one stores show first: the seller's main photo, or the cutout
+  const main = photos.find((p) => p.id === cover) ?? photos[0];
+  const [viewing, setViewing] = useState<number | null>(null);
 
   return (
     <section aria-labelledby="photos-title" className="space-y-3">
@@ -76,17 +85,20 @@ export function ReviewPhotos({
             <li key={p.id}>
               <button
                 type="button"
-                role="checkbox"
-                aria-checked={on}
-                aria-disabled={p.locked}
-                aria-label={t("include", { name: name(p) })}
-                onClick={() => !p.locked && onToggle(p.id)}
+                aria-label={t("viewer.open", { name: name(p) })}
+                aria-describedby={on ? undefined : "photo-left-out"}
+                onClick={() => setViewing(photos.indexOf(p))}
                 className={cn(
                   "relative block aspect-square w-full overflow-hidden rounded-lg border-2 bg-white",
                   on ? "border-primary" : "border-transparent opacity-60",
-                  p.locked && "cursor-default",
                 )}
               >
+                {(p.id === cover || (p.locked && cover === null)) && (
+                  <span className="absolute top-1 left-1 z-10 flex size-5 items-center justify-center rounded-full bg-marigold text-white">
+                    <Star className="size-3 fill-current" aria-hidden="true" />
+                    <span className="sr-only">{t("viewer.isMain")}</span>
+                  </span>
+                )}
                 <Image src={sized(p.url, 320)} alt="" fill sizes="90px" className="object-cover" unoptimized />
                 {on && (
                   <span className="absolute top-1 right-1 flex size-5 items-center justify-center rounded-full bg-primary text-primary-foreground">
@@ -108,6 +120,21 @@ export function ReviewPhotos({
         })}
       </ul>
       <p className="text-xs text-muted-foreground">{t("photosHint")}</p>
+      <span id="photo-left-out" hidden>
+        {t("viewer.leftOut")}
+      </span>
+      <PhotoViewer
+        photos={photos}
+        index={viewing}
+        onIndex={setViewing}
+        onClose={() => setViewing(null)}
+        selected={selected}
+        cover={cover}
+        onToggle={onToggle}
+        onCover={onCover}
+        name={name}
+        title={title}
+      />
     </section>
   );
 }

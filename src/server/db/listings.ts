@@ -16,7 +16,8 @@ export interface ListingRow {
   sort: number;
   item_ids_json: string[];
   status: ListingStatus;
-  fields_json: { en?: unknown; bn?: unknown; variants?: unknown } | null;
+  /** `cover`: the photo the seller made the main one (stores/listing-product.ts). */
+  fields_json: { en?: unknown; bn?: unknown; variants?: unknown; cover?: unknown } | null;
   confidence: number | null;
   check_notes: string[] | null;
   stock_qty: number | null;

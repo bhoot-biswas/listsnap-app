@@ -1111,7 +1111,7 @@
     "photos": "Photos",
     "mainImage": "Main image",
     "angle": "Another angle",
-    "photosHint": "Choose the photos to send to your store. The main image always goes.",
+    "photosHint": "Tap a photo to see it large, choose whether it goes to your store, or make it the main photo, which stores show first.",
     "include": "Include {name}",
     "english": "English",
     "bangla": "বাংলা",
@@ -1340,7 +1340,22 @@
       "undo": "Undo",
       "note": "Meta says Marketplace is for personal selling; a shop that lists stock all the time should follow Meta's commerce rules.",
       "policies": "Commerce Policies"
-    }
+    },
+    "viewer": {
+      "title": "Photo",
+      "open": "Open {name}",
+      "count": "{n, number} of {total, number}",
+      "close": "Close",
+      "previous": "Previous photo",
+      "next": "Next photo",
+      "include": "Include in the store",
+      "included": "Included",
+      "alwaysGoes": "The white photo always goes to the store.",
+      "makeMain": "Make main photo",
+      "isMain": "Main photo",
+      "leftOut": "Left out of the store"
+    },
+    "whitePhoto": "White photo"
   },
   "bulk": {
     "title": "Bulk uploads",

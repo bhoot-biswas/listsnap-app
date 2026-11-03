@@ -82,7 +82,7 @@ export function coverOf(
   listing: Pick<ListingRow, "fields_json">,
   media: { id: string; kind: string; selected: number | boolean | null }[],
 ): string | null {
-  const cover = (listing.fields_json as { cover?: unknown } | null)?.cover;
+  const cover = listing.fields_json?.cover;
   return typeof cover === "string" && media.some((m) => m.id === cover && m.selected && m.kind !== "reel")
     ? cover
     : null;

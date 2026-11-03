@@ -24,6 +24,7 @@ import type { VoiceNoteView } from "./_components/voice-note-card";
 import { ListenResult } from "@/lib/schemas/voice-note";
 import { catalogAccess } from "@/lib/meta-access";
 import { storeTargets } from "@/server/stores/targets";
+import { coverOf } from "@/server/stores/listing-product";
 import { storeStep } from "@/lib/stores";
 import type { WhereItIs } from "./_components/where-it-is";
 import { localTitle } from "@/lib/titles";
@@ -187,6 +188,7 @@ export default async function ReviewPage({ params, searchParams }: PageProps<"/j
     priceBdt: listing.price_bdt ?? suggestedPrice(price_hint_bdt, viewer.workspace.settings.priceRounding),
     stockQty: listing.stock_qty,
     selectedMediaIds: media.filter((m) => m.selected).map((m) => m.id),
+    coverMediaId: coverOf(listing, media),
     variants: listingVariants(job.group_mode, listing.item_ids_json, items, listing.fields_json?.variants),
   };
   const colorPhotos = Object.fromEntries(

@@ -326,6 +326,17 @@ export function ReviewForm({
                 selectedMediaIds: selected.has(id)
                   ? edit.selectedMediaIds.filter((x) => x !== id)
                   : [...edit.selectedMediaIds, id],
+                // a photo left out of the store can't lead it
+                ...(selected.has(id) && edit.coverMediaId === id && { coverMediaId: null }),
+              })
+            }
+            cover={edit.coverMediaId ?? null}
+            onCover={(id) =>
+              change({
+                ...edit,
+                coverMediaId: id,
+                // the main photo goes to the store, so making one main also includes it
+                selectedMediaIds: id && !selected.has(id) ? [...edit.selectedMediaIds, id] : edit.selectedMediaIds,
               })
             }
           />
