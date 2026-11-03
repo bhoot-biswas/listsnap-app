@@ -11,7 +11,7 @@ import type { ChatEvent, ChatMessage, ChatRequest, ToolCall } from "@/lib/schema
 import { chatSystem } from "./prompt";
 import { changesListing, chatTools, checkArgs, makesMedia, needsApproval, runTool, type ChatScope } from "./tools";
 import { approvalItem, pendingCalls, toolExtras } from "./view";
-import { errorWords, requestLocale } from "@/server/step-text";
+import { errorWords, requestLocale, text } from "@/server/step-text";
 
 /** Model turns per seller message: enough to read, act and answer, not enough to wander. */
 const MAX_TURNS = 6;
@@ -110,7 +110,8 @@ export async function runChat(
       if (!chatId || req.newChat) {
         // a card left open in the old chat can't be answered any more, so it says nothing was sent
         if (chatId) await closeCards(chatId);
-        chatId = await ws.startChat(scope.listingId, req.message || "Photo");
+        // a photo sent on its own names the chat in the seller's language, with the day it came
+        chatId = await ws.startChat(scope.listingId, req.message || (await photoTitle()));
         await claim(chatId);
         // early, so the page can give the conversation its own address while the model works
         emit({ type: "chat", chatId });
@@ -272,4 +273,15 @@ async function latestPhotos(workspaceId: string, history: ChatMessage[]): Promis
     if (media) out[id] = await photoDataUrl(media.data);
   }
   return out;
+}
+
+/** "Photo, 3 Nov" in the seller's language: what a chat started with only a photo is called. */
+async function photoTitle(): Promise<string> {
+  const locale = await requestLocale();
+  const day = new Intl.DateTimeFormat(locale === "bn" ? "bn-BD" : "en-GB", {
+    day: "numeric",
+    month: "short",
+    timeZone: "Asia/Dhaka",
+  }).format(new Date());
+  return text(locale, "chat.photoTitle", { day });
 }

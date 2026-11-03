@@ -1401,6 +1401,7 @@
       "store": "Save it to my store"
     },
     "label": "Message",
+    "photoTitle": "Photo, {day}",
     "copy": {
       "label": "Copy",
       "done": "Copied",
