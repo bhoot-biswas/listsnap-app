@@ -23,13 +23,15 @@ const LIVE_SHOP =
 /**
  * Jobs still at work, oldest first. Which of their steps are due is the job's own state's
  * to say (nextCalls), so this only narrows the search to the few jobs that can have any.
- * `videoOnly`: just the jobs a video batch made.
+ * `videoOnly`: just the jobs a video batch made. A paused batch's jobs wait for its Resume.
  */
 export function workingJobs(opts: { videoOnly: boolean; workspaceId?: string; limit: number }): Promise<DueWork[]> {
   return select<DueWork>(
     `SELECT x.id, x.workspace_id, x.visitor_key FROM jobs x ${LIVE_SHOP}
        ${opts.videoOnly ? "JOIN batches b ON b.id = x.batch_id AND b.video_media_id IS NOT NULL" : ""}
+       LEFT JOIN batches pb ON pb.id = x.batch_id
       WHERE x.status = 'processing' AND x.created_at > UTC_TIMESTAMP(3) - ${MAX_AGE}
+        AND pb.paused_at IS NULL
         ${opts.workspaceId ? "AND x.workspace_id = ?" : ""}
       ORDER BY x.created_at LIMIT ?`,
     [...(opts.workspaceId ? [opts.workspaceId] : []), opts.limit],
@@ -44,7 +46,7 @@ export function dueWatches(opts: { workspaceId?: string; maxAttempts: number }):
   return select<DueWork>(
     `SELECT x.id, x.workspace_id, x.visitor_key FROM batches x ${LIVE_SHOP}
        JOIN batch_steps s ON s.batch_id = x.id AND s.step = 'watch' AND s.target = '-'
-      WHERE x.video_media_id IS NOT NULL AND x.created_at > UTC_TIMESTAMP(3) - ${MAX_AGE}
+      WHERE x.video_media_id IS NOT NULL AND x.paused_at IS NULL AND x.created_at > UTC_TIMESTAMP(3) - ${MAX_AGE}
         ${opts.workspaceId ? "AND x.workspace_id = ?" : ""}
         AND (s.status = 'pending'
           OR (s.status = 'failed' AND s.attempts < ? AND s.finished_at < UTC_TIMESTAMP(3) - INTERVAL ${backoffSql} SECOND)

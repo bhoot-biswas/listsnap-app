@@ -45,5 +45,7 @@ export interface BatchState {
   createdAt: string;
   /** Null for a batch of photos. */
   watch: WatchView | null;
+  /** The seller pressed Pause; nothing new starts, in any tab or on the server, until Resume. */
+  paused: boolean;
   rows: BatchRow[];
 }

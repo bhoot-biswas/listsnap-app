@@ -81,10 +81,19 @@ export function batchQueries(ws: string) {
     },
 
     getBatch: (id: string) =>
-      selectOne<{ id: string; total: number; video_media_id: string | null; created_at: Date }>(
-        "SELECT id, total, video_media_id, created_at FROM batches WHERE id = ? AND workspace_id = ?",
+      selectOne<{ id: string; total: number; video_media_id: string | null; paused_at: Date | null; created_at: Date }>(
+        "SELECT id, total, video_media_id, paused_at, created_at FROM batches WHERE id = ? AND workspace_id = ?",
         [id, ws],
       ),
+
+    /** The seller's Pause or Resume; false when the batch isn't this shop's. */
+    async setBatchPaused(id: string, paused: boolean): Promise<boolean> {
+      const r = await execute(
+        `UPDATE batches SET paused_at = ${paused ? "COALESCE(paused_at, UTC_TIMESTAMP(3))" : "NULL"} WHERE id = ? AND workspace_id = ?`,
+        [id, ws],
+      );
+      return r.affectedRows === 1;
+    },
 
     /** Videos uploaded today (Dhaka day), for their daily cap. */
     async videosToday(): Promise<number> {
