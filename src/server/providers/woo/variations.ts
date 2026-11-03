@@ -78,7 +78,7 @@ export async function syncVariations(
   productId: number,
   variants: StoreVariantInput[],
   attribute: ColorAttribute,
-  images: { ids: Map<string, number>; src(mediaId: string): Promise<string | null> },
+  images: { keepStock: boolean; ids: Map<string, number>; src(mediaId: string): Promise<string | null> },
 ): Promise<void> {
   const existing = await api.get<Variation[]>(`products/${productId}/variations`, { per_page: 100 });
   const ours = new Map<string, number>();
@@ -91,8 +91,10 @@ export async function syncVariations(
     const src = !id && isNew && v.mediaId ? await images.src(v.mediaId) : null;
     return {
       regular_price: v.regularPrice === null ? "" : String(v.regularPrice),
-      manage_stock: v.stockQty !== null,
-      ...(v.stockQty === null ? {} : { stock_quantity: v.stockQty }),
+      // a colour already in the store keeps its count unless the seller changed ours
+      ...(isNew || !images.keepStock
+        ? { manage_stock: v.stockQty !== null, ...(v.stockQty === null ? {} : { stock_quantity: v.stockQty }) }
+        : {}),
       attributes: [attribute.option(v.color)],
       meta_data: [{ key: ITEM_META_KEY, value: v.itemId }],
       ...(id ? { image: { id } } : src ? { image: { src, alt: v.color } } : {}),

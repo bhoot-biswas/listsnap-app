@@ -8,7 +8,7 @@ import { listingPrice } from "@/lib/schemas/review";
 import { listingVariants } from "@/lib/variants";
 
 /** A listing as a product, before it has a store: what a store save and an export both send. */
-export type ListingProduct = Omit<StoreDraftInput, "productRef">;
+export type ListingProduct = Omit<StoreDraftInput, "productRef" | "keepStock">;
 
 /**
  * Turns a listing into the product a store gets, in one place, so a direct save and an

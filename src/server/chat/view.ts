@@ -41,6 +41,8 @@ export function approvalItem(call: ToolCall, state: ApprovalState, result?: unkn
     args: call.args,
     state,
     ...(call.preview && { preview: call.preview }),
+    // the reel to be posted, until the post's own result replaces it
+    ...(call.preview?.reel && { media: { url: mediaUrl(call.preview.reel), video: true } }),
     ...toolExtras(call.name, result),
   };
 }

@@ -219,6 +219,10 @@ function Approval({
           ))}
         </ul>
       )}
+      {item.media?.video && (
+        // the reel itself, so the seller watches what goes public before saying yes
+        <video src={item.media.url} controls playsInline className="max-h-72 rounded-lg border bg-black" />
+      )}
       {args.caption &&
         (item.state === "pending" ? (
           // the seller can change a word here instead of saying no and asking again
@@ -283,7 +287,7 @@ function Approval({
           {t(item.state)}
         </p>
       )}
-      <Made item={item} />
+      <Made item={item.media?.video ? { ...item, media: undefined } : item} />
     </div>
   );
 }

@@ -13,6 +13,7 @@ import type { ChatTool } from "@/server/providers/types";
 import { errorText } from "@/server/step-text";
 import { storeTargets } from "@/server/stores/targets";
 import type { StoreKind } from "@/lib/stores";
+import { ReelResult } from "@/lib/schemas/reels";
 
 /**
  * The chat's tools are ops from the registry, so they keep every op rule: auth by
@@ -111,7 +112,9 @@ export async function checkArgs(
   if (!parsed.ok) return parsed;
   const args = parsed.args;
   const listingId = scope.listingId ?? (args.listingId as string | undefined);
-  if (name === "postReel" && listingId && !(await hasReel(workspace, listingId, args.lang as "en" | "bn")))
+  const reel =
+    name === "postReel" && listingId ? await reelMedia(workspace, listingId, args.lang as "en" | "bn") : null;
+  if (name === "postReel" && listingId && !reel)
     // refused before a card is shown: the seller would approve a post that can only fail
     return { ok: false, error: NO_REEL };
   if (name === "postReel" && !args.caption) {
@@ -121,11 +124,12 @@ export async function checkArgs(
   }
   const savesToStore = name === "saveDraftToStore" || name === "saveDraftsToStore";
   // a listing's chat shows its own listing; a reel card already says where it goes
+  if (scope.listingId && reel) return { ok: true, args, preview: { titles: [], reel } };
   if (!needsApproval(name) || (scope.listingId && !savesToStore)) return { ok: true, args };
   const ids = name === "saveDraftsToStore" ? [...new Set(args.listingIds as string[])] : [listingId!];
   const listings = await listingPreview(workspace, ids);
   if (!listings) return { ok: false, error: "One of those listings isn't in this shop. Find it with findListings." };
-  if (!savesToStore) return { ok: true, args, preview: { titles: listings.titles } };
+  if (!savesToStore) return { ok: true, args, preview: { titles: listings.titles, ...(reel && { reel }) } };
   const stores = (args.stores as StoreKind[] | undefined) ?? (await storeTargets(workspace));
   if (!stores.length) return { ok: false, error: NO_STORE };
   return { ok: true, args, preview: { ...listings, stores: [...new Set(stores)] } };
@@ -138,10 +142,13 @@ export const NO_STORE =
 /** What the model hears when it tries to post a reel that isn't made yet. */
 export const NO_REEL = "There's no reel in that language yet. Make it with makeReel first, then post it.";
 
-async function hasReel(workspace: Workspace, listingId: string, lang: "en" | "bn"): Promise<boolean> {
+/** The media id of a listing's reel in that language, or null when there's none yet. */
+async function reelMedia(workspace: Workspace, listingId: string, lang: "en" | "bn"): Promise<string | null> {
   const ws = forWorkspace(workspace.id);
   const listing = await ws.getListing(listingId);
-  return !!listing && !!(await ws.stepResult(listing.job_id, "reel", `${listingId}:showcase:${lang}`));
+  if (!listing) return null;
+  const reel = ReelResult.safeParse(await ws.stepResult(listing.job_id, "reel", `${listingId}:showcase:${lang}`));
+  return reel.success ? reel.data.mediaId : null;
 }
 
 async function listingPreview(

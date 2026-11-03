@@ -96,6 +96,15 @@ describe("listing chat", () => {
     expect(chatRevision(history)).toBe(1);
   });
 
+  it("plays the reel on a post's card before the seller answers", () => {
+    const withReel = history.map((m, i) =>
+      i === 3 && m.role === "assistant"
+        ? { ...m, toolCalls: m.toolCalls!.map((c) => ({ ...c, preview: { titles: [], reel: "m1" } })) }
+        : m,
+    );
+    expect(chatItems(withReel)[3]).toMatchObject({ kind: "approval", state: "pending", media: { video: true } });
+  });
+
   it("hides steps a Stop kept from running, and keeps a card shown before it answerable", () => {
     // the card and the reel came in one turn; Stop came between them
     const turn = history.at(-1) as Extract<ChatMessage, { role: "assistant" }>;

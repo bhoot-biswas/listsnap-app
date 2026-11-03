@@ -6,6 +6,7 @@ import { shopifyOffered } from "@/server/stores/shopify-connect";
 import { SERVICES, SERVICE_GROUP, type Service, type ServiceGroup, type ServiceStatus } from "@/lib/connectors";
 import { ShopifySettings } from "@/lib/shopify-connection";
 import { WooSettings } from "@/lib/woo-connection";
+import { catalogAccess } from "@/lib/meta-access";
 
 /**
  * One line per service for Connections and the dashboard: whether it's connected, how
@@ -20,6 +21,8 @@ export interface ServiceOverview {
   /** For a connected store: whether new drafts go there. */
   saveDrafts: boolean | null;
   checkedAt: Date | null;
+  /** Facebook only: catalog access that is about to end or has ended, so the list says so. */
+  catalogEnds?: { state: "soon" | "expired"; until: Date } | null;
 }
 
 export interface ConnectionsOverview {
@@ -43,6 +46,7 @@ export async function connectionsOverview(workspace: Workspace): Promise<Connect
     const group = SERVICE_GROUP[service];
     if (service === "meta") {
       const s = meta?.settings;
+      const access = s?.catalogAccess && !s.test ? catalogAccess(s.userTokenExpiresAt) : null;
       return [
         {
           service,
@@ -51,6 +55,7 @@ export async function connectionsOverview(workspace: Workspace): Promise<Connect
           address: s?.pageName ?? null,
           saveDrafts: null,
           checkedAt: s ? (metaRow?.last_checked_at ?? null) : null,
+          catalogEnds: access && access.state !== "ok" ? access : null,
         },
       ];
     }

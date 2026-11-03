@@ -265,6 +265,15 @@ export function forWorkspace(workspaceId: string) {
       return row?.result_json ?? null;
     },
 
+    /** The last result a step saved, even while it runs again or after a later failure. */
+    lastStepResult: async <T>(jobId: string, step: string, target = "-"): Promise<T | null> => {
+      const row = await selectOne<{ result_json: T | null }>(
+        "SELECT result_json FROM job_steps WHERE job_id = ? AND step = ? AND target = ? AND workspace_id = ?",
+        [jobId, step, target, ws],
+      );
+      return row?.result_json ?? null;
+    },
+
     apiCalls: (jobId: string) =>
       select<ApiCallRow>(
         "SELECT id, provider, model, step, mode, ms, cost_usd, ok, summary, created_at FROM api_calls WHERE job_id = ? AND workspace_id = ? ORDER BY id",

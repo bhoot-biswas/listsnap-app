@@ -124,6 +124,35 @@ describe("productSetInput on update", () => {
     ...over,
   });
 
+  it("leaves a variant's stock and tracking alone when the seller didn't change stock", () => {
+    const kept = productSetInput(base({ variants: colours, keepStock: true }), existing(), src);
+    const [red] = kept.input.variants as Record<string, unknown>[];
+    expect(red).not.toHaveProperty("inventoryItem");
+    expect(red).not.toHaveProperty("inventoryQuantities");
+  });
+
+  it("sends a changed count to a variant Shopify has, and stock for a new colour", () => {
+    const [red, blue] = productSetInput(base({ variants: colours }), existing(), src).input.variants as Record<
+      string,
+      unknown
+    >[];
+    expect(red).toMatchObject({ inventoryQuantities: [{ locationId: LOC, name: "available", quantity: 2 }] });
+    // Blue is new: it starts untracked, as on create
+    expect(blue).toMatchObject({ inventoryItem: { tracked: false } });
+  });
+
+  it("never turns tracking off for a variant Shopify already has", () => {
+    const one = existing({
+      options: [{ name: "Title", optionValues: [{ name: "Default Title" }] }],
+      variants: [
+        { id: "V-1", price: "1500", selectedOptions: [{ name: "Title", value: "Default Title" }], itemId: "listing" },
+      ],
+    });
+    const [v] = productSetInput(base({ stockQty: null }), one, src).input.variants as Record<string, unknown>[];
+    expect(v).toMatchObject({ id: "V-1" });
+    expect(v).not.toHaveProperty("inventoryItem");
+  });
+
   it("keeps the seller's variants and photos, and never touches status or metafields", () => {
     const { input, sentMedia } = productSetInput(base({ variants: colours }), existing(), src);
     expect(input).not.toHaveProperty("status");

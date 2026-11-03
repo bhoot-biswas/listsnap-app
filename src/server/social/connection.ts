@@ -74,5 +74,7 @@ export function readyCatalog(c: MetaConnection | null, website: string | null): 
 
 /** What the browser may know about the connection: names only, never the token. */
 export function publicMeta(c: MetaConnection | null) {
-  return c ? { pageName: c.settings.pageName, igUsername: c.settings.igUsername, test: c.settings.test } : null;
+  return c
+    ? { pageName: c.settings.pageName, igUsername: c.settings.igUsername, test: c.settings.test, broken: c.broken }
+    : null;
 }

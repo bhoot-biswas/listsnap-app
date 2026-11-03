@@ -69,7 +69,9 @@ export const liveWoo: WooProvider = {
         ? {}
         : {
             regular_price: input.regularPrice === null ? "" : String(input.regularPrice),
-            ...(input.stockQty === null ? {} : { manage_stock: true, stock_quantity: input.stockQty }),
+            ...(input.stockQty === null || (existing && input.keepStock)
+              ? {}
+              : { manage_stock: true, stock_quantity: input.stockQty }),
           }),
       categories: categoryId ? [{ id: categoryId }] : [],
       tags: tagIds.map((id) => ({ id })),
@@ -115,6 +117,7 @@ export const liveWoo: WooProvider = {
       // a draft from before image names: its main image is still first
       if (!plan && existing?.images[0] && input.images[0]) ids.set(input.images[0].mediaId, existing.images[0].id);
       await syncVariations(api, saved.id, variants, color, {
+        keepStock: !!input.keepStock,
         ids,
         src: async (mediaId) => {
           const file = await readMedia(ctx.workspaceId, mediaId);

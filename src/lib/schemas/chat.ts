@@ -19,7 +19,7 @@ export const ToolCall = z.object({
   /**
    * What an approval card shows besides the args: the listings it acts on, by title and
    * price, and for a store save the stores the draft goes to, so a shop with WooCommerce
-   * and Shopify both connected sees where.
+   * and Shopify both connected sees where. A reel post's card also plays the reel.
    */
   preview: z
     .object({
@@ -30,6 +30,8 @@ export const ToolCall = z.object({
         .max(20)
         .optional(),
       stores: z.array(StoreKind).max(2).optional(),
+      /** For a reel post: the reel's media id, so the seller watches what goes public. */
+      reel: z.string().max(100).optional(),
     })
     .optional(),
 });

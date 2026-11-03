@@ -89,13 +89,18 @@ export function productSetInput(
     (!variants && theirs.length > 0);
   if (foreign) throw new StepError("shopifyOptions", { permanent: true });
 
-  const stock = (qty: number | null) =>
-    qty === null || !input.locationId
-      ? { inventoryItem: { tracked: false } }
-      : {
-          inventoryItem: { tracked: true },
-          inventoryQuantities: [{ locationId: input.locationId, name: "available", quantity: qty }],
-        };
+  // a variant Shopify already has keeps its stock as the seller and their sales left it:
+  // its count unless the seller changed ours, and its tracking always, so an update never
+  // turns tracking off for a product the seller now counts in Shopify
+  const stock = (qty: number | null, variantId: string | undefined) =>
+    variantId && (input.keepStock || qty === null || !input.locationId)
+      ? {}
+      : qty === null || !input.locationId
+        ? { inventoryItem: { tracked: false } }
+        : {
+            inventoryItem: { tracked: true },
+            inventoryQuantities: [{ locationId: input.locationId, name: "available", quantity: qty }],
+          };
   const price = (p: number | null) => (p === null ? {} : { price: String(p) });
   const theirVariants = theirs.map((v) => ({
     id: v.id,
@@ -122,7 +127,7 @@ export function productSetInput(
             }),
         optionValues: [{ optionName: COLOR, name: v.color }],
         ...price(v.regularPrice),
-        ...stock(v.stockQty),
+        ...stock(v.stockQty, id),
         ...(file ? { file } : {}),
       };
     });
@@ -140,7 +145,7 @@ export function productSetInput(
             }),
         optionValues: [{ optionName: TITLE_OPTION.name, name: TITLE_OPTION.value }],
         ...price(input.regularPrice),
-        ...stock(input.stockQty),
+        ...stock(input.stockQty, id),
       },
     ];
   }
