@@ -80,8 +80,11 @@ export interface ListingListRow {
 }
 
 export interface AttentionRow {
-  /** choose: waiting at Choose items; unfinished: left while still being made. */
-  kind: "review" | "failed" | "choose" | "unfinished";
+  /**
+   * choose: waiting at Choose items; unfinished: left while still being made; ready:
+   * finished and checked, but not in a store or posted anywhere yet.
+   */
+  kind: "review" | "failed" | "choose" | "unfinished" | "ready";
   job_id: string;
   listing_id: string | null;
   title: string | null;
@@ -276,28 +279,33 @@ export function overviewQueries(ws: string) {
      * Unsure drafts, failed steps and unfinished jobs, newest first. A job only moves while
      * its page is open, so one left mid-way (or waiting at Choose items) has no listing to
      * show anywhere else. Two minutes of quiet keeps a job that is running now off the list;
-     * bulk jobs have their batch page instead.
+     * bulk jobs have their batch page instead. Ready listings come after all of those:
+     * they're the next step, not a problem.
      */
     attention: (limit = 5) =>
       select<AttentionRow>(
-        `(SELECT 'review' AS kind, l.job_id, l.id AS listing_id, ${TITLE} AS title, ${TITLE_BN} AS title_bn, l.created_at
+        `(SELECT 'review' AS kind, l.job_id, l.id AS listing_id, ${TITLE} AS title, ${TITLE_BN} AS title_bn, l.created_at, 0 AS later
             FROM listings l WHERE l.workspace_id = ? AND l.status = 'needs_review' AND l.archived_at IS NULL)
          UNION ALL
-         (SELECT 'failed', j.id, l.id, ${TITLE}, ${TITLE_BN}, j.created_at
+         (SELECT 'failed', j.id, l.id, ${TITLE}, ${TITLE_BN}, j.created_at, 0
             FROM jobs j LEFT JOIN listings l ON l.job_id = j.id AND l.status = 'failed' AND l.archived_at IS NULL
            WHERE j.workspace_id = ? AND j.archived_at IS NULL AND (j.status = 'failed' OR l.id IS NOT NULL))
          UNION ALL
          (SELECT IF(j.status = 'awaiting_choice', 'choose', 'unfinished'), j.id, NULL,
                  (SELECT ${TITLE} FROM listings l WHERE l.job_id = j.id ORDER BY l.created_at LIMIT 1),
                  (SELECT ${TITLE_BN} FROM listings l WHERE l.job_id = j.id ORDER BY l.created_at LIMIT 1),
-                 j.created_at
+                 j.created_at, 0
             FROM jobs j
            WHERE j.workspace_id = ? AND j.batch_id IS NULL AND j.archived_at IS NULL
              AND j.status IN ('processing', 'awaiting_choice')
              AND j.created_at < NOW(3) - INTERVAL 2 MINUTE
              AND NOT EXISTS (SELECT 1 FROM listings l WHERE l.job_id = j.id AND l.status = 'failed'))
-         ORDER BY created_at DESC LIMIT ?`,
-        [ws, ws, ws, limit],
+         UNION ALL
+         (SELECT 'ready', l.job_id, l.id, ${TITLE}, ${TITLE_BN}, l.created_at, 1
+            FROM listings l JOIN jobs j ON j.id = l.job_id
+           WHERE l.workspace_id = ? AND l.status = 'ready' AND l.archived_at IS NULL AND j.batch_id IS NULL)
+         ORDER BY later, created_at DESC LIMIT ?`,
+        [ws, ws, ws, ws, limit],
       ),
 
     /** Recent changes, each listing once: re-saving a draft moves it to the top instead of repeating it. */

@@ -91,7 +91,7 @@ export default async function UsagePage() {
         </div>
 
         <MonthChart days={days} totals={total} />
-        <DayTable days={days} money={money} />
+        <DayTable days={days} />
 
         {/* what the AI cost and each call: for the curious and for judges, not a seller's daily view */}
         <details className="group rounded-xl border bg-card">
@@ -118,7 +118,7 @@ export default async function UsagePage() {
               </div>
             </dl>
             <StepCosts steps={steps} money={money} />
-            <CallLog calls={calls} />
+            <CallLog calls={calls} money={money} />
           </div>
         </details>
       </div>

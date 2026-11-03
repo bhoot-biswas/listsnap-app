@@ -1,5 +1,6 @@
 import { useFormatter } from "next-intl";
 import { cn } from "@/lib/utils";
+import { nextDhakaMidnight } from "@/lib/dhaka-day";
 
 /** One daily limit as a bar (Dashboard, Usage). Marigold from 90%, so the limit isn't a surprise. */
 export function UsageMeter({ label, used, limit }: { label: string; used: number; limit: number }) {
@@ -30,7 +31,7 @@ export function UsageMeter({ label, used, limit }: { label: string; used: number
   );
 }
 
-/** When the daily limits start again: the next midnight UTC. */
+/** When the daily limits start again: the next midnight in Dhaka, as the counters are kept. */
 export function nextReset(now = new Date()) {
-  return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
+  return nextDhakaMidnight(now);
 }

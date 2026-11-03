@@ -2,6 +2,7 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { ChatMessage } from "@/lib/schemas/chat";
 import { execute, json, select, selectOne } from "./pool";
+import { dhakaDayStart } from "./dhaka-sql";
 
 /** How much of a conversation the model sees again; older turns rarely matter to a listing. */
 const HISTORY = 60;
@@ -206,7 +207,7 @@ export function chatQueries(ws: string) {
     async loosePhotosToday(): Promise<number> {
       const row = await selectOne<{ n: number }>(
         `SELECT COUNT(*) AS n FROM media m WHERE m.workspace_id = ? AND m.kind = 'original'
-            AND m.created_at >= UTC_DATE() AND NOT EXISTS (SELECT 1 FROM photos p WHERE p.media_id = m.id)`,
+            AND m.created_at >= ${dhakaDayStart()} AND NOT EXISTS (SELECT 1 FROM photos p WHERE p.media_id = m.id)`,
         [ws],
       );
       return Number(row?.n ?? 0);
@@ -215,7 +216,7 @@ export function chatQueries(ws: string) {
     /** Messages spoken into a chat box today; each one is a logged Transcribe request. */
     async dictationsToday(): Promise<number> {
       const row = await selectOne<{ n: number }>(
-        "SELECT COUNT(*) AS n FROM api_calls WHERE workspace_id = ? AND step = 'dictate' AND created_at >= UTC_DATE()",
+        `SELECT COUNT(*) AS n FROM api_calls WHERE workspace_id = ? AND step = 'dictate' AND created_at >= ${dhakaDayStart()}`,
         [ws],
       );
       return Number(row?.n ?? 0);
@@ -224,7 +225,7 @@ export function chatQueries(ws: string) {
     /** Chat model calls today; each one is a logged Spark request. */
     async chatCallsToday(): Promise<number> {
       const row = await selectOne<{ n: number }>(
-        "SELECT COUNT(*) AS n FROM api_calls WHERE workspace_id = ? AND step = 'chat' AND created_at >= UTC_DATE()",
+        `SELECT COUNT(*) AS n FROM api_calls WHERE workspace_id = ? AND step = 'chat' AND created_at >= ${dhakaDayStart()}`,
         [ws],
       );
       return Number(row?.n ?? 0);

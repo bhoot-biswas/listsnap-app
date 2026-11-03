@@ -1,12 +1,12 @@
 import { getFormatter, getLocale, getTranslations } from "next-intl/server";
-import { AlertTriangle, CheckCircle2, CircleAlert, CirclePause } from "lucide-react";
+import { AlertTriangle, CheckCircle2, CircleAlert, CirclePause, Send } from "lucide-react";
 import { ButtonLink } from "@/components/app/button-link";
 import { listingHref } from "@/lib/listing-links";
 import { localTitle } from "@/lib/titles";
 import type { AttentionRow } from "@/server/db/scope";
 import { relativeTime } from "@/lib/relative-time";
 
-/** Unsure drafts, failed steps and unfinished jobs, each with one button. Empty reads as good news. */
+/** Unsure drafts, failed steps, unfinished jobs and listings ready to go out, each with one button. Empty reads as good news. */
 export async function NeedsAttention({ rows }: { rows: AttentionRow[] }) {
   const t = await getTranslations("dashboard.attention");
   const format = await getFormatter();
@@ -26,11 +26,18 @@ export async function NeedsAttention({ rows }: { rows: AttentionRow[] }) {
           {rows.map((r) => {
             const failed = r.kind === "failed";
             const paused = r.kind === "choose" || r.kind === "unfinished";
-            const Icon = failed ? CircleAlert : paused ? CirclePause : AlertTriangle;
-            const tone = failed ? "text-destructive" : paused ? "text-muted-foreground" : "text-warning";
+            const ready = r.kind === "ready";
+            const Icon = failed ? CircleAlert : paused ? CirclePause : ready ? Send : AlertTriangle;
+            const tone = failed
+              ? "text-destructive"
+              : paused
+                ? "text-muted-foreground"
+                : ready
+                  ? "text-primary"
+                  : "text-warning";
             const href = paused
               ? (`/job/${r.job_id}` as const)
-              : listingHref({ ...r, id: r.listing_id, status: failed ? "failed" : "needs_review" });
+              : listingHref({ ...r, id: r.listing_id, status: failed ? "failed" : ready ? "ready" : "needs_review" });
             return (
               <li key={`${r.kind}-${r.listing_id ?? r.job_id}`} className="flex min-h-14 items-center gap-3 px-4 py-2">
                 <Icon className={`size-4 ${tone}`} aria-hidden="true" />

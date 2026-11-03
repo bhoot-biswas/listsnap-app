@@ -8,6 +8,9 @@ import "server-only";
 /** The Dhaka date a timestamp column falls on, as YYYY-MM-DD. */
 export const dhakaDate = (column: string) => `DATE_FORMAT(${column} + INTERVAL 6 HOUR, '%Y-%m-%d')`;
 
+/** Today's Dhaka date, for the daily counters' `date` column. */
+export const DHAKA_TODAY = "DATE(UTC_TIMESTAMP() + INTERVAL 6 HOUR)";
+
 /** The UTC moment the Dhaka day `daysAgo` days back began (0 is today). */
 export const dhakaDayStart = (daysAgo = 0) =>
   `(TIMESTAMP(DATE(UTC_TIMESTAMP() + INTERVAL 6 HOUR)) - INTERVAL 6 HOUR - INTERVAL ${Math.trunc(daysAgo)} DAY)`;

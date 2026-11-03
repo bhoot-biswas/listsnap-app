@@ -11,6 +11,7 @@ import { limitQueries } from "./limits";
 import { mediaLibraryQueries } from "./media-library";
 import { opRunQueries } from "./op-runs";
 import { chatQueries } from "./chats";
+import { DHAKA_TODAY, dhakaDayStart } from "./dhaka-sql";
 
 export type { ListingRow, ListingSnapshot, ListingStatus, RecentListingRow } from "./listings";
 export type { OpRunRow, OpVia } from "./op-runs";
@@ -284,25 +285,25 @@ export function forWorkspace(workspaceId: string) {
     async counts(): Promise<{ needsReview: number; listingsToday: number }> {
       const row = await selectOne<{ needs_review: number; today: number }>(
         `SELECT (SELECT COUNT(*) FROM listings WHERE workspace_id = ? AND status = 'needs_review' AND archived_at IS NULL) AS needs_review,
-                (SELECT listings FROM usage_daily WHERE workspace_id = ? AND date = UTC_DATE()) AS today`,
+                (SELECT listings FROM usage_daily WHERE workspace_id = ? AND date = ${DHAKA_TODAY}) AS today`,
         [ws, ws],
       );
       return { needsReview: Number(row?.needs_review ?? 0), listingsToday: Number(row?.today ?? 0) };
     },
 
-    /** Review's AI help used today (UTC), for its daily cap. */
+    /** Review's AI help used today (Dhaka day), for its daily cap. */
     async assistsToday(): Promise<number> {
       const row = await selectOne<{ n: number }>(
-        "SELECT COUNT(*) AS n FROM api_calls WHERE workspace_id = ? AND step = 'assist' AND created_at >= UTC_DATE()",
+        `SELECT COUNT(*) AS n FROM api_calls WHERE workspace_id = ? AND step = 'assist' AND created_at >= ${dhakaDayStart()}`,
         [ws],
       );
       return Number(row?.n ?? 0);
     },
 
-    /** Shop photos uploaded today (UTC), for the brand kit's daily cap. */
+    /** Shop photos uploaded today (Dhaka day), for the brand kit's daily cap. */
     async brandPhotosToday(): Promise<number> {
       const row = await selectOne<{ n: number }>(
-        "SELECT COUNT(*) AS n FROM media WHERE workspace_id = ? AND kind = 'brand' AND created_at >= UTC_DATE()",
+        `SELECT COUNT(*) AS n FROM media WHERE workspace_id = ? AND kind = 'brand' AND created_at >= ${dhakaDayStart()}`,
         [ws],
       );
       return Number(row?.n ?? 0);

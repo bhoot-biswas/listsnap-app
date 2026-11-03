@@ -2,9 +2,10 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { isIPv6 } from "node:net";
 import { execute, selectOne } from "./pool";
+import { DHAKA_TODAY } from "./dhaka-sql";
 
 /**
- * The daily limits, counted in usage_daily (UTC days). A slot is reserved before the
+ * The daily limits, counted in usage_daily by the Dhaka day. A slot is reserved before the
  * work it pays for, in one conditional UPDATE, so two tabs or a fast bulk upload can't
  * both take the last one. Spread into forWorkspace().
  */
@@ -22,9 +23,9 @@ export const DEFAULT_LIMITS = { listings: 20, images: 60, reels: REELS_PER_DAY }
 
 async function reserve(table: "usage_daily" | "ip_daily", key: string, counter: Counter | IpCounter, limit: number) {
   const keyColumn = table === "usage_daily" ? "workspace_id" : "ip_hash";
-  await execute(`INSERT IGNORE INTO ${table} (${keyColumn}, date) VALUES (?, UTC_DATE())`, [key]);
+  await execute(`INSERT IGNORE INTO ${table} (${keyColumn}, date) VALUES (?, ${DHAKA_TODAY})`, [key]);
   const r = await execute(
-    `UPDATE ${table} SET ${counter} = ${counter} + 1 WHERE ${keyColumn} = ? AND date = UTC_DATE() AND ${counter} < ?`,
+    `UPDATE ${table} SET ${counter} = ${counter} + 1 WHERE ${keyColumn} = ? AND date = ${DHAKA_TODAY} AND ${counter} < ?`,
     [key, limit],
   );
   return r.affectedRows === 1;
@@ -38,7 +39,7 @@ export function limitQueries(ws: string) {
     /** Gives a slot back when the photo it was for never became a job. */
     async releaseListing() {
       await execute(
-        "UPDATE usage_daily SET listings = GREATEST(listings - 1, 0) WHERE workspace_id = ? AND date = UTC_DATE()",
+        `UPDATE usage_daily SET listings = GREATEST(listings - 1, 0) WHERE workspace_id = ? AND date = ${DHAKA_TODAY}`,
         [ws],
       );
     },
@@ -49,7 +50,7 @@ export function limitQueries(ws: string) {
      */
     async countSampleListings(n: number) {
       await execute(
-        `INSERT INTO usage_daily (workspace_id, date, listings) VALUES (?, UTC_DATE(), ?)
+        `INSERT INTO usage_daily (workspace_id, date, listings) VALUES (?, ${DHAKA_TODAY}, ?)
            ON DUPLICATE KEY UPDATE listings = listings + VALUES(listings)`,
         [ws, n],
       );
@@ -61,7 +62,7 @@ export function limitQueries(ws: string) {
     /** Gives an AI photo slot back when the step failed before Muse Image made a photo. */
     async releaseImage() {
       await execute(
-        "UPDATE usage_daily SET images = GREATEST(images - 1, 0) WHERE workspace_id = ? AND date = UTC_DATE()",
+        `UPDATE usage_daily SET images = GREATEST(images - 1, 0) WHERE workspace_id = ? AND date = ${DHAKA_TODAY}`,
         [ws],
       );
     },
@@ -72,7 +73,7 @@ export function limitQueries(ws: string) {
     /** Gives a reel slot back when the render failed: that's the server's fault, not the seller's. */
     async releaseReel() {
       await execute(
-        "UPDATE usage_daily SET reels = GREATEST(reels - 1, 0) WHERE workspace_id = ? AND date = UTC_DATE()",
+        `UPDATE usage_daily SET reels = GREATEST(reels - 1, 0) WHERE workspace_id = ? AND date = ${DHAKA_TODAY}`,
         [ws],
       );
     },
@@ -80,7 +81,7 @@ export function limitQueries(ws: string) {
     /** What the meters show: listings started, AI photos and reels made today. */
     async usageToday(): Promise<{ listings: number; images: number; reels: number }> {
       const row = await selectOne<{ listings: number; images: number; reels: number }>(
-        "SELECT listings, images, reels FROM usage_daily WHERE workspace_id = ? AND date = UTC_DATE()",
+        `SELECT listings, images, reels FROM usage_daily WHERE workspace_id = ? AND date = ${DHAKA_TODAY}`,
         [ws],
       );
       return { listings: Number(row?.listings ?? 0), images: Number(row?.images ?? 0), reels: Number(row?.reels ?? 0) };
@@ -139,7 +140,7 @@ export const demoIpLimit = {
     reserve("ip_daily", ipHash, counter, DEMO_PER_IP[counter]),
   async release(ipHash: string, counter: IpCounter = "listings") {
     await execute(
-      `UPDATE ip_daily SET ${counter} = GREATEST(${counter} - 1, 0) WHERE ip_hash = ? AND date = UTC_DATE()`,
+      `UPDATE ip_daily SET ${counter} = GREATEST(${counter} - 1, 0) WHERE ip_hash = ? AND date = ${DHAKA_TODAY}`,
       [ipHash],
     );
   },

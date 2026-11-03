@@ -38,7 +38,7 @@ describe.skipIf(!enabled)("demo visitor's photos, reels and dictation across sho
 
   const fill = (counter: string, n: number) =>
     execute(
-      `INSERT INTO ip_daily (ip_hash, date, ${counter}) VALUES (?, UTC_DATE(), ?) ON DUPLICATE KEY UPDATE ${counter} = VALUES(${counter})`,
+      `INSERT INTO ip_daily (ip_hash, date, ${counter}) VALUES (?, DATE(UTC_TIMESTAMP() + INTERVAL 6 HOUR), ?) ON DUPLICATE KEY UPDATE ${counter} = VALUES(${counter})`,
       [hash, n],
     );
   const upload = () => {

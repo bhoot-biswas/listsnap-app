@@ -6,7 +6,7 @@ import type { Checklist } from "@/server/db/scope";
 import { cn } from "@/lib/utils";
 import { relativeTime } from "@/lib/relative-time";
 
-/** Today's use against the daily limits, which reset at midnight UTC. */
+/** Today's use against the daily limits, which reset at midnight in Dhaka. */
 export async function UsageToday({
   listings,
   images,

@@ -5,6 +5,7 @@ import { VideoProduct } from "@/lib/schemas/video";
 import { execute, json, select, selectOne, transaction } from "./pool";
 import { LISTING_COLUMNS, type ListingRow } from "./listings";
 import type { ItemRow, JobRow, PhotoRow, StepRowView } from "./scope";
+import { dhakaDayStart } from "./dhaka-sql";
 
 /**
  * Bulk uploads, bound to one workspace and spread into forWorkspace(). A batch is just
@@ -85,10 +86,10 @@ export function batchQueries(ws: string) {
         [id, ws],
       ),
 
-    /** Videos uploaded today (UTC), for their daily cap. */
+    /** Videos uploaded today (Dhaka day), for their daily cap. */
     async videosToday(): Promise<number> {
       const row = await selectOne<{ n: number }>(
-        "SELECT COUNT(*) AS n FROM media WHERE workspace_id = ? AND kind = 'video' AND created_at >= UTC_DATE()",
+        `SELECT COUNT(*) AS n FROM media WHERE workspace_id = ? AND kind = 'video' AND created_at >= ${dhakaDayStart()}`,
         [ws],
       );
       return Number(row?.n ?? 0);

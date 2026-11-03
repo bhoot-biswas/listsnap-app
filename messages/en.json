@@ -250,7 +250,8 @@
       "choose": "Waiting for you to choose items",
       "unfinished": "Stopped when the page was closed",
       "unfinishedTitle": "Unfinished listing",
-      "continue": "Continue"
+      "continue": "Continue",
+      "ready": "Ready: not in a store or posted yet"
     },
     "usage": {
       "title": "Usage today",
@@ -408,7 +409,8 @@
       "intro": "Every call to Muse Spark, SAM and Muse Image, with its time and cost.",
       "empty": "No AI calls yet.",
       "ok": "Worked",
-      "failed": "Failed"
+      "failed": "Failed",
+      "seconds": "{s} s"
     },
     "days": {
       "title": "Each day",
