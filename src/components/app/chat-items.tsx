@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import type { ChatItem } from "@/lib/schemas/chat";
 import { ChatText } from "./chat-text";
 import { MediaImg } from "@/components/app/media-img";
+import { CopyButton } from "@/components/app/copy-button";
 
 const isBangla = (text: string) => /[ঀ-৿]/.test(text);
 
@@ -75,6 +76,7 @@ export function ChatEntry({
             >
               <span className="sr-only">{t("assistant")}: </span>
               <ChatText text={item.text} />
+              <CopyButton text={item.text} className="-ml-2" />
             </div>
           ))}
       </div>
@@ -249,6 +251,7 @@ function Approval({
             >
               {args.caption}
             </p>
+            <CopyButton text={args.caption} className="-ml-2" />
           </div>
         ))}
       {item.state === "pending" ? (

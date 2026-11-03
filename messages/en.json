@@ -1401,6 +1401,11 @@
       "store": "Save it to my store"
     },
     "label": "Message",
+    "copy": {
+      "label": "Copy",
+      "done": "Copied",
+      "failed": "Couldn't copy"
+    },
     "placeholder": "Ask about this listing…",
     "send": "Send",
     "sendAgain": "Send again",
