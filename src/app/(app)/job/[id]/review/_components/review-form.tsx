@@ -309,10 +309,11 @@ export function ReviewForm({
       )}
 
       {/*
-        Phone: photo, the checks, then the fields, with the extras last. Desktop: photo,
-        checks and extras on the left, the fields beside them.
+        Phone: photo, price and stock (the edit sellers make most, so on the first screens),
+        the checks, then the text, with the extras last. Desktop: photo, price, checks and
+        extras on the left, the text beside them.
       */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)] lg:grid-rows-[auto_auto_1fr] lg:gap-x-8">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,340px)_minmax(0,1fr)] lg:grid-rows-[auto_auto_auto_1fr] lg:gap-x-8">
         <div className="lg:col-start-1 lg:row-start-1">
           <ReviewPhotos
             photos={photos}
@@ -329,12 +330,14 @@ export function ReviewForm({
           />
         </div>
 
-        <div className="space-y-6 lg:col-start-1 lg:row-start-2">
+        <div className="lg:col-start-1 lg:row-start-2">{priceAndColors}</div>
+
+        <div className="space-y-6 lg:col-start-1 lg:row-start-3">
           <CheckPanel listingId={listingId} confidence={confidence} notes={checkNotes} status={status} />
           {voiceNote && <VoiceNoteCard note={voiceNote} />}
         </div>
 
-        <div className="space-y-6 lg:col-start-2 lg:row-span-3 lg:row-start-1">
+        <div className="space-y-6 lg:col-start-2 lg:row-span-4 lg:row-start-1">
           <div role="tablist" aria-label={t("title")} className="inline-flex rounded-lg border p-1">
             {(["en", "bn"] as const).map((l) => (
               <button
@@ -364,13 +367,9 @@ export function ReviewForm({
               onChange={(v) =>
                 change(lang === "en" ? { ...edit, en: { ...edit.en, ...v } } : { ...edit, bn: { ...edit.bn!, ...v } })
               }
-              afterTitle={priceAndColors}
             />
           ) : (
-            <>
-              <BanglaMissing listingId={listingId} off={banglaOff} beforeWrite={() => saver.flush()} />
-              {priceAndColors}
-            </>
+            <BanglaMissing listingId={listingId} off={banglaOff} beforeWrite={() => saver.flush()} />
           )}
         </div>
 
@@ -379,7 +378,7 @@ export function ReviewForm({
           id="extras"
           open={extrasOpen}
           onToggle={(e) => setExtrasOpen(e.currentTarget.open)}
-          className="group space-y-4 lg:col-start-1 lg:row-start-3 lg:self-start"
+          className="group space-y-4 lg:col-start-1 lg:row-start-4 lg:self-start"
         >
           <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-xl border bg-card p-4 hover:bg-muted/40 [&::-webkit-details-marker]:hidden">
             <span className="space-y-0.5">
@@ -398,7 +397,7 @@ export function ReviewForm({
       </div>
 
       {/* on every width, so saving never means scrolling back up a long listing */}
-      <div className="sticky bottom-0 z-10 -mx-4 space-y-2 border-t bg-background/95 px-4 py-3 backdrop-blur md:-mx-6 md:px-6">
+      <div className="sticky bottom-0 z-10 -mx-4 space-y-2 border-t bg-background/95 px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur md:-mx-6 md:px-6">
         {next && (
           <Link
             href={`/job/${jobId}/review?l=${next.id}`}

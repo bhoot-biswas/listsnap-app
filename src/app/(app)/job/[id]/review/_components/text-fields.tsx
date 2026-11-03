@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useLocale, useTranslations } from "next-intl";
+import { useTranslations } from "next-intl";
 import { Plus, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,7 +42,6 @@ export function TextFields({
   english,
   onChange,
   onField,
-  afterTitle,
 }: {
   listingId: string;
   lang: "en" | "bn";
@@ -51,11 +50,8 @@ export function TextFields({
   onChange: (next: TextValue) => void;
   /** Sets one field on the latest edit: an AI answer can arrive after more typing. */
   onField: (field: "title" | "short_description" | "description", text: string) => void;
-  /** Price and colours: what the seller must check comes before the descriptions. */
-  afterTitle?: React.ReactNode;
 }) {
   const t = useTranslations("review");
-  const locale = useLocale();
   const [tag, setTag] = useState("");
   const set = <K extends keyof TextValue>(key: K, v: TextValue[K]) => onChange({ ...value, [key]: v });
   const id = (name: string) => `${lang}-${name}`;
@@ -94,9 +90,6 @@ export function TextFields({
         />
         {assist("title", t("titleField"))}
       </div>
-
-      {/* the fields' language is the app's, not the text tab's */}
-      {afterTitle && <div lang={locale}>{afterTitle}</div>}
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
