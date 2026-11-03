@@ -22,14 +22,23 @@ import { ArchiveButton } from "@/components/app/archive-button";
 const SAVABLE = new Set(["ready", "needs_review"]);
 const EDITABLE = new Set(["ready", "needs_review", "in_store", "posted"]);
 
-export function JobView({ initial, archived }: { initial: JobState; archived: boolean }) {
+export function JobView({
+  initial,
+  archived,
+  hasStore,
+}: {
+  initial: JobState;
+  archived: boolean;
+  /** The shop has a store new drafts go to; without one, Save all would only fail. */
+  hasStore: boolean;
+}) {
   const t = useTranslations("job");
   const tArchive = useTranslations("archive");
   const tCommon = useTranslations("common");
   const { state, offline, stalled, retry, choose, resume } = useJobRunner(initial);
   const photo = state.photos[0];
   const finished = state.status === "ready";
-  const savable = finished ? state.listings.filter((l) => SAVABLE.has(l.status)) : [];
+  const savable = finished && hasStore ? state.listings.filter((l) => SAVABLE.has(l.status)) : [];
   const inStore = state.listings.some((l) => l.status === "in_store" || l.status === "posted");
   // compare the photo with the first listing's studio scene, or its cutout until that's made
   const first = state.listings[0];

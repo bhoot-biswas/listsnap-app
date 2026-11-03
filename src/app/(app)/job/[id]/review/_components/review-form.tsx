@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { STORE_NAMES, type StoreKind } from "@/lib/stores";
 import Link from "next/link";
 import { useLocale, useTranslations } from "next-intl";
-import { ArrowRight, Check, ChevronDown, CloudOff, Loader2 } from "lucide-react";
+import { ArrowRight, Check, ChevronDown, CloudOff, Loader2, Send } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { StatusBadge, type ListingStatus } from "@/components/app/status-badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,6 +51,7 @@ export function ReviewForm({
   voiceNote,
   status,
   inStore,
+  hasStore,
   hasWebsite,
   stores,
   archived,
@@ -80,6 +82,8 @@ export function ReviewForm({
   voiceNote: VoiceNoteView | null;
   status: ListingStatus;
   inStore: boolean;
+  /** The shop has a store new drafts go to. Without one, posting is the way out. */
+  hasStore: boolean;
   /** The shop has a website set, which an exported Facebook catalog needs. */
   hasWebsite: boolean;
   /** Edited since the store draft was saved. */
@@ -180,6 +184,11 @@ export function ReviewForm({
     looks.made.length > 0 || Object.values(reels.made).some(Boolean) || !!catalog.saved || !!marketplace.posted,
   );
   const extras = useRef<HTMLDetailsElement>(null);
+  const openReels = () => {
+    setExtrasOpen(true);
+    // the panel is in the DOM once the details element has opened
+    requestAnimationFrame(() => document.getElementById("reel-title")?.scrollIntoView({ block: "start" }));
+  };
   useEffect(() => {
     // opening the element fires onToggle, which keeps the state in step
     if (window.location.hash === "#extras" && extras.current) {
@@ -428,14 +437,22 @@ export function ReviewForm({
               unchecked={status === "needs_review"}
               beforeExport={saver.flush}
             />
-            <SaveToStore
-              jobId={jobId}
-              listingIds={[listingId]}
-              label={inStore ? t("updateStore") : t("saveToStore")}
-              update={inStore}
-              beforeSave={saver.flush}
-              className="w-auto max-sm:flex-1"
-            />
+            {hasStore ? (
+              <SaveToStore
+                jobId={jobId}
+                listingIds={[listingId]}
+                label={inStore ? t("updateStore") : t("saveToStore")}
+                update={inStore}
+                beforeSave={saver.flush}
+                className="w-auto max-sm:flex-1"
+              />
+            ) : (
+              // no store to save to: the reel and its post, in Extras, are where this listing goes
+              <Button type="button" className="h-11 w-auto max-sm:flex-1" onClick={openReels}>
+                <Send className="size-4" aria-hidden="true" />
+                {t("postOnFacebook")}
+              </Button>
+            )}
           </div>
         </div>
       </div>

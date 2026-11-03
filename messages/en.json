@@ -1138,6 +1138,7 @@
     "saveInvalid": "Couldn’t save this. Check the price, stock and text lengths.",
     "offline": "Offline, will save",
     "saveToStore": "Save draft to store",
+    "postOnFacebook": "Post on Facebook",
     "updateStore": "Update store draft",
     "storeBehindIn": "Out of date in {stores}. Update to send your changes.",
     "storeMissing": "Not in {stores} yet. Update to save it there too.",
