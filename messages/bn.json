@@ -1331,6 +1331,7 @@
     "choose": "ছবি বেছে নিন",
     "uploading": "{total, number}টির মধ্যে {done, number}টি আপলোড হচ্ছে…",
     "tooMany": "একবারে সর্বোচ্চ {max, number}টি ছবি।",
+    "trimmed": "{count, number}টি ছবি বাদ পড়েছে: একবারে সর্বোচ্চ {max, number}টি।",
     "uploadFailed": "আপলোড হয়নি। ইন্টারনেট দেখে আবার চেষ্টা করুন।",
     "someFailed": "{count, number}টি ছবি আপলোড করা যায়নি।",
     "empty": "এখনো কোনো বাল্ক আপলোড নেই।",
@@ -1364,6 +1365,8 @@
     "photosMissing": "{count, plural, one {#টি ছবি হয়নি} other {#টি ছবি হয়নি}}",
     "moreListings": "আরও {count, number}টি",
     "edited": "সেভ হয়েছে",
+    "editFailed": "সেভ হয়নি। আবার চেষ্টা করতে ঘর থেকে বেরিয়ে আসুন।",
+    "selectedCount": "{count, number}টি বাছা হয়েছে",
     "cost": {
       "title": "{count, plural, one {#টি ছবি আপলোড করবেন?} other {#টি ছবি আপলোড করবেন?}}",
       "uses": "এতে {listings, plural, one {#টি লিস্টিং} other {#টি লিস্টিং}} শুরু হবে আর প্রায় {photos, plural, one {#টি AI ছবি} other {#টি AI ছবি}} বানানো হবে।",

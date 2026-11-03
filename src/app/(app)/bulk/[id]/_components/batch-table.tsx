@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useFormatter, useTranslations } from "next-intl";
-import { Check, Loader2 } from "lucide-react";
+import { Check, CircleAlert, Loader2 } from "lucide-react";
 import { ConfidenceDots } from "@/components/app/confidence-dots";
 import { StatusBadge } from "@/components/app/status-badge";
 import { quickEditListing } from "@/server/actions/review";
@@ -17,7 +17,11 @@ export const SAVABLE = new Set(["ready", "needs_review"]);
 
 type Field = "title" | "category" | "priceBdt";
 
-/** One inline-edited cell: saves when the seller leaves it (or presses Enter), with a tick when saved. */
+/**
+ * One inline-edited cell: saves when the seller leaves it (or presses Enter), with a tick
+ * when saved. A save that didn't go through says so and keeps what was typed, so leaving
+ * the cell again tries again.
+ */
 function InlineField({
   listingId,
   field,
@@ -32,7 +36,7 @@ function InlineField({
   numeric?: boolean;
 }) {
   const t = useTranslations("bulk");
-  const [saved, setSaved] = useState<"idle" | "saving" | "saved">("idle");
+  const [saved, setSaved] = useState<"idle" | "saving" | "saved" | "failed">("idle");
   const [last, setLast] = useState(value);
   const commit = async (raw: string) => {
     const text = raw.trim();
@@ -44,7 +48,7 @@ function InlineField({
     if (field === "title" && !text) return;
     setSaved("saving");
     const r = await quickEditListing(listingId, patch).catch(() => null);
-    setSaved(r?.ok ? "saved" : "idle");
+    setSaved(r?.ok ? "saved" : "failed");
     if (r?.ok) setLast(text);
   };
   return (
@@ -53,16 +57,19 @@ function InlineField({
         aria-label={label}
         defaultValue={value}
         inputMode={numeric ? "numeric" : undefined}
+        aria-invalid={saved === "failed" || undefined}
         onBlur={(e) => void commit(e.target.value)}
         onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
         className={cn(
-          "h-10 w-full min-w-0 rounded-md border border-transparent bg-transparent px-2 text-sm hover:border-input focus:border-ring focus:outline-none",
+          "h-10 w-full min-w-0 rounded-md border border-transparent bg-transparent px-2 text-sm hover:border-input focus:border-ring focus:outline-none max-md:h-11 max-md:border-input",
           numeric && "w-24 tabular-nums",
+          saved === "failed" && "border-destructive",
         )}
       />
       <span className="w-4 shrink-0" aria-live="polite">
         {saved === "saving" && <Loader2 className="size-3.5 animate-spin text-muted-foreground" />}
         {saved === "saved" && <Check className="size-3.5 text-success" aria-label={t("edited")} />}
+        {saved === "failed" && <CircleAlert className="size-3.5 text-destructive" aria-label={t("editFailed")} />}
       </span>
     </div>
   );
@@ -271,8 +278,19 @@ export function BatchTable({
               <p className="truncate text-sm font-medium">{r.listing?.title ?? "…"}</p>
               <div className="flex flex-wrap items-center gap-2">
                 <RowStatus row={r} active={activeJobIds.has(r.jobId)} />
-                {r.listing?.priceBdt != null && (
-                  <span className="text-sm tabular-nums">৳{format.number(r.listing.priceBdt)}</span>
+                {/* the price is the edit sellers make here; the rest waits for Review */}
+                {r.listing?.title ? (
+                  <InlineField
+                    listingId={r.listing.id}
+                    field="priceBdt"
+                    value={r.listing.priceBdt === null ? "" : String(r.listing.priceBdt)}
+                    label={t("colPrice")}
+                    numeric
+                  />
+                ) : (
+                  r.listing?.priceBdt != null && (
+                    <span className="text-sm tabular-nums">৳{format.number(r.listing.priceBdt)}</span>
+                  )
                 )}
               </div>
             </div>

@@ -10,7 +10,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("bulk"))("title") };
 }
 
-/** S11 one bulk upload. `?start=1` (straight after the upload) starts it; otherwise it waits for Resume. */
+/** S11 one bulk upload. `?start=1` (straight after the upload) starts it; opened later, it carries on unless paused. */
 export default async function BatchPage({ params, searchParams }: PageProps<"/bulk/[id]">) {
   const viewer = await requireWorkspace();
   const { id } = await params;

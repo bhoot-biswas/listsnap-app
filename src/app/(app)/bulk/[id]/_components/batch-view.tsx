@@ -12,6 +12,7 @@ import { JOBS_AT_ONCE, useBatchRunner } from "@/hooks/use-batch-runner";
 import type { BatchState } from "@/lib/batch-state";
 import { BatchTable, SAVABLE, isStuck } from "./batch-table";
 import { WatchPanel } from "./watch-panel";
+import { cn } from "@/lib/utils";
 
 const EXPORTABLE = new Set(["ready", "needs_review", "in_store", "posted"]);
 
@@ -89,14 +90,17 @@ export function BatchView({
               </Button>
             ))}
           {toExport.length > 0 && (
-            <ExportMenu
-              listingIds={toExport}
-              hasWebsite={hasWebsite}
-              label={t("exportSelected", { count: toExport.length })}
-            />
+            <div className={cn(chosen.length > 0 && "max-md:hidden")}>
+              <ExportMenu
+                listingIds={toExport}
+                hasWebsite={hasWebsite}
+                label={t("exportSelected", { count: toExport.length })}
+              />
+            </div>
           )}
           {chosen.length > 0 && (
             <SaveToStore
+              className="max-md:hidden"
               jobId={rows[0]!.jobId}
               listingIds={chosen}
               label={t("saveSelected", { count: chosen.length })}
@@ -159,6 +163,39 @@ export function BatchView({
           }
           onSelectAll={(ids) => setSelected(new Set(ids))}
         />
+
+        {/* on a phone the buttons above are twenty cards away, so the ticked ones get a bar
+            at the foot of the screen, above the tab bar, as on Listings */}
+        {chosen.length > 0 && (
+          <div
+            role="region"
+            aria-label={t("selectedCount", { count: chosen.length })}
+            className="sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-20 flex flex-wrap items-center gap-2 rounded-xl border bg-card p-2 shadow-lg md:hidden"
+          >
+            <p className="w-full px-2 text-sm font-medium" aria-live="polite">
+              {t("selectedCount", { count: chosen.length })}
+            </p>
+            <SaveToStore
+              jobId={rows[0]!.jobId}
+              listingIds={chosen}
+              label={t("saveSelected", { count: chosen.length })}
+              className="w-auto flex-1"
+              onDone={() => {
+                setSelected(new Set());
+                void reload();
+              }}
+              onPartial={(failedIds) => {
+                setSelected(new Set(failedIds));
+                void reload();
+              }}
+            />
+            <ExportMenu
+              listingIds={chosen}
+              hasWebsite={hasWebsite}
+              label={t("exportSelected", { count: chosen.length })}
+            />
+          </div>
+        )}
       </div>
     </>
   );
