@@ -133,6 +133,20 @@ html[lang="bn"] {
   font-size: 106.25%;
 }
 
+/*
+ * Bangla anywhere, the English UI's Bangla titles included: tightened letters crowd its
+ * conjuncts, and vowel signs above and below the line need room. Outside the layers, so
+ * it wins over a heading's tracking-tight and a tight leading.
+ */
+:lang(bn) {
+  letter-spacing: normal;
+}
+h1:lang(bn),
+h2:lang(bn),
+h3:lang(bn) {
+  line-height: 1.35;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

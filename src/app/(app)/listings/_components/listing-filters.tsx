@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { getTranslations } from "next-intl/server";
+import { getFormatter, getTranslations } from "next-intl/server";
 import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -46,6 +46,7 @@ export async function ListingFilters({
 }) {
   const t = await getTranslations("listings");
   const tStatus = await getTranslations("status");
+  const format = await getFormatter();
   const SORTS: ListingSort[] = ["newest", "oldest", "price_low", "price_high", "check"];
   const chips = LISTING_STATUSES.filter((s) => !(s === "processing" || s === "failed") || counts[s] || s === status);
   const chip = (key: ListingView | null, label: string, n: number) => (
@@ -59,7 +60,9 @@ export async function ListingFilters({
         )}
       >
         {label}
-        <span className={cn("tabular-nums", status === key ? "opacity-80" : "text-muted-foreground")}>{n}</span>
+        <span className={cn("tabular-nums", status === key ? "opacity-80" : "text-muted-foreground")}>
+          {format.number(n)}
+        </span>
       </Link>
     </li>
   );

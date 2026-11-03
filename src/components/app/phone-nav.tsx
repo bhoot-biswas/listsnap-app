@@ -28,7 +28,7 @@ export function PhoneNav({ needsReview }: { needsReview: number }) {
       href={href}
       aria-current={here(href) ? "page" : undefined}
       className={cn(
-        "relative flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium",
+        "relative flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-xs font-medium",
         here(href) ? "text-primary" : "text-muted-foreground",
       )}
     >
@@ -54,7 +54,7 @@ export function PhoneNav({ needsReview }: { needsReview: number }) {
         {tab("/listings", t("listings"), ListChecks, needsReview)}
         <Link
           href="/snap"
-          className="flex min-h-14 flex-1 flex-col items-center justify-end gap-0.5 pb-1 text-[11px] font-medium text-primary"
+          className="flex min-h-14 flex-1 flex-col items-center justify-end gap-0.5 pb-1 text-xs font-medium text-primary"
         >
           <span className="-mt-5 flex size-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg ring-4 ring-background">
             <Camera className="size-6" aria-hidden="true" />
@@ -65,7 +65,7 @@ export function PhoneNav({ needsReview }: { needsReview: number }) {
         <button
           type="button"
           onClick={() => setOpenMobile(true)}
-          className="flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-[11px] font-medium text-muted-foreground"
+          className="flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 text-xs font-medium text-muted-foreground"
         >
           <Menu className="size-5" aria-hidden="true" />
           {t("more")}
