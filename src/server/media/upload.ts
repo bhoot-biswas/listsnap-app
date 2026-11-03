@@ -8,6 +8,7 @@ const TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/heic", "i
 
 /** Why an uploaded file can't be used, as the response to send; null when it looks fine. */
 export async function photoFileProblem(f: File): Promise<Response | null> {
+  // an empty type gets through here; normalisePhoto reads the file itself and refuses non-photos
   if (f.type && !TYPES.has(f.type)) return fail(415, "unsupported_file", "notPhoto");
   if (f.size > MAX_BYTES) return fail(413, "too_large", "photoTooLarge", { mb: MAX_BYTES / 1024 / 1024 });
   return null;

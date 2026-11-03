@@ -101,8 +101,8 @@ export const makeReel = defineOp({
     retry: z.boolean().default(false),
   }),
   effect: "creates_media",
-  async run({ workspace }, { listingId, lang, template, retry }) {
-    const r = await executeReelStep(workspace, listingId, lang, template, retry);
+  async run({ workspace, meta }, { listingId, lang, template, retry }) {
+    const r = await executeReelStep(workspace, listingId, lang, template, retry, meta.clientIp);
     if (!r.found) return { ok: false, error: "not_found" };
     if ("invalid" in r) return { ok: false, error: "not_ready", message: r.invalid };
     return {

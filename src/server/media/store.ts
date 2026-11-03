@@ -41,13 +41,26 @@ export interface MediaRecord {
 /** Longest side kept for originals (the browser shrinks first; this is the backstop). */
 export const MAX_SIDE = 2048;
 
+/** What a phone photo comes as; AVIF reports itself as heif. */
+const PHOTO_FORMATS = new Set(["jpeg", "png", "webp", "heif"]);
+/**
+ * Past any phone camera's full resolution (a 108 MP sensor is about this). A small file
+ * that claims to be much larger would make sharp decode gigabytes on this 2-CPU server.
+ */
+const MAX_INPUT_PIXELS = 120_000_000;
+
 /**
  * Normalises an upload: applies the EXIF orientation, caps the size and re-encodes as
  * JPEG. sharp drops all metadata unless asked to keep it, so GPS and camera details
- * never reach disk. Throws on anything sharp can't decode.
+ * never reach disk. Throws on anything sharp can't decode, on a format that isn't a
+ * photo (SVG, TIFF, GIF and the rest libvips would also read), and on a huge image.
  */
 export async function normalisePhoto(input: Buffer): Promise<{ data: Buffer; width: number; height: number }> {
-  const { data, info } = await sharp(input, { failOn: "error" })
+  // the header only: the format and size are known before any pixel is decoded
+  const meta = await sharp(input, { limitInputPixels: MAX_INPUT_PIXELS }).metadata();
+  if (!meta.format || !PHOTO_FORMATS.has(meta.format)) throw new Error(`not a photo format: ${meta.format}`);
+  if ((meta.width ?? 0) * (meta.height ?? 0) > MAX_INPUT_PIXELS) throw new Error("image too large");
+  const { data, info } = await sharp(input, { failOn: "error", limitInputPixels: MAX_INPUT_PIXELS })
     .rotate()
     .resize({ width: MAX_SIDE, height: MAX_SIDE, fit: "inside", withoutEnlargement: true })
     .jpeg({ quality: 90, mozjpeg: true })

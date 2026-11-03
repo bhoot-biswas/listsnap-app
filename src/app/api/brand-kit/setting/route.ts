@@ -3,6 +3,7 @@ import { forWorkspace } from "@/server/db/scope";
 import { mediaUrl, normalisePhoto, saveMedia } from "@/server/media/store";
 import { isHeic } from "@/server/media/upload";
 import { fail, ok, unauthorized } from "@/server/http";
+import { clientIp, takeDemoAllowance } from "@/server/limits";
 import { BRAND_PHOTO_MAX_BYTES } from "@/lib/schemas/brand-kit";
 
 /**
@@ -35,10 +36,13 @@ export async function POST(request: Request) {
   if (file.size > BRAND_PHOTO_MAX_BYTES)
     return fail(413, "too_large", "shopPhotoTooLarge", { mb: BRAND_PHOTO_MAX_BYTES / 1024 / 1024 });
 
+  const release = await takeDemoAllowance(viewer.workspace, clientIp(request), "uploads");
+  if (!release) return fail(429, "limit_reached", "shopPhotoLimit");
   let photo;
   try {
     photo = await normalisePhoto(Buffer.from(await file.arrayBuffer()));
   } catch {
+    await release();
     return isHeic(Buffer.from(await file.slice(0, 64).arrayBuffer()))
       ? fail(415, "unsupported_file", "heicPhoto")
       : fail(415, "unsupported_file", "shopPhotoUnreadable");

@@ -97,6 +97,10 @@ export const DEMO_PER_IP = {
   images: 60,
   /** Chat messages, dictations and field assists, each a paid model call or more. */
   ai_calls: 100,
+  /** Photos kept on disk without making a listing: chat attachments and brand kit photos. */
+  uploads: 40,
+  /** A reel takes a minute of every core, and renders wait in one line for the whole server. */
+  reels: REELS_PER_DAY,
 } as const;
 
 /** Listings a visitor can start each day across all their demo shops. */
