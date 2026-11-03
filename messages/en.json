@@ -328,6 +328,15 @@
     "selectRow": "Select {title}",
     "selectedCount": "{count, plural, one {# selected} other {# selected}}",
     "saveCount": "{count, plural, one {Save # to store} other {Save # to store}}",
+    "updateCount": "{count, plural, one {Update # store draft} other {Update # store drafts}}",
+    "not": {
+      "label": "Show",
+      "anywhere": "Everything",
+      "store": "Not in a store yet",
+      "catalog": "Not in the catalog yet",
+      "facebook": "Not on Facebook yet",
+      "instagram": "Not on Instagram yet"
+    },
     "archivedCount": "{count, plural, one {Archived # listing.} other {Archived # listings.}}",
     "restoredCount": "{count, plural, one {Restored # listing.} other {Restored # listings.}}",
     "clearSelection": "Clear selection",
@@ -1146,6 +1155,16 @@
     "offline": "Offline, will save",
     "saveToStore": "Save draft to store",
     "postOnFacebook": "Post on Facebook",
+    "whereItIs": {
+      "title": "Where it is:",
+      "store": "In {store}",
+      "catalog": "In Facebook catalog",
+      "facebook": "On Facebook",
+      "instagram": "On Instagram",
+      "marketplace": "On Marketplace",
+      "behind": "out of date",
+      "opens": "(opens in a new tab)"
+    },
     "updateStore": "Update store draft",
     "storeBehindIn": "Out of date in {stores}. Update to send your changes.",
     "storeMissing": "Not in {stores} yet. Update to save it there too.",

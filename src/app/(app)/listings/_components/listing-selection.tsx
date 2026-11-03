@@ -11,12 +11,13 @@ import { ExportMenu } from "@/components/app/export-menu";
 import { SaveToCatalog } from "@/components/app/save-to-catalog";
 import { setListingsArchived } from "@/server/actions/archive";
 
-/** Statuses a draft can be saved from; In store and Posted ones are updated from their own page. */
+/** Statuses a new draft can be saved from; In store and Posted ones are updated when behind. */
 const SAVABLE = new Set(["ready", "needs_review"]);
 /** Every finished listing exports, whether or not it is in a store yet. */
 const EXPORTABLE = new Set(["ready", "needs_review", "in_store", "posted"]);
 
-type Row = { id: string; jobId: string; status: string };
+/** `behind`: in a store whose draft is older than the seller's last change. */
+type Row = { id: string; jobId: string; status: string; behind: boolean };
 type Selection = {
   selected: Set<string>;
   toggle: (id: string, on: boolean) => void;
@@ -117,6 +118,7 @@ function SelectionBar({
   if (!selected.size) return null;
   const chosen = rows.filter((r) => selected.has(r.id));
   const savable = chosen.filter((r) => SAVABLE.has(r.status));
+  const updatable = chosen.filter((r) => r.behind);
   const exportable = chosen.filter((r) => EXPORTABLE.has(r.status));
 
   const archive = async (ids: string[], to: boolean) => {
@@ -163,6 +165,22 @@ function SelectionBar({
                   router.refresh();
                 }}
                 // the saved ones show In store; the failed stay ticked for Try again
+                onPartial={(failed) => setSelected(new Set(failed))}
+              />
+            )}
+            {updatable.length > 0 && (
+              // the same save as on Review's "Update store draft": the seller's edits to the same product
+              <SaveToStore
+                jobId={updatable[0]!.jobId}
+                listingIds={updatable.map((r) => r.id)}
+                label={t("updateCount", { count: updatable.length })}
+                update
+                variant={savable.length ? "outline" : "default"}
+                className="w-auto"
+                onDone={() => {
+                  setSelected(new Set());
+                  router.refresh();
+                }}
                 onPartial={(failed) => setSelected(new Set(failed))}
               />
             )}

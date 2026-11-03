@@ -24,6 +24,8 @@ import type { VoiceNoteView } from "./_components/voice-note-card";
 import { ListenResult } from "@/lib/schemas/voice-note";
 import { catalogAccess } from "@/lib/meta-access";
 import { storeTargets } from "@/server/stores/targets";
+import { storeStep } from "@/lib/stores";
+import type { WhereItIs } from "./_components/where-it-is";
 import { localTitle } from "@/lib/titles";
 import { numberRepeats, REVIEWABLE } from "@/lib/review-next";
 
@@ -140,6 +142,24 @@ export default async function ReviewPage({ params, searchParams }: PageProps<"/j
     if (p.success)
       (posted[p.data.lang] ??= {})[p.data.destination] = { permalink: p.data.permalink, test: p.data.test };
   }
+  // the first post of each kind, in either language: the strip links to one of them
+  const postOn = (d: "facebook" | "instagram") =>
+    REEL_LANGS.map((lang) => posted[lang]?.[d]?.permalink).find(Boolean) ?? null;
+  const storeLinks = await Promise.all(
+    kept.map(async (s) => ({
+      kind: s.kind,
+      url: (await ws.lastStepResult<{ editUrl?: string }>(id, storeStep(s.kind), listing.id))?.editUrl ?? null,
+      behind: stores.behind.includes(s.kind),
+    })),
+  );
+  const catalog = catalogState(meta, viewer.workspace.settings.website, savedCatalog, listing.edited_at);
+  const where: WhereItIs = {
+    stores: storeLinks,
+    catalog: catalog.saved && catalog.saved.items > 0 ? { behind: catalog.saved.behind } : null,
+    facebook: postOn("facebook"),
+    instagram: postOn("instagram"),
+    marketplace: listing.marketplace_posted_at ? { url: listing.marketplace_url } : null,
+  };
   const reels = Object.fromEntries(
     REEL_LANGS.map((lang, i) => {
       const r = ReelResult.safeParse(reelResults[i]);
@@ -256,7 +276,8 @@ export default async function ReviewPage({ params, searchParams }: PageProps<"/j
             ? { at: listing.marketplace_posted_at.toISOString(), url: listing.marketplace_url }
             : null,
         }}
-        catalog={catalogState(meta, viewer.workspace.settings.website, savedCatalog, listing.edited_at)}
+        catalog={catalog}
+        where={where}
         chat={{
           items: chatItems(history),
           revision: chatRevision(history),

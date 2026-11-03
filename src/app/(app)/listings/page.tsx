@@ -7,7 +7,7 @@ import { ButtonLink } from "@/components/app/button-link";
 import { Pager } from "@/components/app/pager";
 import { requireWorkspace } from "@/server/auth/session";
 import { forWorkspace } from "@/server/db/scope";
-import { LISTING_PAGE_SIZE, LISTING_SORTS } from "@/server/db/overview";
+import { LISTING_GAPS, LISTING_PAGE_SIZE, LISTING_SORTS } from "@/server/db/overview";
 import { LISTING_VIEWS, ListingFilters, listingsHref } from "./_components/listing-filters";
 import { ListingTable } from "./_components/listing-table";
 import { metaConnection, readyCatalog } from "@/server/social/connection";
@@ -21,6 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
 const Query = z.object({
   status: z.enum(LISTING_VIEWS).optional().catch(undefined),
   q: z.string().trim().max(100).optional().catch(undefined),
+  not: z.enum(LISTING_GAPS).optional().catch(undefined),
   sort: z.enum(LISTING_SORTS).optional().catch(undefined),
   page: z.coerce.number().int().min(1).max(1000).optional().catch(undefined),
 });
@@ -34,6 +35,7 @@ export default async function ListingsPage({ searchParams }: PageProps<"/listing
   const filter = {
     status: query.status ?? null,
     q: query.q ?? "",
+    not: query.not ?? null,
     sort: query.sort ?? "newest",
     page: query.page ?? 1,
   };
@@ -43,9 +45,9 @@ export default async function ListingsPage({ searchParams }: PageProps<"/listing
   const status = filter.status === "archived" || filter.status === "behind" ? null : filter.status;
   const [{ rows, total }, counts, shop, meta] = await Promise.all([
     ws.listingPage({ ...filter, status, archived, behind }),
-    ws.statusCounts(filter.q),
+    ws.statusCounts(filter.q, filter.not),
     // the counts follow the search, so whether the shop has listings at all is asked apart
-    filter.q ? ws.statusCounts() : null,
+    filter.q || filter.not ? ws.statusCounts() : null,
     metaConnection(ws),
   ]);
   // "All" means every listing still in use; archived ones have their own chip, and
@@ -77,7 +79,14 @@ export default async function ListingsPage({ searchParams }: PageProps<"/listing
           </div>
         ) : (
           <>
-            <ListingFilters status={filter.status} q={filter.q} sort={filter.sort} counts={counts} all={all} />
+            <ListingFilters
+              status={filter.status}
+              q={filter.q}
+              not={filter.not}
+              sort={filter.sort}
+              counts={counts}
+              all={all}
+            />
             {rows.length === 0 ? (
               <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed px-6 py-12 text-center">
                 <p className="text-muted-foreground">{t("noMatch")}</p>
@@ -89,7 +98,7 @@ export default async function ListingsPage({ searchParams }: PageProps<"/listing
               <>
                 <ListingSelection
                   key={listingsHref(filter)}
-                  rows={rows.map((r) => ({ id: r.id, jobId: r.job_id, status: r.status }))}
+                  rows={rows.map((r) => ({ id: r.id, jobId: r.job_id, status: r.status, behind: r.behind.length > 0 }))}
                   archived={archived}
                   hasWebsite={!!viewer.workspace.settings.website}
                   catalogName={readyCatalog(meta, viewer.workspace.settings.website)?.name ?? null}

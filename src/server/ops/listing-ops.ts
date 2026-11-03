@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { ListingSnapshot } from "@/server/db/scope";
 import { ListingEdit, suggestedPrice } from "@/lib/schemas/review";
 import { BanglaText } from "@/lib/schemas/pipeline";
+import { syncCatalogArchive } from "@/server/pipeline/catalog-step";
 import { defineOp } from "./define-op";
 
 /** Ids are opaque here; an unknown or foreign one is "not found", not "invalid". */
@@ -170,12 +171,13 @@ export const undoLast = defineOp({
 export const archiveListing = defineOp({
   name: "archiveListing",
   description:
-    "Archive a listing the seller doesn't want (a wrong detection, a test): it leaves Listings, the dashboard and the media library but nothing is deleted. archived false brings it back.",
+    "Archive a listing the seller doesn't want (a wrong detection, a test): it leaves Listings, the dashboard and the media library, and shows out of stock in the Facebook catalog, but nothing is deleted. archived false brings it back.",
   input: z.object({ listingId: ListingId, archived: z.boolean().default(true) }),
   effect: "edits_draft",
-  async run({ ws }, { listingId, archived }) {
+  async run({ ws, workspace }, { listingId, archived }) {
     if (!(await ws.getListing(listingId))) return { ok: false, error: "not_found" };
     const changed = await ws.setListingArchived(listingId, archived);
+    if (changed) await syncCatalogArchive(workspace, listingId);
     return { ok: true, value: { archived, changed }, listingId, summary: archived ? "archived" : "restored" };
   },
 });
@@ -186,9 +188,10 @@ export const archiveJob = defineOp({
     "Archive a whole job (a photo and every listing made from it), for one that failed or was started by mistake. Nothing is deleted; archived false brings the job and those listings back.",
   input: z.object({ jobId: z.string().min(1).max(64), archived: z.boolean().default(true) }),
   effect: "edits_draft",
-  async run({ ws }, { jobId, archived }) {
+  async run({ ws, workspace }, { jobId, archived }) {
     if (!(await ws.getJob(jobId))) return { ok: false, error: "not_found" };
     const changed = await ws.setJobArchived(jobId, archived);
+    if (changed) for (const l of await ws.listings(jobId)) await syncCatalogArchive(workspace, l.id);
     return { ok: true, value: { archived, changed }, summary: archived ? "archived job" : "restored job" };
   },
 });

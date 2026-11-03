@@ -98,6 +98,21 @@ describe.skipIf(!enabled)("Listings page (MariaDB)", async () => {
     expect((await A.statusCounts("bangles")).behind).toBeUndefined();
   });
 
+  it("finds the finished listings that aren't in a store or on Facebook yet, with counts to match", async () => {
+    const not = async (gap: "store" | "facebook") =>
+      (await A.listingPage({ status: null, q: "", page: 1, not: gap })).rows.map((r) => r.id);
+    expect(await not("store")).toEqual([ids.kurti]);
+    expect(await A.statusCounts("", "store")).toEqual({ ready: 1 });
+    // a reel posted to Facebook takes the bangles off that list only
+    const jobId = (await A.getListing(ids.bangles))!.job_id;
+    await execute(
+      "INSERT INTO job_steps (job_id, step, target, workspace_id, status, attempts) VALUES (?, 'post', ?, ?, 'done', 1)",
+      [jobId, `${ids.bangles}:en:facebook`, a.workspace.id],
+    );
+    expect((await not("facebook")).sort()).toEqual([ids.saree, ids.kurti].sort());
+    expect(await not("store")).toEqual([ids.kurti]);
+  });
+
   it("tells the stores apart: updating one leaves the other behind", async () => {
     // a minute later, only WooCommerce gets the update
     await execute(

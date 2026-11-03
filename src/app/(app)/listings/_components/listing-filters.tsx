@@ -4,7 +4,7 @@ import { Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import type { ListingSort } from "@/server/db/overview";
+import { LISTING_GAPS, type ListingGap, type ListingSort } from "@/server/db/overview";
 import { ListingSortSelect } from "./listing-sort";
 
 export const LISTING_STATUSES = ["processing", "needs_review", "ready", "in_store", "posted", "failed"] as const;
@@ -16,10 +16,17 @@ export const LISTING_VIEWS = [...LISTING_STATUSES, "behind", "archived"] as cons
 export type ListingView = (typeof LISTING_VIEWS)[number];
 
 /** Builds a Listings URL; filters and search live in the query string, so they survive reloads and sharing. */
-export function listingsHref(p: { status?: ListingView | null; q?: string; sort?: ListingSort; page?: number }) {
+export function listingsHref(p: {
+  status?: ListingView | null;
+  q?: string;
+  not?: ListingGap | null;
+  sort?: ListingSort;
+  page?: number;
+}) {
   const s = new URLSearchParams();
   if (p.status) s.set("status", p.status);
   if (p.q) s.set("q", p.q);
+  if (p.not) s.set("not", p.not);
   if (p.sort && p.sort !== "newest") s.set("sort", p.sort);
   if (p.page && p.page > 1) s.set("page", String(p.page));
   const qs = s.toString();
@@ -34,12 +41,14 @@ export function listingsHref(p: { status?: ListingView | null; q?: string; sort?
 export async function ListingFilters({
   status,
   q,
+  not,
   sort,
   counts,
   all,
 }: {
   status: ListingView | null;
   q: string;
+  not: ListingGap | null;
   sort: ListingSort;
   counts: Partial<Record<ListingView, number>>;
   all: number;
@@ -52,7 +61,7 @@ export async function ListingFilters({
   const chip = (key: ListingView | null, label: string, n: number) => (
     <li key={key ?? "all"}>
       <Link
-        href={listingsHref({ status: key, q, sort })}
+        href={listingsHref({ status: key, q, not, sort })}
         aria-current={status === key ? "page" : undefined}
         className={cn(
           "inline-flex h-11 items-center gap-1.5 rounded-full border px-4 text-sm whitespace-nowrap md:h-9",
@@ -77,10 +86,11 @@ export async function ListingFilters({
           {(counts.archived || status === "archived") && chip("archived", t("archived"), counts.archived ?? 0)}
         </ul>
       </nav>
-      <div className="flex gap-2 lg:shrink-0">
-        <form role="search" action="/listings" className="flex flex-1 gap-2 lg:w-72">
+      <div className="flex flex-wrap gap-2 lg:shrink-0 lg:flex-nowrap">
+        <form role="search" action="/listings" className="flex flex-1 gap-2 max-md:basis-full lg:w-72">
           {status && <input type="hidden" name="status" value={status} />}
           {sort !== "newest" && <input type="hidden" name="sort" value={sort} />}
+          {not && <input type="hidden" name="not" value={not} />}
           <Input
             type="search"
             name="q"
@@ -101,8 +111,19 @@ export async function ListingFilters({
           </Button>
         </form>
         <ListingSortSelect
+          value={not ?? "anywhere"}
+          hrefs={Object.fromEntries(
+            ["anywhere", ...LISTING_GAPS].map((g) => [
+              g,
+              listingsHref({ status, q, not: g === "anywhere" ? null : (g as ListingGap), sort }),
+            ]),
+          )}
+          labels={Object.fromEntries(["anywhere", ...LISTING_GAPS].map((g) => [g, t(`not.${g}`)]))}
+          label={t("not.label")}
+        />
+        <ListingSortSelect
           value={sort}
-          hrefs={Object.fromEntries(SORTS.map((s) => [s, listingsHref({ status, q, sort: s })]))}
+          hrefs={Object.fromEntries(SORTS.map((s) => [s, listingsHref({ status, q, not, sort: s })]))}
           labels={Object.fromEntries(SORTS.map((s) => [s, t(`sort.${s}`)]))}
           label={t("sortBy")}
         />

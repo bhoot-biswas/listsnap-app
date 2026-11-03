@@ -31,6 +31,7 @@ import { ArchiveButton } from "@/components/app/archive-button";
 import type { ChatItem } from "@/lib/schemas/chat";
 import { VoiceNoteCard, type VoiceNoteView } from "./voice-note-card";
 import { BanglaMissing } from "./bangla-missing";
+import { WhereItIsStrip, type WhereItIs } from "./where-it-is";
 
 export type { ReviewPhoto } from "./review-side";
 
@@ -60,6 +61,7 @@ export function ReviewForm({
   reels,
   catalog,
   marketplace,
+  where,
   chat,
 }: {
   jobId: string;
@@ -70,6 +72,8 @@ export function ReviewForm({
   reels: ReelsState;
   catalog: CatalogState;
   marketplace: MarketplaceState;
+  /** Everywhere the listing already is, for the strip at the top. */
+  where: WhereItIs;
   /** The stored conversation, and how many changes the chat has made to this listing. */
   chat: { items: ChatItem[]; revision: number; running: string | null };
   colorPhotos: Record<string, string>;
@@ -295,6 +299,8 @@ export function ReviewForm({
           <ListingChat listingId={listingId} initial={chat.items} running={chat.running} beforeSend={saver.flush} />
         </div>
       </div>
+
+      <WhereItIsStrip where={where} />
 
       {archived && (
         <p role="status" className="rounded-xl border bg-muted px-4 py-3 text-sm">
