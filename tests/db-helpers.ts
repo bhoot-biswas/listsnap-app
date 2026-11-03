@@ -122,11 +122,15 @@ type Workspace = Awaited<ReturnType<typeof createTestWorkspace>>["workspace"];
 export async function runJob(workspace: Workspace, jobId: string, maxRounds = 20) {
   const { loadJobState } = await import("@/server/pipeline/job-state");
   const { executeJobStep, executeListingStep } = await import("@/server/pipeline/execute");
+  // A step something else is running (another tab, the step worker) answers "running" at
+  // once. The browser waits and asks again; so does this, without counting it as a round,
+  // so a job driven from two places isn't given up on while the other one still works.
+  const deadline = Date.now() + RUNNING_WAIT_MS;
   for (let round = 0; round < maxRounds; round++) {
     const state = await loadJobState(workspace, jobId);
     if (!state) throw new Error("job vanished");
     if (!state.next.length) return state;
-    await Promise.all(
+    const results = await Promise.all(
       state.next.map(async ({ url }) => {
         const u = new URL(url, "http://test");
         const job = u.pathname.match(/^\/api\/jobs\/([^/]+)\/steps\/(plan|segment|group|listen)$/);
@@ -139,9 +143,18 @@ export async function runJob(workspace: Workspace, jobId: string, maxRounds = 20
         throw new Error(`unexpected next call ${url}`);
       }),
     );
+    const running = results.some((r) => "outcome" in r && r.outcome.state === "running");
+    if (running && Date.now() < deadline) {
+      await new Promise((r) => setTimeout(r, RUNNING_POLL_MS));
+      round--;
+    }
   }
   throw new Error(`job ${jobId} didn't settle in ${maxRounds} rounds`);
 }
+
+/** How often runJob asks again about a step something else is running, and for how long at most. */
+const RUNNING_POLL_MS = 50;
+const RUNNING_WAIT_MS = 60_000;
 
 /**
  * A few seconds of test-pattern video with a tone, made by ffmpeg (CI installs it, as the
