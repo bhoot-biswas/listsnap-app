@@ -14,7 +14,7 @@ export function ListingSortSelect({
   labels,
   label,
 }: {
-  value: ListingSort;
+  value: ListingSort | string;
   hrefs: Record<string, Route>;
   labels: Record<string, string>;
   label: string;
@@ -25,7 +25,7 @@ export function ListingSortSelect({
       aria-label={label}
       value={value}
       onChange={(e) => router.push(hrefs[e.target.value]!)}
-      className="h-11 max-w-44 shrink-0 rounded-lg border border-input bg-card px-2 text-sm md:h-9"
+      className="h-11 max-w-44 shrink-0 rounded-lg max-md:max-w-none max-md:flex-1 border border-input bg-card px-2 text-sm md:h-9"
     >
       {Object.entries(labels).map(([key, text]) => (
         <option key={key} value={key}>

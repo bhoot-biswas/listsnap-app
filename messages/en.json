@@ -329,6 +329,14 @@
     "selectedCount": "{count, plural, one {# selected} other {# selected}}",
     "saveCount": "{count, plural, one {Save # to store} other {Save # to store}}",
     "updateCount": "{count, plural, one {Update # store draft} other {Update # store drafts}}",
+    "not": {
+      "label": "Show",
+      "anywhere": "Everything",
+      "store": "Not in a store yet",
+      "catalog": "Not in the catalog yet",
+      "facebook": "Not on Facebook yet",
+      "instagram": "Not on Instagram yet"
+    },
     "archivedCount": "{count, plural, one {Archived # listing.} other {Archived # listings.}}",
     "restoredCount": "{count, plural, one {Restored # listing.} other {Restored # listings.}}",
     "clearSelection": "Clear selection",

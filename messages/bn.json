@@ -329,6 +329,14 @@
     "selectedCount": "{count, number}টি বাছা হয়েছে",
     "saveCount": "{count, number}টি স্টোরে সেভ করুন",
     "updateCount": "{count, number}টি স্টোর ড্রাফট আপডেট করুন",
+    "not": {
+      "label": "দেখান",
+      "anywhere": "সবকিছু",
+      "store": "এখনো স্টোরে নেই",
+      "catalog": "এখনো ক্যাটালগে নেই",
+      "facebook": "এখনো ফেসবুকে নেই",
+      "instagram": "এখনো ইনস্টাগ্রামে নেই"
+    },
     "archivedCount": "{count, number}টি লিস্টিং আর্কাইভ হয়েছে।",
     "restoredCount": "{count, number}টি লিস্টিং ফিরিয়ে আনা হয়েছে।",
     "clearSelection": "বাছাই মুছুন",

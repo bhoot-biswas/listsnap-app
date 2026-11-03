@@ -35,6 +35,24 @@ const BEHIND_IN = `FROM listing_store_products sp
   WHERE sp.listing_id = l.id AND sp.workspace_id = l.workspace_id AND l.edited_at > sp.saved_at`;
 const BEHIND = `EXISTS (SELECT 1 ${BEHIND_IN})`;
 
+/** Where a finished listing isn't yet, for "what's left to do" on Listings. */
+export const LISTING_GAPS = ["store", "catalog", "facebook", "instagram"] as const;
+export type ListingGap = (typeof LISTING_GAPS)[number];
+const posted = (d: "facebook" | "instagram") =>
+  `EXISTS (SELECT 1 FROM job_steps ps WHERE ps.workspace_id = l.workspace_id AND ps.job_id = l.job_id
+     AND ps.step = 'post' AND ps.target LIKE CONCAT(l.id, ':%:${d}') AND ps.status = 'done')`;
+const GAP: Record<ListingGap, string> = {
+  store:
+    "NOT EXISTS (SELECT 1 FROM listing_store_products sp WHERE sp.listing_id = l.id AND sp.workspace_id = l.workspace_id)",
+  catalog: `NOT EXISTS (SELECT 1 FROM job_steps cs WHERE cs.workspace_id = l.workspace_id AND cs.job_id = l.job_id
+     AND cs.step = 'catalog' AND cs.target = l.id AND cs.status = 'done')`,
+  facebook: `NOT ${posted("facebook")}`,
+  instagram: `NOT ${posted("instagram")}`,
+};
+// only finished listings can be anywhere, so the others never count as "not there yet"
+const gapFilter = (gap: ListingGap) =>
+  ` AND l.status IN ('ready', 'needs_review', 'in_store', 'posted') AND ${GAP[gap]}`;
+
 export interface ListingListRow {
   id: string;
   job_id: string;
@@ -121,6 +139,8 @@ export function overviewQueries(ws: string) {
       page: number;
       archived?: boolean;
       behind?: boolean;
+      /** Only finished listings that aren't in this place yet. */
+      not?: ListingGap | null;
       sort?: ListingSort;
     }) {
       const where = ["l.workspace_id = ?", `l.archived_at IS ${opts.archived ? "NOT " : ""}NULL`];
@@ -130,6 +150,7 @@ export function overviewQueries(ws: string) {
         params.push(opts.status);
       }
       if (opts.behind) where.push(BEHIND);
+      if (opts.not) where.push(gapFilter(opts.not).slice(" AND ".length));
       if (opts.q) {
         where.push(SEARCH);
         params.push(likeTerm(opts.q));
@@ -176,11 +197,14 @@ export function overviewQueries(ws: string) {
     },
 
     /**
-     * Listings per status for the filter chips, within the search so a chip's count is
-     * what it opens. Archived ones count only as archived; `behind` is counted on its own.
+     * Listings per status for the filter chips, within the search and the "not in" choice
+     * so a chip's count is what it opens. Archived ones count only as archived; `behind` is counted on its own.
      */
-    async statusCounts(q = ""): Promise<Partial<Record<ListingStatus | "archived" | "behind", number>>> {
-      const search = q ? ` AND ${SEARCH}` : "";
+    async statusCounts(
+      q = "",
+      not: ListingGap | null = null,
+    ): Promise<Partial<Record<ListingStatus | "archived" | "behind", number>>> {
+      const search = (q ? ` AND ${SEARCH}` : "") + (not ? gapFilter(not) : "");
       const params = q ? [ws, likeTerm(q)] : [ws];
       const [rows, behind] = await Promise.all([
         select<{ status: ListingStatus | "archived"; n: number }>(
