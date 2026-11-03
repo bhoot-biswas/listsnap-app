@@ -88,4 +88,63 @@ describe("Autosaver", () => {
     await vi.advanceTimersByTimeAsync(0);
     expect(states.at(-1)).toBe("invalid");
   });
+
+  it("drops a failed edit waiting to be retried once the server's copy wins", async () => {
+    const saved: string[] = [];
+    let fail = true;
+    const s = new Autosaver<string>(
+      "old",
+      async (v) => (fail ? false : (saved.push(v), true)),
+      () => {},
+      10,
+      100,
+    );
+    s.change("seller's text");
+    await vi.advanceTimersByTimeAsync(10);
+    // the assistant changed the listing meanwhile; its copy is what the form shows now
+    s.reset("assistant's text");
+    fail = false;
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(saved).toEqual([]);
+    expect(s.pending).toBe(false);
+    s.change("next edit");
+    await vi.advanceTimersByTimeAsync(10);
+    expect(saved).toEqual(["next edit"]);
+  });
+
+  it("doesn't retry a save that was already on its way when the server's copy won", async () => {
+    let calls = 0;
+    let answer: (v: false) => void = () => {};
+    const s = new Autosaver<string>(
+      "",
+      () => (calls++, new Promise((r) => (answer = r))),
+      () => {},
+      10,
+      100,
+    );
+    s.change("stale");
+    await vi.advanceTimersByTimeAsync(10);
+    s.reset("fresh");
+    answer(false);
+    await vi.advanceTimersByTimeAsync(1000);
+    expect(calls).toBe(1);
+    expect(s.pending).toBe(false);
+  });
+
+  it("stops retrying a failing server after a few tries, and tries again on the next edit", async () => {
+    let calls = 0;
+    const s = new Autosaver<string>(
+      "",
+      async () => (calls++, false),
+      () => {},
+      10,
+      100,
+    );
+    s.change("a");
+    await vi.advanceTimersByTimeAsync(60_000);
+    expect(calls).toBe(5);
+    s.change("ab");
+    await vi.advanceTimersByTimeAsync(10);
+    expect(calls).toBe(6);
+  });
 });

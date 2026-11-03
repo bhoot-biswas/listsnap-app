@@ -62,6 +62,17 @@ export function parseStoredError(stored: string): { key: StepErrorKey; params?: 
   }
 }
 
+/**
+ * A logged call's line for the seller: its own summary when it worked, the error's words
+ * when it didn't. Rows from before errors were stored as keys hold a raw message, which
+ * only the server log should show; they read as the generic error.
+ */
+export function callSummary(ok: boolean, summary: string | null, locale: Locale): string {
+  if (ok) return summary ?? "";
+  const parsed = summary ? parseStoredError(summary) : null;
+  return errorWords(parsed ?? { key: "generic" }, locale);
+}
+
 /** A StepError's words in the seller's language, for errors that are answered at once rather than stored. */
 export function errorWords(err: { key: StepErrorKey; params?: TextParams }, locale: Locale): string {
   const params =

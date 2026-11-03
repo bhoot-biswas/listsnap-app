@@ -1,5 +1,7 @@
 import "server-only";
 import { execute } from "@/server/db/pool";
+import { GENERIC_STEP_ERROR, StepError } from "@/server/pipeline/run-step";
+import { storedError } from "@/server/step-text";
 import type { CallContext } from "./types";
 
 export interface CallInfo {
@@ -13,7 +15,9 @@ export interface CallInfo {
  * Times an outside call and records it in api_calls, whether it worked or not. This
  * feeds the Under the hood panel, Usage "by step" and the README cost numbers. The
  * summary is written by the caller from the result, so secrets and photos never reach
- * the log; errors keep only their message, cut short.
+ * the log. A failure keeps the error the seller would see (a StepError's key and values,
+ * or the generic one): the call log is on the seller's Usage page, and a raw message can
+ * be a provider's whole error page or ffmpeg's output. That goes to the server log.
  */
 export async function logged<T>(
   ctx: CallContext,
@@ -28,8 +32,10 @@ export async function logged<T>(
     await record(ctx, info, Math.round(performance.now() - started), true, summary, costUsd);
     return result;
   } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    await record(ctx, info, Math.round(performance.now() - started), false, message, 0);
+    const summary = err instanceof StepError ? storedError(err.key, err.params) : GENERIC_STEP_ERROR;
+    if (!(err instanceof StepError))
+      console.warn(`[api_calls] ${info.provider} ${info.endpoint} failed:`, err instanceof Error ? err.message : err);
+    await record(ctx, info, Math.round(performance.now() - started), false, summary, 0);
     throw err;
   }
 }

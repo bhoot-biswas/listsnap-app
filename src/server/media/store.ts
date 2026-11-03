@@ -149,7 +149,10 @@ export async function readMedia(workspaceId: string, id: string): Promise<{ data
   if (!file) return null;
   try {
     return { data: await readFile(file.abs), mime: file.mime };
-  } catch {
+  } catch (err) {
+    // a missing file is "photo missing"; a disk or permission problem is the server's, and must be seen
+    if ((err as NodeJS.ErrnoException).code !== "ENOENT")
+      console.error(`[media] couldn't read ${id}:`, err instanceof Error ? err.message : err);
     return null;
   }
 }

@@ -117,7 +117,7 @@ export function chatQueries(ws: string) {
       );
       const messages = rows
         .reverse()
-        .map((r) => ChatMessage.safeParse(typeof r.body_json === "string" ? JSON.parse(r.body_json) : r.body_json))
+        .map((r) => ChatMessage.safeParse(typeof r.body_json === "string" ? parseOrNull(r.body_json) : r.body_json))
         .flatMap((p) => (p.success ? [p.data] : []));
       const start = messages.findIndex((m) => m.role === "user");
       return start < 0 ? [] : messages.slice(start);
@@ -231,4 +231,13 @@ export function chatQueries(ws: string) {
       return Number(row?.n ?? 0);
     },
   };
+}
+
+/** One unreadable row is skipped like an invalid one, instead of breaking the whole chat. */
+function parseOrNull(text: string): unknown {
+  try {
+    return JSON.parse(text);
+  } catch {
+    return null;
+  }
 }

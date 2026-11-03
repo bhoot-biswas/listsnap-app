@@ -164,7 +164,8 @@ export function ReviewForm({
     seenRevision.current = chat.revision;
     latest.current = initial;
     setEdit(initial);
-  }, [chat.revision, initial]);
+    saver.reset(initial);
+  }, [chat.revision, initial, saver]);
 
   // a look made after the page loaded arrives in `photos`; the seller just asked for it, so
   // it starts ticked, and the next autosave must not save it as unticked

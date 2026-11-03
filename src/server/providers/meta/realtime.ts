@@ -44,9 +44,9 @@ export function liveTranscribeLive(ctx: CallContext, keywords: string[], events:
   let processedMs = 0;
   let timer: ReturnType<typeof setTimeout> | null = null;
   let deadline: ReturnType<typeof setTimeout> | null = null;
-  let resolve!: (r: { text: string; ms: number }) => void;
+  let resolve!: (r: { text: string; ms: number; cancelled?: boolean }) => void;
   let reject!: (err: Error) => void;
-  const done = new Promise<{ text: string; ms: number }>((res, rej) => {
+  const done = new Promise<{ text: string; ms: number; cancelled?: boolean }>((res, rej) => {
     resolve = res;
     reject = rej;
   });
@@ -157,7 +157,9 @@ export function liveTranscribeLive(ctx: CallContext, keywords: string[], events:
     () => done,
     // billed per whole second the engine heard; the words stay out of the log, like photos
     (r) => ({
-      summary: `${(r.ms / 1000).toFixed(1)} s heard live · ${r.text.length} characters · ${Math.round(pacer.silencePaddedMs)} ms padded`,
+      summary: r.cancelled
+        ? `${(r.ms / 1000).toFixed(1)} s heard live · stopped before the words`
+        : `${(r.ms / 1000).toFixed(1)} s heard live · ${r.text.length} characters · ${Math.round(pacer.silencePaddedMs)} ms padded`,
       costUsd: (Math.floor(r.ms / 1000) / 3600) * PRICE_PER_HOUR,
     }),
   ).catch(() => {
@@ -171,7 +173,8 @@ export function liveTranscribeLive(ctx: CallContext, keywords: string[], events:
       if (settled) return;
       settled = true;
       stop();
-      reject(new Error("seller left"));
+      // not a failure: what Meta already heard is billed, so it is logged as a call that cost that
+      resolve({ text: "", ms: Math.max(processedMs, pacer.sentMs), cancelled: true });
     },
   };
 }

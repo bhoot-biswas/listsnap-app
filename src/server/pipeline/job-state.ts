@@ -16,7 +16,7 @@ import type { GroupResult, PlanResult, SegmentResult } from "@/lib/schemas/pipel
 import { autoScenes } from "./execute";
 import { nextCalls, type NextCall } from "./next-calls";
 import { MAX_ATTEMPTS } from "./run-step";
-import { errorText, parseStoredError, text } from "@/server/step-text";
+import { callSummary, errorText, parseStoredError, text } from "@/server/step-text";
 import type { Locale } from "@/i18n/request";
 
 const callUrl = (jobId: string, c: NextCall): string => {
@@ -157,7 +157,7 @@ export function buildJobState(workspace: Workspace, d: JobData, locale: Locale =
       ms: c.ms,
       costUsd: c.cost_usd,
       ok: !!c.ok,
-      summary: c.summary,
+      summary: callSummary(!!c.ok, c.summary, locale),
     })),
     costUsd: calls.reduce((s, c) => s + c.cost_usd, 0),
   };
