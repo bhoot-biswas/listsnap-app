@@ -187,7 +187,7 @@ export function ReviewForm({
   const openReels = () => {
     setExtrasOpen(true);
     // the panel is in the DOM once the details element has opened
-    requestAnimationFrame(() => document.getElementById("reel-title")?.scrollIntoView({ block: "start" }));
+    requestAnimationFrame(() => document.getElementById("reel-title")?.scrollIntoView({ block: "center" }));
   };
   useEffect(() => {
     // opening the element fires onToggle, which keeps the state in step

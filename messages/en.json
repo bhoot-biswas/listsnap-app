@@ -276,8 +276,8 @@
     "activity": {
       "title": "Activity",
       "sent_to_store": "Draft “{title}” saved to the store",
-      "saved": "{kind, select, instagram {Instagram connected} shopify {Shopify connected} woo {WooCommerce connected} other {Store connected}}",
-      "removed": "{kind, select, instagram {Instagram disconnected} shopify {Shopify disconnected} woo {WooCommerce disconnected} other {Store disconnected}}",
+      "saved": "{kind, select, meta {Facebook connected} instagram {Instagram connected} shopify {Shopify connected} woo {WooCommerce connected} other {Store connected}}",
+      "removed": "{kind, select, meta {Facebook disconnected} instagram {Instagram disconnected} shopify {Shopify disconnected} woo {WooCommerce disconnected} other {Store disconnected}}",
       "untitled": "Untitled listing"
     },
     "ask": {
@@ -748,6 +748,7 @@
     "suggested": "Suggested",
     "doneTitle": "{count, plural, one {Your listing is made} other {Your # listings are made}}",
     "doneBody": "Check the text, then save it to your store. Products are always saved as drafts.",
+    "doneBodyNoStore": "Check the text, then post it: make a reel and post it to your Facebook Page, or export it for Marketplace.",
     "review": "Review",
     "newListing": "Snap another",
     "listing": "Listing {n}",

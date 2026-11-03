@@ -276,8 +276,8 @@
     "activity": {
       "title": "সাম্প্রতিক কাজ",
       "sent_to_store": "“{title}” ড্রাফট স্টোরে রাখা হয়েছে",
-      "saved": "{kind, select, instagram {Instagram যুক্ত হয়েছে} shopify {Shopify যুক্ত হয়েছে} woo {WooCommerce যুক্ত হয়েছে} other {স্টোর যুক্ত হয়েছে}}",
-      "removed": "{kind, select, instagram {Instagram সরানো হয়েছে} shopify {Shopify সরানো হয়েছে} woo {WooCommerce সরানো হয়েছে} other {স্টোর সরানো হয়েছে}}",
+      "saved": "{kind, select, meta {ফেসবুক যুক্ত হয়েছে} instagram {Instagram যুক্ত হয়েছে} shopify {Shopify যুক্ত হয়েছে} woo {WooCommerce যুক্ত হয়েছে} other {স্টোর যুক্ত হয়েছে}}",
+      "removed": "{kind, select, meta {ফেসবুক সরানো হয়েছে} instagram {Instagram সরানো হয়েছে} shopify {Shopify সরানো হয়েছে} woo {WooCommerce সরানো হয়েছে} other {স্টোর সরানো হয়েছে}}",
       "untitled": "নামহীন লিস্টিং"
     },
     "ask": {
@@ -748,6 +748,7 @@
     "suggested": "প্রস্তাবিত",
     "doneTitle": "{count, plural, one {আপনার লিস্টিং বানানো শেষ} other {আপনার #টি লিস্টিং বানানো শেষ}}",
     "doneBody": "লেখাটা একবার দেখে নিন, তারপর স্টোরে সেভ করুন। পণ্য সবসময় ড্রাফট হিসেবে সেভ হয়।",
+    "doneBodyNoStore": "লেখাটা একবার দেখে নিন, তারপর পোস্ট করুন: রিল বানিয়ে আপনার ফেসবুক পেজে দিন, অথবা মার্কেটপ্লেসের জন্য এক্সপোর্ট করুন।",
     "review": "দেখে নিন",
     "newListing": "আরেকটি ছবি তুলুন",
     "listing": "লিস্টিং {n, number}",

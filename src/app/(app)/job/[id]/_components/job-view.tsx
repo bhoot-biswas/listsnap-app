@@ -117,7 +117,7 @@ export function JobView({
               {finished && state.listings.some((l) => l.status !== "failed") && (
                 <div className="space-y-1">
                   <h2 className="text-xl font-semibold">{t("doneTitle", { count: state.listings.length })}</h2>
-                  <p className="text-sm text-muted-foreground">{t("doneBody")}</p>
+                  <p className="text-sm text-muted-foreground">{t(hasStore ? "doneBody" : "doneBodyNoStore")}</p>
                 </div>
               )}
               <ul className="grid gap-4 sm:grid-cols-2">
@@ -170,7 +170,7 @@ export function JobView({
                       <div className="flex flex-wrap gap-2">
                         <ButtonLink
                           href={`/job/${state.id}/review?l=${l.id}`}
-                          variant={finished ? "outline" : "default"}
+                          variant={finished && hasStore ? "outline" : "default"}
                           className="h-11 md:h-10"
                         >
                           {finished ? t("review") : t("reviewNow")}
@@ -197,7 +197,11 @@ export function JobView({
                       {t("seeSaved")}
                     </ButtonLink>
                   )}
-                  <ButtonLink href="/snap" variant={savable.length || inStore ? "ghost" : "default"} size="lg">
+                  <ButtonLink
+                    href="/snap"
+                    variant={savable.length || inStore || !hasStore ? "ghost" : "default"}
+                    size="lg"
+                  >
                     {t("newListing")}
                   </ButtonLink>
                 </div>
