@@ -1,5 +1,5 @@
 import "server-only";
-import { sqlStepStore } from "@/server/db/steps";
+import { saveStepProgress, sqlStepStore, stepProgress } from "@/server/db/steps";
 import { forWorkspace, type WorkspaceScope } from "@/server/db/scope";
 import type { Workspace } from "@/server/db/workspaces";
 import { GroupMode, Scene, writtenStatus } from "@/lib/schemas/pipeline";
@@ -185,11 +185,12 @@ export async function executePostStep(
   const listing = await ws.getListing(listingId);
   if (!listing) return { found: false };
   if (!LOOKABLE.has(listing.status)) return { found: true, invalid: "This listing isn't finished yet." };
-  const outcome = await runStep(
-    sqlStepStore(ws.id),
-    { jobId: listing.job_id, step: "post", target: `${listingId}:${req.lang}:${req.destination}` },
-    { lockMs: POST_LOCK_MS },
-    () => postStep({ ws, workspace, listing }, req),
+  const key = { jobId: listing.job_id, step: "post", target: `${listingId}:${req.lang}:${req.destination}` };
+  const outcome = await runStep(sqlStepStore(ws.id), key, { lockMs: POST_LOCK_MS }, () =>
+    postStep({ ws, workspace, listing }, req, {
+      read: () => stepProgress(ws.id, key),
+      save: (progress) => saveStepProgress(ws.id, key, progress),
+    }),
   );
   return { found: true, outcome };
 }

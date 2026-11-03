@@ -14,6 +14,7 @@ import type { AssistRequest } from "@/lib/schemas/assist";
 import type { ReelTemplate, ReelVariables } from "@/lib/schemas/reels";
 import type { ChatMessage } from "@/lib/schemas/chat";
 import type { SellerFacts } from "@/lib/schemas/voice-note";
+import type { PostProgress } from "@/lib/schemas/social";
 
 /** One of several products in a photo, each listed on its own. */
 export interface OneOfSeveral {
@@ -313,7 +314,18 @@ export interface InstagramProvider {
     input: { account: SocialAccount; imageUrls: string[]; caption: string },
   ): Promise<{ mediaId: string; permalink: string }>;
   /** Posts a reel from a public video URL: a container, then waiting for it, then publishing. */
-  postReel(ctx: CallContext, input: { account: SocialAccount; videoUrl: string; caption: string }): Promise<SocialPost>;
+  postReel(ctx: CallContext, input: ReelPostInput & { account: SocialAccount }): Promise<SocialPost>;
+}
+
+/**
+ * A reel post that can be picked up again. `resume` is what an earlier try saved, and
+ * `checkpoint` saves it, before the call that would make the post public.
+ */
+export interface ReelPostInput {
+  videoUrl: string;
+  caption: string;
+  resume?: PostProgress | null;
+  checkpoint?: (progress: PostProgress) => Promise<void>;
 }
 
 /** A Page the seller manages, with the token that posts as it and its linked Instagram account. */
@@ -362,7 +374,7 @@ export interface FacebookProvider {
     input: { catalogId: string; userToken: string; handle: string },
   ): Promise<CatalogBatch>;
   /** Posts a reel to the seller's Page from a public video URL. */
-  postReel(ctx: CallContext, input: { page: SocialAccount; videoUrl: string; caption: string }): Promise<SocialPost>;
+  postReel(ctx: CallContext, input: ReelPostInput & { page: SocialAccount }): Promise<SocialPost>;
   /** Whether Meta still accepts a token. Throws when Meta couldn't be asked. */
   checkToken(ctx: CallContext, token: string): Promise<"ok" | "refused">;
 }

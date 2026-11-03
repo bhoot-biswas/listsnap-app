@@ -14,6 +14,8 @@ const mode = (name: string): ProviderMode => (read(name) === "live" ? "live" : "
 
 export interface Env {
   prod: boolean;
+  /** Next leaves SIGTERM to the app (NEXT_MANUAL_SIG_HANDLE), so running steps can finish first. */
+  drainOnStop: boolean;
   siteUrl: string;
   databaseUrl: string;
   poolSize: number;
@@ -64,6 +66,7 @@ export function env(): Env {
   const googleSecret = read("GOOGLE_CLIENT_SECRET");
   cached = {
     prod: process.env.NODE_ENV === "production",
+    drainOnStop: !!read("NEXT_MANUAL_SIG_HANDLE"),
     siteUrl,
     databaseUrl: read("DATABASE_URL"),
     poolSize: Number(read("DATABASE_POOL_SIZE")) || 5,

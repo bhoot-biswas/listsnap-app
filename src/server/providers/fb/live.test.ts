@@ -198,6 +198,88 @@ describe("Facebook reel", () => {
   });
 });
 
+describe("Facebook reel, picked up again", () => {
+  const page = { id: "P", name: "Rupkotha", token: "pt" };
+  const upload = "https://rupload.facebook.com/video-upload/v24.0/V";
+  const saved: unknown[] = [];
+  const checkpoint = async (p: unknown) => void saved.push(p);
+  beforeEach(() => void (saved.length = 0));
+
+  it("saves the reserved video before Facebook fetches it", async () => {
+    answers = [
+      () => json({ video_id: "V", upload_url: upload }),
+      () => {
+        throw new Error("socket hang up");
+      },
+    ];
+    await expect(fb.postReel(ctx, { page, videoUrl: "https://x", caption: "c", checkpoint })).rejects.toThrow();
+    expect(saved).toEqual([{ videoId: "V", uploadUrl: upload }]);
+  });
+
+  it("returns the reel an earlier try published, without posting again", async () => {
+    answers = [
+      () => json({ status: { video_status: "ready", publishing_phase: { status: "complete" } } }),
+      () => json({ status: { video_status: "ready", publishing_phase: { status: "complete" } } }),
+    ];
+    const post = await fb.postReel(ctx, {
+      page,
+      videoUrl: "https://x",
+      caption: "c",
+      resume: { videoId: "V", uploadUrl: upload },
+      checkpoint,
+    });
+    expect(post.postId).toBe("V");
+    expect(sent.every((s) => s.method === "GET")).toBe(true);
+  });
+
+  it("sends the same video again when the earlier try never published it", async () => {
+    answers = [
+      () => json({ status: { video_status: "upload_complete", publishing_phase: { status: "not_started" } } }),
+      () => json({ success: true }),
+      () => json({ success: true }),
+      () => json({ status: { video_status: "ready", publishing_phase: { status: "complete" } } }),
+    ];
+    const post = await fb.postReel(ctx, {
+      page,
+      videoUrl: "https://x",
+      caption: "c",
+      resume: { videoId: "V", uploadUrl: upload },
+      checkpoint,
+    });
+    expect(post.postId).toBe("V");
+    // no new upload reserved, so there can't be a second reel
+    expect(sent.some((s) => s.body.upload_phase === "start")).toBe(false);
+    expect(sent[2]!.body).toMatchObject({ upload_phase: "finish", video_id: "V" });
+  });
+
+  it("starts a new video when Facebook refused the earlier one", async () => {
+    answers = [
+      () => json({ status: { video_status: "error", processing_phase: { status: "error" } } }),
+      () => json({ video_id: "W", upload_url: "https://rupload.facebook.com/video-upload/v24.0/W" }),
+      () => json({ success: true }),
+      () => json({ success: true }),
+      () => json({ status: { video_status: "ready", publishing_phase: { status: "complete" } } }),
+    ];
+    const post = await fb.postReel(ctx, {
+      page,
+      videoUrl: "https://x",
+      caption: "c",
+      resume: { videoId: "V", uploadUrl: upload },
+      checkpoint,
+    });
+    expect(post.postId).toBe("W");
+    expect(saved).toEqual([{ videoId: "W", uploadUrl: "https://rupload.facebook.com/video-upload/v24.0/W" }]);
+  });
+
+  it("posts nothing when it can't learn what happened to the earlier try", async () => {
+    answers = [() => json({ error: { message: "oops", code: 1 } }, 500)];
+    await expect(
+      fb.postReel(ctx, { page, videoUrl: "https://x", caption: "c", resume: { videoId: "V", uploadUrl: upload } }),
+    ).rejects.toMatchObject({ key: "metaPostUnknown" });
+    expect(sent).toHaveLength(1);
+  });
+});
+
 describe("Instagram", () => {
   const account = { id: "IG", name: "@rup", token: "pt" };
 
@@ -233,6 +315,87 @@ describe("Instagram", () => {
     ];
     const post = await ig.postReel(ctx, { account, videoUrl: "https://x", caption: "c" });
     expect(post).toEqual({ postId: "M", permalink: "https://www.instagram.com/rup/" });
+  });
+
+  describe("picked up again", () => {
+    const saved: unknown[] = [];
+    const checkpoint = async (p: unknown) => void saved.push(p);
+    beforeEach(() => void (saved.length = 0));
+
+    it("saves the container before publishing it", async () => {
+      answers = [
+        () => json({ id: "C" }),
+        () => json({ status_code: "FINISHED" }),
+        () => json({ id: "M" }),
+        () => json({ permalink: "https://www.instagram.com/reel/abc/" }),
+      ];
+      await ig.postReel(ctx, { account, videoUrl: "https://x", caption: "c", checkpoint });
+      expect(saved).toEqual([{ container: "C" }]);
+    });
+
+    it("finds the post when publishing got no answer but Instagram made it", async () => {
+      answers = [
+        () => json({ id: "C" }),
+        () => json({ status_code: "FINISHED" }),
+        () => {
+          throw new Error("socket hang up");
+        },
+        () => json({ status_code: "PUBLISHED" }),
+        () =>
+          json({
+            data: [
+              { id: "M0", caption: "older", permalink: "https://www.instagram.com/reel/old/" },
+              { id: "M", caption: "Hi ", permalink: "https://www.instagram.com/reel/abc/" },
+            ],
+          }),
+      ];
+      const post = await ig.postReel(ctx, { account, videoUrl: "https://x", caption: "Hi", checkpoint });
+      expect(post).toEqual({ postId: "M", permalink: "https://www.instagram.com/reel/abc/" });
+      expect(sent.filter((s) => s.url.includes("media_publish"))).toHaveLength(1);
+    });
+
+    it("returns the post an earlier try published, without publishing again", async () => {
+      answers = [
+        () => json({ status_code: "PUBLISHED" }),
+        () => json({ data: [{ id: "M", caption: "c", permalink: "https://www.instagram.com/reel/abc/" }] }),
+      ];
+      const post = await ig.postReel(ctx, { account, videoUrl: "https://x", caption: "c", resume: { container: "C" } });
+      expect(post.postId).toBe("M");
+      expect(sent.some((s) => s.method === "POST")).toBe(false);
+    });
+
+    it("publishes the earlier try's container once it is ready, instead of making another", async () => {
+      answers = [
+        () => json({ status_code: "FINISHED" }),
+        () => json({ status_code: "FINISHED" }),
+        () => json({ id: "M" }),
+        () => json({ permalink: "https://www.instagram.com/reel/abc/" }),
+      ];
+      const post = await ig.postReel(ctx, { account, videoUrl: "https://x", caption: "c", resume: { container: "C" } });
+      expect(post.postId).toBe("M");
+      expect(sent.filter((s) => s.method === "POST")).toHaveLength(1);
+      expect(sent[2]!.body).toMatchObject({ creation_id: "C" });
+    });
+
+    it("makes a new container when the earlier one expired", async () => {
+      answers = [
+        () => json({ status_code: "EXPIRED" }),
+        () => json({ id: "D" }),
+        () => json({ status_code: "FINISHED" }),
+        () => json({ id: "M" }),
+        () => json({ permalink: "https://www.instagram.com/reel/abc/" }),
+      ];
+      await ig.postReel(ctx, { account, videoUrl: "https://x", caption: "c", resume: { container: "C" }, checkpoint });
+      expect(saved).toEqual([{ container: "D" }]);
+    });
+
+    it("posts nothing when it can't learn what happened to the earlier try", async () => {
+      answers = [() => json({ error: { message: "oops", code: 1 } }, 500)];
+      await expect(
+        ig.postReel(ctx, { account, videoUrl: "https://x", caption: "c", resume: { container: "C" } }),
+      ).rejects.toMatchObject({ key: "metaPostUnknown" });
+      expect(sent).toHaveLength(1);
+    });
   });
 
   it("builds a carousel from its photos", async () => {

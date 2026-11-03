@@ -1571,6 +1571,7 @@
       "metaProblem": "Facebook had a problem (error {status}). Try again.",
       "metaNoAnswer": "Facebook didn't answer. Try again in a moment.",
       "metaVideo": "Facebook couldn't use this reel's video. Try making the reel again.",
+      "metaPostUnknown": "Facebook didn't say yet whether the post went out. Try again in a minute; it won't be posted twice.",
       "metaSlow": "Instagram is still working on the video. Try again in a minute; nothing was posted yet.",
       "connectCatalog": "Connect Facebook again in Connections and allow catalog access, then try again.",
       "chooseCatalog": "Choose a Facebook catalog in Connections first.",

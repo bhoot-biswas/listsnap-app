@@ -12,13 +12,18 @@ Type=simple
 User=listsnap
 Group=listsnap
 WorkingDirectory=/srv/listsnap-current
-Environment=NODE_ENV=production NEXT_TELEMETRY_DISABLED=1
+# NEXT_MANUAL_SIG_HANDLE hands SIGTERM to the app, which lets running steps finish first
+Environment=NODE_ENV=production NEXT_TELEMETRY_DISABLED=1 NEXT_MANUAL_SIG_HANDLE=true
 # only Nginx on this machine talks to the app
 ExecStart=/usr/bin/node node_modules/next/dist/bin/next start --hostname 127.0.0.1 --port 3000
 Restart=always
 RestartSec=3
 # next exits 143 on SIGTERM; a normal stop isn't a failure
 SuccessExitStatus=143
+# SIGTERM to the app only: its reel browsers and ffmpeg finish the step it is waiting for.
+# It exits within 60 s; whatever is still running after 90 s is killed.
+KillMode=mixed
+TimeoutStopSec=90
 
 # The app user owns the code, so the whole system is read-only to the app: it can't
 # change its own code or the deploy files. It writes only its media and reel browser

@@ -151,6 +151,23 @@ export async function updateDoneStepResult(workspaceId: string, key: StepKey, re
   return r.affectedRows === 1;
 }
 
+/** What a running step saved about work it started outside (see job_steps.progress_json). */
+export async function stepProgress(workspaceId: string, key: StepKey): Promise<unknown> {
+  const row = await selectOne<{ progress_json: unknown }>(
+    "SELECT progress_json FROM job_steps WHERE job_id = ? AND step = ? AND target = ? AND workspace_id = ?",
+    [key.jobId, key.step, key.target, workspaceId],
+  );
+  return row?.progress_json ?? null;
+}
+
+/** Saves it; only while the step runs, so a run that lost its claim to a finished one can't. */
+export async function saveStepProgress(workspaceId: string, key: StepKey, progress: unknown): Promise<void> {
+  await execute(
+    "UPDATE job_steps SET progress_json = ? WHERE job_id = ? AND step = ? AND target = ? AND workspace_id = ? AND status = 'running'",
+    [json(progress), key.jobId, key.step, key.target, workspaceId],
+  );
+}
+
 export async function reopenDoneStep(workspaceId: string, key: StepKey): Promise<void> {
   await execute(
     "UPDATE job_steps SET status = 'pending', attempts = 0 WHERE job_id = ? AND step = ? AND target = ? AND workspace_id = ? AND status = 'done'",

@@ -7,7 +7,8 @@ import type { FacebookProvider, MetaCatalog, MetaPage } from "../types";
  * Facebook Login and Page reels through the Graph API. A reel is three calls: reserve
  * an upload, let Facebook fetch the video from our signed link, then publish it. We then
  * watch the video's status for a while, so a reel Facebook rejects fails here instead of
- * looking posted.
+ * looking posted. The reserved video is saved before the rest, so a retry continues with
+ * it: one reserved video can become at most one reel.
  */
 
 // the whole post must answer the browser within Nginx's two minutes
@@ -181,20 +182,34 @@ export function makeLiveFacebook(wait = realWait): FacebookProvider {
       }
     },
 
-    async postReel(ctx, { page, videoUrl, caption }) {
-      const start = await graph<{ video_id: string; upload_url: string }>(ctx, {
-        provider: "facebook",
-        endpoint: "video_reels start",
-        method: "POST",
-        path: `/${page.id}/video_reels`,
-        params: { upload_phase: "start" },
-        token: page.token,
-      });
+    async postReel(ctx, { page, videoUrl, caption, resume, checkpoint }) {
+      let reel = resume && "videoId" in resume ? resume : null;
+      if (reel) {
+        // an earlier try reserved this video; only Facebook knows whether it went out
+        const state = await publishState(ctx, page.token, reel.videoId);
+        if (state === "unknown") throw new GraphError(0, 0, "metaPostUnknown");
+        if (state === "published") return watchAndReturn(ctx, page.token, reel.videoId, wait);
+        // it never went out, so a fresh upload can't make a second reel
+        if (state === "failed") reel = null;
+      }
+      if (!reel) {
+        const start = await graph<{ video_id: string; upload_url: string }>(ctx, {
+          provider: "facebook",
+          endpoint: "video_reels start",
+          method: "POST",
+          path: `/${page.id}/video_reels`,
+          params: { upload_phase: "start" },
+          token: page.token,
+        });
+        reel = { videoId: start.video_id, uploadUrl: start.upload_url };
+        await checkpoint?.(reel);
+      }
+      // the same video again: Facebook replaces what an unfinished try sent
       await graph(ctx, {
         provider: "facebook",
         endpoint: "rupload file_url",
         method: "POST",
-        path: start.upload_url,
+        path: reel.uploadUrl,
         token: page.token,
         headers: { file_url: videoUrl },
         timeoutMs: 60_000,
@@ -205,17 +220,16 @@ export function makeLiveFacebook(wait = realWait): FacebookProvider {
           endpoint: "video_reels finish",
           method: "POST",
           path: `/${page.id}/video_reels`,
-          params: { upload_phase: "finish", video_id: start.video_id, video_state: "PUBLISHED", description: caption },
+          params: { upload_phase: "finish", video_id: reel.videoId, video_state: "PUBLISHED", description: caption },
           token: page.token,
         });
       } catch (err) {
-        // with no answer, or a server error, Facebook may have published it anyway: trying
-        // again would post a second reel, so its status decides
+        // with no answer, or a server error, Facebook may have published it anyway; the
+        // saved video means a retry asks Facebook first instead of posting a second reel
         if (!(err instanceof GraphError && (err.status === 0 || err.status >= 500))) throw err;
-        if (!(await reelStarted(ctx, page.token, start.video_id))) throw err;
+        if ((await publishState(ctx, page.token, reel.videoId)) !== "published") throw err;
       }
-      await watchReel(ctx, page.token, start.video_id, wait);
-      return { postId: start.video_id, permalink: `https://www.facebook.com/reel/${start.video_id}` };
+      return watchAndReturn(ctx, page.token, reel.videoId, wait);
     },
   };
 }
@@ -232,14 +246,37 @@ const reelStatus = (ctx: PostContext, token: string, videoId: string) =>
     token,
   });
 
-/** Whether Facebook took the publish, for a finish call whose answer was lost. Unknown counts as no. */
-async function reelStarted(ctx: PostContext, token: string, videoId: string): Promise<boolean> {
+/**
+ * Where a reserved video stands: `published` once Facebook took the publish, `failed`
+ * when it refused the video (it was never public), `unknown` when Facebook couldn't be
+ * asked, and `pending` otherwise: nothing went out yet, and this video can still be sent.
+ */
+async function publishState(
+  ctx: PostContext,
+  token: string,
+  videoId: string,
+): Promise<"published" | "failed" | "pending" | "unknown"> {
+  let status: ReelStatus["status"];
   try {
-    const { status } = await reelStatus(ctx, token, videoId);
-    return ["in_progress", "complete"].includes(status?.publishing_phase?.status ?? "");
+    ({ status } = await reelStatus(ctx, token, videoId));
   } catch {
-    return false;
+    return "unknown";
   }
+  const publishing = status?.publishing_phase?.status ?? "";
+  if (["in_progress", "complete"].includes(publishing)) return "published";
+  if (publishing === "error" || status?.processing_phase?.status === "error" || status?.video_status === "error")
+    return "failed";
+  return "pending";
+}
+
+async function watchAndReturn(
+  ctx: PostContext,
+  token: string,
+  videoId: string,
+  wait: (ms: number) => Promise<unknown>,
+) {
+  await watchReel(ctx, token, videoId, wait);
+  return { postId: videoId, permalink: `https://www.facebook.com/reel/${videoId}` };
 }
 
 /**
