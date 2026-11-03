@@ -1,6 +1,7 @@
 import "server-only";
 import type { ChatItem, ChatMessage, ToolCall, ToolExtras } from "@/lib/schemas/chat";
 import { mediaUrl } from "@/server/media/store";
+import { errorText } from "@/server/step-text";
 import { changesListing, needsApproval } from "./tools";
 
 /** Found listings shown under a reply; the model reads all of them, the seller sees the first few. */
@@ -44,7 +45,13 @@ export function approvalItem(call: ToolCall, state: ApprovalState, result?: unkn
     // the reel to be posted, until the post's own result replaces it
     ...(call.preview?.reel && { media: { url: mediaUrl(call.preview.reel), video: true } }),
     ...toolExtras(call.name, result),
+    ...(state === "failed" && failedReason(result)),
   };
+}
+
+function failedReason(result: unknown): { reason: { en: string; bn: string } } | object {
+  const stored = (result as { stepError?: unknown } | undefined)?.stepError;
+  return typeof stored === "string" ? { reason: { en: errorText(stored, "en"), bn: errorText(stored, "bn") } } : {};
 }
 
 /** Calls from the model's last turn that still wait for the seller's approval. */

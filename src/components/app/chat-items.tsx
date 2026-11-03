@@ -2,7 +2,7 @@
 
 import type { Route } from "next";
 import Link from "next/link";
-import { useFormatter, useTranslations } from "next-intl";
+import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { ArrowRight, Check, ExternalLink, Square, Store, X } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import type { ChatItem } from "@/lib/schemas/chat";
 import { ChatText } from "./chat-text";
 import { MediaImg } from "@/components/app/media-img";
+import { CopyButton } from "@/components/app/copy-button";
 
 const isBangla = (text: string) => /[ঀ-৿]/.test(text);
 
@@ -75,6 +76,7 @@ export function ChatEntry({
             >
               <span className="sr-only">{t("assistant")}: </span>
               <ChatText text={item.text} />
+              <CopyButton text={item.text} className="-ml-2" />
             </div>
           ))}
       </div>
@@ -177,6 +179,7 @@ function Approval({
 }) {
   const t = useTranslations("chat.approval");
   const tReels = useTranslations("review.reels");
+  const locale = useLocale();
   const args = item.args as {
     lang?: "en" | "bn";
     destination?: "facebook" | "instagram";
@@ -249,6 +252,7 @@ function Approval({
             >
               {args.caption}
             </p>
+            <CopyButton text={args.caption} className="-ml-2" />
           </div>
         ))}
       {item.state === "pending" ? (
@@ -285,6 +289,11 @@ function Approval({
           )}
         >
           {t(item.state)}
+          {item.state === "failed" && item.reason && (
+            <span lang={locale} className="block font-normal">
+              {item.reason[locale === "bn" ? "bn" : "en"]}
+            </span>
+          )}
         </p>
       )}
       <Made item={item.media?.video ? { ...item, media: undefined } : item} />

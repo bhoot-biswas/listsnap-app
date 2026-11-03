@@ -23,11 +23,14 @@ export default async function AssistantPage({ searchParams }: PageProps<"/assist
   const t = await getTranslations("chat");
   const [chats, counts, { ask }] = await Promise.all([ws.chatList(null), ws.counts(), searchParams]);
   // the first suggestion names what's waiting, when something is
-  const suggestions = SUGGESTIONS.map((s) =>
-    s === "review" && counts.needsReview > 0
-      ? t("shopSuggestions.reviewCount", { n: counts.needsReview })
-      : t(`shopSuggestions.${s}`),
-  );
+  const suggestions = SUGGESTIONS.map((s) => ({
+    text:
+      s === "review" && counts.needsReview > 0
+        ? t("shopSuggestions.reviewCount", { n: counts.needsReview })
+        : t(`shopSuggestions.${s}`),
+    // Eid photos spend the day's AI photos: the seller reads it, names the listings, sends
+    fill: s === "eid",
+  }));
 
   return (
     <>
@@ -35,6 +38,7 @@ export default async function AssistantPage({ searchParams }: PageProps<"/assist
       <AssistantChat
         initial={[]}
         heading={t("start.heading", { shop: viewer.workspace.name })}
+        intro={t("start.intro")}
         suggestions={suggestions}
         ask={typeof ask === "string" && ask.trim() ? ask : undefined}
       >

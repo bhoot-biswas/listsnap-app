@@ -105,6 +105,22 @@ describe("listing chat", () => {
     expect(chatItems(withReel)[3]).toMatchObject({ kind: "approval", state: "pending", media: { video: true } });
   });
 
+  it("says why an approved card failed, in both languages", () => {
+    const failed: ChatMessage[] = [
+      ...history,
+      {
+        role: "tool",
+        toolCallId: "c2",
+        name: "postReel",
+        result: { ok: false, error: "failed", message: "x", stepError: JSON.stringify({ key: "connectStore" }) },
+      },
+    ];
+    const card = chatItems(failed).at(-1) as { state: string; reason?: { en: string; bn: string } };
+    expect(card.state).toBe("failed");
+    expect(card.reason?.en).toMatch(/store/i);
+    expect(card.reason?.bn).toMatch(/[ঀ-৿]/);
+  });
+
   it("hides steps a Stop kept from running, and keeps a card shown before it answerable", () => {
     // the card and the reel came in one turn; Stop came between them
     const turn = history.at(-1) as Extract<ChatMessage, { role: "assistant" }>;

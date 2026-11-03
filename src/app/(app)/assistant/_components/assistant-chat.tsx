@@ -6,7 +6,7 @@ import { useTranslations } from "next-intl";
 import { CHAT_MESSAGE_MAX, type ChatItem } from "@/lib/schemas/chat";
 import { useChat } from "@/hooks/use-chat";
 import { takeAsk } from "@/lib/ask-handoff";
-import { ChatComposer } from "@/components/app/chat-composer";
+import { ChatComposer, useSuggestion, type Suggestion } from "@/components/app/chat-composer";
 import { ChatThread } from "@/components/app/chat-thread";
 
 /**
@@ -19,6 +19,7 @@ export function AssistantChat({
   initial,
   chatId,
   heading,
+  intro,
   suggestions = [],
   ask,
   running = false,
@@ -28,7 +29,9 @@ export function AssistantChat({
   /** The conversation on screen; none on the start screen. */
   chatId?: string;
   heading?: string;
-  suggestions?: string[];
+  /** What the assistant can do, under the heading of the start screen. */
+  intro?: string;
+  suggestions?: Suggestion[];
   /** A message the Dashboard's ask box sent here, to send at once. */
   ask?: string;
   /** Its reply is still being worked on: the seller left mid-turn and came back. */
@@ -43,6 +46,7 @@ export function AssistantChat({
     runningChat: running ? chatId : null,
     onStarted: (id) => window.history.pushState(null, "", `/assistant/${id}`),
   });
+  const pick = useSuggestion(chat, true);
 
   // a question from the Dashboard's ask box (or an old ?ask= link); once only, even when
   // React runs effects twice, and taken first, so going back doesn't send it again
@@ -59,22 +63,25 @@ export function AssistantChat({
   if (chat.items.length === 0 && !chatId)
     return (
       <div className="mx-auto w-full max-w-2xl space-y-6 px-4 pt-8 pb-10 md:pt-20">
-        <h2 className="text-center text-2xl font-semibold text-balance md:text-3xl">{heading}</h2>
+        <div className="space-y-2 text-center">
+          <h2 className="text-2xl font-semibold text-balance md:text-3xl">{heading}</h2>
+          {intro && <p className="text-sm text-balance text-muted-foreground">{intro}</p>}
+        </div>
         <div className="space-y-2">
           <ChatComposer chat={chat} placeholder={t("shopPlaceholder")} newChat autoFocus />
           {chat.error && <p className="px-1 text-sm text-destructive">{chat.error}</p>}
         </div>
         <ul>
           {suggestions.map((s) => (
-            <li key={s}>
+            <li key={s.text}>
               <button
                 type="button"
                 disabled={chat.busy}
-                onClick={() => chat.send(s, true)}
+                onClick={() => pick(s)}
                 className="flex min-h-11 w-full items-center gap-3 rounded-md px-2 text-left text-sm hover:bg-muted/60 disabled:opacity-50"
               >
                 <ArrowRight className="size-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-                {s}
+                {s.text}
               </button>
             </li>
           ))}

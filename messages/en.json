@@ -1401,6 +1401,12 @@
       "store": "Save it to my store"
     },
     "label": "Message",
+    "photoTitle": "Photo, {day}",
+    "copy": {
+      "label": "Copy",
+      "done": "Copied",
+      "failed": "Couldn't copy"
+    },
     "placeholder": "Ask about this listing…",
     "send": "Send",
     "sendAgain": "Send again",
@@ -1480,7 +1486,7 @@
     "shopSuggestions": {
       "review": "Which listings need review?",
       "ready": "Save everything that's Ready to my store",
-      "eid": "Make Eid photos for my red sarees",
+      "eid": "Make Eid photos for my newest listings",
       "left": "How many AI photos are left today?",
       "reviewCount": "{n, plural, one {# listing needs review: what's wrong?} other {# listings need review: what's wrong?}}"
     },
@@ -1505,6 +1511,7 @@
     "stepsDone": "{n, plural, one {# step done} other {# steps done}}",
     "start": {
       "heading": "{shop}: what shall we work on?",
+      "intro": "Ask in English or Bangla, or by voice. I can find and fix listings, start one from a photo, make photos and reels, save drafts to your store and post reels. I always ask before anything goes to your store or your Page.",
       "recent": "Recent",
       "seeAll": "See all"
     },

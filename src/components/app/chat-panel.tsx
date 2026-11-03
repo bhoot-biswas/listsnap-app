@@ -5,7 +5,7 @@ import { MessageSquarePlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ChatItem } from "@/lib/schemas/chat";
 import { useChat } from "@/hooks/use-chat";
-import { ChatComposer } from "./chat-composer";
+import { ChatComposer, useSuggestion, type Suggestion } from "./chat-composer";
 import { ChatHistory } from "./chat-history";
 import { ChatThread } from "./chat-thread";
 
@@ -32,7 +32,7 @@ export function ChatPanel({
   running?: string | null;
   intro: string;
   placeholder: string;
-  suggestions: string[];
+  suggestions: Suggestion[];
   /** Scrolls to the latest message again when a hidden panel opens. */
   visible?: boolean;
   /** Saves the seller's pending edits first, so the chat works on what they see. */
@@ -40,6 +40,7 @@ export function ChatPanel({
 }) {
   const t = useTranslations("chat");
   const chat = useChat({ endpoint, initial, beforeSend, runningChat: running });
+  const pick = useSuggestion(chat, true);
   const empty = chat.items.length === 0;
 
   return (
@@ -66,14 +67,14 @@ export function ChatPanel({
             <div className="flex flex-wrap gap-2">
               {suggestions.map((s) => (
                 <Button
-                  key={s}
+                  key={s.text}
                   type="button"
                   variant="outline"
                   className="h-auto min-h-11 text-left whitespace-normal"
                   disabled={chat.busy}
-                  onClick={() => chat.send(s, true)}
+                  onClick={() => pick(s)}
                 >
-                  {s}
+                  {s.text}
                 </Button>
               ))}
             </div>

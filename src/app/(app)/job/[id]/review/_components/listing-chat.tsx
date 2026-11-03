@@ -9,6 +9,8 @@ import { ChatPanel } from "@/components/app/chat-panel";
 import type { ChatItem } from "@/lib/schemas/chat";
 
 const SUGGESTIONS = ["status", "reel", "eid", "store"] as const;
+// these make photos or a reel, which spend the day's allowance: the seller sends them
+const MAKES = new Set<string>(["reel", "eid"]);
 
 /** A listing's chat, in a side panel so the form stays in view while the chat changes it. */
 export function ListingChat({
@@ -43,7 +45,7 @@ export function ListingChat({
           running={running}
           intro={t("intro")}
           placeholder={t("placeholder")}
-          suggestions={SUGGESTIONS.map((s) => t(`suggestions.${s}`))}
+          suggestions={SUGGESTIONS.map((s) => ({ text: t(`suggestions.${s}`), fill: MAKES.has(s) }))}
           visible={open}
           beforeSend={beforeSend}
         />

@@ -222,5 +222,6 @@ export async function runTool(
   if (outcome.state === "done") return { ok: true, done: true, result: outcome.result };
   if (outcome.state === "running") return { ok: true, stillWorking: true, message: ERROR_TEXT.busy };
   // the model reads the English; the seller sees the step's own card in their language
-  return { ok: false, error: "failed", message: errorText(outcome.error, "en") };
+  // and the stored error, so a card that failed can say why in the seller's language
+  return { ok: false, error: "failed", message: errorText(outcome.error, "en"), stepError: outcome.error };
 }
