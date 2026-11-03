@@ -90,7 +90,7 @@ export function VoiceRecorder({
               setSettled(false);
               void mic.start();
             }}
-            disabled={disabled}
+            disabled={disabled || mic.phase === "starting"}
           >
             <Mic className="size-4" aria-hidden="true" />
             <span className="sr-only">{t("record")}</span>

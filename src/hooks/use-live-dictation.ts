@@ -5,11 +5,14 @@ import { VOICE_NOTE_MAX_S } from "@/lib/schemas/voice-note";
 import { DictationEvent } from "@/lib/schemas/dictation";
 import { RECORDING_TYPES, recordingFile, type RecorderProblem } from "@/hooks/use-recorder";
 
-export type DictationPhase = "idle" | "listening" | "writing";
+/** `starting` while the browser asks for the microphone; the mic button waits meanwhile. */
+export type DictationPhase = "idle" | "starting" | "listening" | "writing";
 
 /** Give up on live words and send the recording whole after this long. */
 const DRAIN_MS = 3000;
 const FINAL_MS = 10_000;
+// longer than this and an empty live result means the live path heard nothing, not silence
+const HEARD_NOTHING_MS = 1000;
 
 const wait = <T>(p: Promise<T>, ms: number) =>
   Promise.race([p, new Promise<null>((r) => setTimeout(() => r(null), ms))]);
@@ -31,6 +34,7 @@ interface Session {
   drained: (() => void) | null;
   final: string | null;
   settled: (() => void) | null;
+  began: number;
 }
 
 /**
@@ -66,6 +70,8 @@ export function useLiveDictation({
   const [problem, setProblem] = useState<RecorderProblem | null>(null);
   const session = useRef<Session | null>(null);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
+  // the permission prompt can outlast the page: its answer then finds nobody to record for
+  const gone = useRef(false);
   const cb = useRef({ onWords, onDone, onFail, onRecorded });
   useEffect(() => {
     cb.current = { onWords, onDone, onFail, onRecorded };
@@ -80,19 +86,21 @@ export function useLiveDictation({
   };
 
   // let go of the microphone and the live session when the page goes away
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    gone.current = false;
+    return () => {
+      gone.current = true;
       const s = session.current;
       if (!s) return;
+      session.current = null;
       s.abort.abort();
       if (s.rec?.state === "recording") {
         s.rec.onstop = null;
         s.rec.stop();
       }
       release(s);
-    },
-    [],
-  );
+    };
+  }, []);
 
   const pump = async (s: Session) => {
     if (s.uploading || !s.id) return;
@@ -145,6 +153,8 @@ export function useLiveDictation({
 
   /** Resolves false when there's no microphone to record with, or the seller said no. */
   const start = async (): Promise<boolean> => {
+    // a second tap while the first waits for the microphone would leave that one running
+    if (session.current) return false;
     setProblem(null);
     if (typeof MediaRecorder === "undefined" || !navigator.mediaDevices?.getUserMedia) {
       setProblem("unsupported");
@@ -168,9 +178,11 @@ export function useLiveDictation({
       drained: null,
       final: null,
       settled: null,
+      began: 0,
     };
     void s.ctx?.resume().catch(() => {});
     session.current = s;
+    setPhase("starting");
     // connect while the permission prompt is up: the handshake takes a second or so
     if (canStream) void listen(s);
 
@@ -180,9 +192,19 @@ export function useLiveDictation({
       s.abort.abort();
       release(s);
       session.current = null;
+      setPhase("idle");
       setProblem("denied");
       return false;
     }
+    if (gone.current || session.current !== s) {
+      s.abort.abort();
+      release(s);
+      if (session.current === s) session.current = null;
+      if (!gone.current) setPhase("idle");
+      return false;
+    }
+    // iPhone Safari can leave a context made before the microphone was granted suspended
+    void s.ctx?.resume().catch(() => {});
 
     const mimeType = RECORDING_TYPES.find((type) => MediaRecorder.isTypeSupported(type));
     s.rec = new MediaRecorder(s.stream, mimeType ? { mimeType } : undefined);
@@ -210,9 +232,9 @@ export function useLiveDictation({
 
     setSeconds(0);
     setPhase("listening");
-    const began = Date.now();
+    s.began = Date.now();
     timer.current = setInterval(() => {
-      const sec = Math.floor((Date.now() - began) / 1000);
+      const sec = Math.floor((Date.now() - s.began) / 1000);
       setSeconds(sec);
       if (sec >= maxSeconds) void stop();
     }, 250);
@@ -242,6 +264,7 @@ export function useLiveDictation({
         500,
       );
     }
+    const recordedMs = Date.now() - s.began;
     const rec = s.rec;
     const file = new Promise<File>((r) => {
       rec.onstop = () => r(recordingFile(s.chunks, rec.mimeType || "audio/webm"));
@@ -263,6 +286,9 @@ export function useLiveDictation({
         );
         if (ended?.ok) await wait(settled, FINAL_MS);
         if (s.live) text = s.final;
+        // words were spoken, but the live path heard none of them (a muted context on
+        // iPhone): the whole recording decides instead of "not heard"
+        if (text !== null && !text.trim() && recordedMs > HEARD_NOTHING_MS && writeDown) text = null;
       }
     }
     s.abort.abort();

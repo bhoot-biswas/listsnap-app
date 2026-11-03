@@ -66,7 +66,7 @@ export function ChatMic({
           variant="ghost"
           size="icon"
           className="size-11 shrink-0 md:size-9"
-          disabled={disabled || mic.phase === "writing"}
+          disabled={disabled || mic.phase === "starting" || mic.phase === "writing"}
           onClick={() => {
             setError(null);
             onWorking(true);
