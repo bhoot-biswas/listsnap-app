@@ -6,6 +6,7 @@ import path from "node:path";
 import { promisify } from "node:util";
 import sharp from "sharp";
 import { env } from "@/server/env";
+import { heavy } from "@/server/heavy";
 import { StepError } from "@/server/pipeline/run-step";
 import { logged } from "../log";
 import type { ReelPhotoFiles, VideoProvider } from "../types";
@@ -86,30 +87,33 @@ export const liveVideo: VideoProvider = {
       ctx,
       { provider: "video", model: `hyperframes ${HYPERFRAMES_VERSION}`, endpoint: "render", mode: "live" },
       () =>
-        oneAtATime(async () => {
-          const started = performance.now();
-          const dir = await mkdtemp(path.join(tmpdir(), "listsnap-reel-"));
-          try {
-            await stage(dir, input.template, input.photos);
-            const out = path.join(dir, "reel.mp4");
-            // inline JSON: in 0.8.217 both --variables-file and a --variables path fail to read the file
-            const args = ["render", dir, "--variables", JSON.stringify(input.variables), "--strict-variables"];
-            args.push("--workers", String(env().reelWorkers), "--quiet", "-o", out);
-            await run(process.execPath, [CLI, ...args], {
-              timeout: TIMEOUT_MS,
-              maxBuffer: 16 * 1024 * 1024,
-              windowsHide: true,
-            }).catch((err: { stderr?: string; killed?: boolean }) => {
-              // the CLI's own words, not the command line, so the log says what went wrong
-              const why = err.killed ? "timed out" : (err.stderr ?? "").trim().split("\n").slice(-3).join(" ");
-              throw new Error(`hyperframes render failed: ${why || "no output"}`);
-            });
-            const data = await readFile(out);
-            return { data, width: 1080, height: 1920, seconds: Math.round((performance.now() - started) / 100) / 10 };
-          } finally {
-            await rm(dir, { recursive: true, force: true });
-          }
-        }),
+        // one reel at a time, and it counts as heavy work like ffmpeg: a render uses every core
+        oneAtATime(() =>
+          heavy(async () => {
+            const started = performance.now();
+            const dir = await mkdtemp(path.join(tmpdir(), "listsnap-reel-"));
+            try {
+              await stage(dir, input.template, input.photos);
+              const out = path.join(dir, "reel.mp4");
+              // inline JSON: in 0.8.217 both --variables-file and a --variables path fail to read the file
+              const args = ["render", dir, "--variables", JSON.stringify(input.variables), "--strict-variables"];
+              args.push("--workers", String(env().reelWorkers), "--quiet", "-o", out);
+              await run(process.execPath, [CLI, ...args], {
+                timeout: TIMEOUT_MS,
+                maxBuffer: 16 * 1024 * 1024,
+                windowsHide: true,
+              }).catch((err: { stderr?: string; killed?: boolean }) => {
+                // the CLI's own words, not the command line, so the log says what went wrong
+                const why = err.killed ? "timed out" : (err.stderr ?? "").trim().split("\n").slice(-3).join(" ");
+                throw new Error(`hyperframes render failed: ${why || "no output"}`);
+              });
+              const data = await readFile(out);
+              return { data, width: 1080, height: 1920, seconds: Math.round((performance.now() - started) / 100) / 10 };
+            } finally {
+              await rm(dir, { recursive: true, force: true });
+            }
+          }),
+        ),
       (r) => ({
         summary: `${input.template} ${input.variables.lang} · ${r.seconds} s · ${(r.data.length / 1e6).toFixed(1)} MB`,
         costUsd: 0,

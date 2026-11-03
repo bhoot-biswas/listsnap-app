@@ -92,35 +92,38 @@ export function fillOccluders(mask: Uint8Array, rgb: Uint8Array, width: number, 
   const n = width * height;
   const label = new Int32Array(n).fill(-1);
   const regions: { touchesEdge: boolean; count: number; sum: [number, number, number] }[] = [];
-  const stack: number[] = [];
+  // Typed arrays and no array per pixel: a 2048 px box is four million pixels, and this
+  // runs on the server's one JavaScript thread, so every allocation here holds up the
+  // other requests. Each pixel is pushed at most once, so n slots are always enough.
+  const stack = new Int32Array(n);
+  const push = (q: number, id: number, top: number) => {
+    label[q] = id;
+    stack[top] = q;
+    return top + 1;
+  };
   for (let start = 0; start < n; start++) {
     if (mask[start] || label[start]! >= 0) continue;
     const region = { touchesEdge: false, count: 0, sum: [0, 0, 0] as [number, number, number] };
     const id = regions.push(region) - 1;
-    label[start] = id;
-    stack.push(start);
-    while (stack.length) {
-      const p = stack.pop()!;
+    let top = push(start, id, 0);
+    let r = 0;
+    let g = 0;
+    let b = 0;
+    while (top) {
+      const p = stack[--top]!;
       const x = p % width;
       const y = (p - x) / width;
       region.count++;
-      region.sum[0] += rgb[p * 3]!;
-      region.sum[1] += rgb[p * 3 + 1]!;
-      region.sum[2] += rgb[p * 3 + 2]!;
+      r += rgb[p * 3]!;
+      g += rgb[p * 3 + 1]!;
+      b += rgb[p * 3 + 2]!;
       if (x === 0 || y === 0 || x === width - 1 || y === height - 1) region.touchesEdge = true;
-      const next = [
-        x > 0 ? p - 1 : -1,
-        x < width - 1 ? p + 1 : -1,
-        y > 0 ? p - width : -1,
-        y < height - 1 ? p + width : -1,
-      ];
-      for (const q of next) {
-        if (q >= 0 && !mask[q] && label[q]! < 0) {
-          label[q] = id;
-          stack.push(q);
-        }
-      }
+      if (x > 0 && !mask[p - 1] && label[p - 1]! < 0) top = push(p - 1, id, top);
+      if (x < width - 1 && !mask[p + 1] && label[p + 1]! < 0) top = push(p + 1, id, top);
+      if (y > 0 && !mask[p - width] && label[p - width]! < 0) top = push(p - width, id, top);
+      if (y < height - 1 && !mask[p + width] && label[p + width]! < 0) top = push(p + width, id, top);
     }
+    region.sum = [r, g, b];
   }
 
   // the background is what surrounds the product inside its box: the regions open to the edge

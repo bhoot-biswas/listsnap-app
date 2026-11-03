@@ -1,8 +1,9 @@
 import "server-only";
 import { StepError } from "./run-step";
 import { sharpnessOf } from "@/server/image-ops";
-import { normalisePhoto, readMedia, saveMedia } from "@/server/media/store";
-import { openVideo } from "@/server/media/video";
+import { access } from "node:fs/promises";
+import { locateMedia, normalisePhoto, saveMedia } from "@/server/media/store";
+import { openVideoFile } from "@/server/media/video";
 import { SHOP_WORDS } from "@/server/media/voice";
 import { baseten, meta, type CallContext } from "@/server/providers";
 import { takeListingSlot } from "@/server/limits";
@@ -39,15 +40,16 @@ export async function watchStep(ctx: WatchContext): Promise<WatchResult> {
   if (made.length && !saved) return { found: made.length, jobs: made.length, limited: 0 };
 
   const batch = await ctx.ws.getBatch(ctx.batchId);
-  const file = batch?.video_media_id ? await readMedia(ctx.ws.id, batch.video_media_id) : null;
-  if (!file) throw new StepError("videoMissing");
+  // ffmpeg reads the stored file where it is; the video is never loaded into memory
+  const file = batch?.video_media_id ? await locateMedia(ctx.ws.id, batch.video_media_id) : null;
+  if (!file || !(await exists(file.abs))) throw new StepError("videoMissing");
   const call = { workspaceId: ctx.ws.id, jobId: null, step: "watch" };
 
   // the first product's listing slot is taken before the paid models listen and watch,
   // so a shop (or demo visitor) already at today's limit costs nothing more
   let first = saved ? null : await takeListingSlot(ctx.ws, ctx.workspace, ctx.ip);
   if (!saved && !first) throw new StepError("listingsUsedUp", { permanent: true });
-  const video = await openVideo(file.data);
+  const video = await openVideoFile(file.abs);
   try {
     const seconds = await video.seconds();
     // watching again finds the same: these use up the attempts at once instead of three runs
@@ -104,7 +106,10 @@ export async function watchStep(ctx: WatchContext): Promise<WatchResult> {
 }
 
 /** Muse Voice Transcribe hears what was said, then Muse Spark Open lists the products. */
-async function watchVideo(video: Awaited<ReturnType<typeof openVideo>>, call: CallContext): Promise<VideoProduct[]> {
+async function watchVideo(
+  video: Awaited<ReturnType<typeof openVideoFile>>,
+  call: CallContext,
+): Promise<VideoProduct[]> {
   const [sound, small] = await Promise.all([video.sound(), video.small()]);
   const heard = sound ? await meta().transcribe(call, sound, SHOP_WORDS, true) : null;
   const timed = (heard?.turns ?? [])
@@ -117,7 +122,7 @@ async function watchVideo(video: Awaited<ReturnType<typeof openVideo>>, call: Ca
 }
 
 /** The sharpest of a few frames around the model's moment, as a product photo; null if none. */
-async function bestFrame(video: Awaited<ReturnType<typeof openVideo>>, p: VideoProduct, seconds: number) {
+async function bestFrame(video: Awaited<ReturnType<typeof openVideoFile>>, p: VideoProduct, seconds: number) {
   let best: { data: Buffer; score: number } | null = null;
   for (const offset of AROUND) {
     const at = Math.min(Math.max(0, p.best_frame_s + offset), Math.max(0, seconds - 0.1));
@@ -136,3 +141,9 @@ function spoken(p: VideoProduct): ListenResult {
   const nothing = price_bdt === null && stock === null && !material && !sizes.length && !colors.length && !notes.length;
   return { transcript: p.said, heardBy: "video", facts: nothing ? null : facts };
 }
+
+const exists = (file: string) =>
+  access(file).then(
+    () => true,
+    () => false,
+  );
