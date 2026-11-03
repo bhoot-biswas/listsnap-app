@@ -81,6 +81,7 @@ export function ChatComposer({
         </div>
       )}
       <textarea
+        data-chat-input
         aria-label={t("label")}
         placeholder={placeholder}
         value={chat.draft}
@@ -144,4 +145,23 @@ export function ChatComposer({
       </div>
     </form>
   );
+}
+
+/**
+ * A suggestion under the message box. One that makes something (photos, a reel) spends
+ * the day's allowance, so it fills the box for the seller to read, change and send;
+ * a question or a store save (which stops at a card anyway) is sent at once.
+ */
+export type Suggestion = { text: string; fill?: boolean };
+
+export function useSuggestion(chat: Pick<Chat, "send" | "setDraft">, newChat: boolean) {
+  return (s: Suggestion) => {
+    if (!s.fill) return chat.send(s.text, newChat);
+    chat.setDraft(s.text);
+    requestAnimationFrame(() => {
+      const box = document.querySelector<HTMLTextAreaElement>("[data-chat-input]");
+      box?.focus();
+      box?.setSelectionRange(s.text.length, s.text.length);
+    });
+  };
 }
