@@ -143,6 +143,9 @@ const steps = ((globalThis as { __listsnapSteps?: { running: number; draining: b
   draining: false,
 });
 
+/** True once the server is stopping: nothing new should be started. */
+export const isDraining = () => steps.draining;
+
 /** Stops new steps from starting; resolves with how many still run when they're done or `ms` is up. */
 export async function drainSteps(ms: number, poll = 250): Promise<number> {
   steps.draining = true;

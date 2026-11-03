@@ -26,16 +26,26 @@ export async function reserveListingSlot(
 export const clientIp = (request: Request): string =>
   request.headers.get(env().ipHeader)?.split(",").at(-1)?.trim() || "unknown";
 
+/**
+ * Who a demo limit is counted against: the visitor's address when there is a request, or
+ * the hash kept on the job when the server works on it by itself (the step worker).
+ */
+export type Visitor = string | { hash: string };
+
+/** The salted hash ip_daily counts a visitor by. */
+export const visitorHash = (v: Visitor | undefined): string =>
+  typeof v === "object" ? v.hash : demoIpLimit.hash(v || "unknown", env().authSecret);
+
 /** The same slot for callers without a request, such as a chat tool; null at the limit. */
 export async function takeListingSlot(
   ws: WorkspaceScope,
   workspace: Workspace,
-  ip: string,
+  ip: Visitor,
 ): Promise<(() => Promise<void>) | null> {
   if (!(await ws.reserveListing(workspace.limits.listings))) return null;
   if (!workspace.isDemo) return () => ws.releaseListing();
 
-  const ipHash = demoIpLimit.hash(ip, env().authSecret);
+  const ipHash = visitorHash(ip);
   if (!(await demoIpLimit.reserve(ipHash))) {
     await ws.releaseListing();
     return null;
@@ -53,11 +63,11 @@ export async function takeListingSlot(
  */
 export async function takeDemoAllowance(
   workspace: Workspace,
-  ip: string | undefined,
+  ip: Visitor | undefined,
   counter: Exclude<IpCounter, "listings">,
 ): Promise<(() => Promise<void>) | null> {
   if (!workspace.isDemo) return async () => {};
-  const ipHash = demoIpLimit.hash(ip || "unknown", env().authSecret);
+  const ipHash = visitorHash(ip);
   if (!(await demoIpLimit.reserve(ipHash, counter))) return null;
   return () => demoIpLimit.release(ipHash, counter);
 }

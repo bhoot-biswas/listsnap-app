@@ -4,7 +4,7 @@ import { saveMedia } from "@/server/media/store";
 import { photoFileProblem, readPhotoFile, unreadablePhoto } from "@/server/media/upload";
 import { normaliseVoice, unreadableVoice, voiceFileProblem } from "@/server/media/voice";
 import { fail, ok, unauthorized } from "@/server/http";
-import { reserveListingSlot } from "@/server/limits";
+import { clientIp, reserveListingSlot, visitorHash } from "@/server/limits";
 
 const MAX_PHOTOS = 5;
 
@@ -71,6 +71,7 @@ export async function POST(request: Request) {
       ? await saveMedia(ws.id, "voice", note.data, { mime: "audio/wav", width: 0, height: 0, selected: false })
       : null;
     const id = await ws.createJob(saved, batchId ?? undefined, voiceMedia?.id);
+    if (viewer.workspace.isDemo) await ws.rememberVisitor("jobs", id, visitorHash(clientIp(request)));
     return ok({ id }, 201);
   } catch (err) {
     await slot.release();

@@ -20,7 +20,7 @@ import {
 import type { BrandKit } from "@/lib/schemas/brand-kit";
 import { LOOKS, lookKind, type Look, type LookResult } from "@/lib/schemas/looks";
 import { ListenResult, type SellerFacts } from "@/lib/schemas/voice-note";
-import { takeDemoAllowance } from "@/server/limits";
+import { type Visitor, takeDemoAllowance } from "@/server/limits";
 
 /** Per-listing steps: write (English), translate (Bangla), render (one scene per call), look (on request). */
 
@@ -29,7 +29,7 @@ export interface ListingStepContext {
   workspace: Workspace;
   listing: ListingRow;
   /** Who asked, for a demo shop's per-visitor AI photo limit. */
-  ip?: string;
+  ip?: Visitor;
 }
 
 const call = (ctx: ListingStepContext, step: string) => ({ workspaceId: ctx.ws.id, jobId: ctx.listing.job_id, step });

@@ -38,6 +38,8 @@ export interface Env {
   };
   /** Chrome workers per reel render; each takes about 256 MB. */
   reelWorkers: number;
+  /** Which jobs the server works through by itself: none, video batches, or every job. */
+  pipelineWorker: "off" | "batches" | "all";
   modelApiKey: string;
   basetenApiKey: string;
   mockDelayMs: number;
@@ -99,6 +101,7 @@ export function env(): Env {
       baseten: mode("PROVIDER_MODE_BASETEN"),
     },
     reelWorkers: Math.min(8, Math.max(1, Number(read("REEL_WORKERS")) || 2)),
+    pipelineWorker: (["batches", "all"] as const).find((m) => m === read("PIPELINE_WORKER")) ?? "off",
     modelApiKey: read("MODEL_API_KEY"),
     basetenApiKey: read("BASETEN_API_KEY"),
     mockDelayMs: Math.max(0, Number(read("MOCK_DELAY_MS")) || 0),

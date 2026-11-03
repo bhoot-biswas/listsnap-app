@@ -6,7 +6,7 @@ import { locateMedia, normalisePhoto, saveMedia } from "@/server/media/store";
 import { openVideoFile } from "@/server/media/video";
 import { SHOP_WORDS } from "@/server/media/voice";
 import { baseten, meta, type CallContext } from "@/server/providers";
-import { takeListingSlot } from "@/server/limits";
+import { takeListingSlot, visitorHash, type Visitor } from "@/server/limits";
 import type { WorkspaceScope } from "@/server/db/scope";
 import type { Workspace } from "@/server/db/workspaces";
 import type { ListenResult } from "@/lib/schemas/voice-note";
@@ -17,7 +17,7 @@ export interface WatchContext {
   workspace: Workspace;
   batchId: string;
   /** Who pressed the button, for a demo shop's per-visitor limit. */
-  ip: string;
+  ip: Visitor;
 }
 
 /** Frames tried around the moment the model picked; a hand or a turn can blur any one of them. */
@@ -82,12 +82,13 @@ export async function watchStep(ctx: WatchContext): Promise<WatchResult> {
           width: photo.width,
           height: photo.height,
         });
-        await ctx.ws.createJob(
+        const jobId = await ctx.ws.createJob(
           [{ mediaId: media.id, width: photo.width, height: photo.height }],
           ctx.batchId,
           undefined,
           spoken(p),
         );
+        if (ctx.workspace.isDemo) await ctx.ws.rememberVisitor("jobs", jobId, visitorHash(ctx.ip));
       } catch (err) {
         // the job wasn't made, so its slot goes back; the next attempt makes it
         await slot();

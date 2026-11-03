@@ -160,6 +160,7 @@ Then:
 - **The demo store:** paste the three `DEMO_WOO_…` lines from step 7, and set `PROVIDER_MODE_WOO=live`.
 - **Shopify:** see "Shopify" below. Until the app is registered, leave `PROVIDER_MODE_SHOPIFY=mock`.
 - **Meta AI:** add `MODEL_API_KEY=…` and set `PROVIDER_MODE_META=live`. Set a spend alert on the Meta side too.
+- **Background work:** `PIPELINE_WORKER=batches` lets the server work through video batches by itself, so a seller who puts the phone away doesn't stop them; `all` does it for every job. It runs at most three steps at once, waits 5 s, 30 s and 2 min between failed attempts, and leaves jobs older than a day to their tab. `off` (the default) leaves every step to the browser, as before; changing it needs only `systemctl restart listsnap`.
 - **Reels:** set `PROVIDER_MODE_VIDEO=live`. On a 2-vCPU server also add `REEL_WORKERS=1`: a 12 s reel takes about 46 s and under 900 MB either way, and one worker leaves a core for the app.
 - **Email sign-in:** create a mailbox in hPanel (for example `hello@getlistsnap.com`), then add:
 

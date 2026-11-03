@@ -107,6 +107,16 @@ export async function workspaceForUser(userId: string): Promise<Workspace | null
   return row ? toWorkspace(row) : null;
 }
 
+/** A shop by id, while it exists; for the server's own work (the step worker), which has no seller. */
+export async function workspaceById(id: string): Promise<Workspace | null> {
+  const row = await selectOne<WorkspaceRow>(
+    `SELECT id, name, is_demo, expires_at, onboarded_at, settings_json, daily_listing_limit, daily_image_limit
+       FROM workspaces WHERE id = ? AND (expires_at IS NULL OR expires_at > UTC_TIMESTAMP(3))`,
+    [id],
+  );
+  return row ? toWorkspace(row) : null;
+}
+
 export async function markOnboarded(workspaceId: string, name?: string): Promise<void> {
   await execute(
     "UPDATE workspaces SET onboarded_at = COALESCE(onboarded_at, UTC_TIMESTAMP(3)), name = COALESCE(?, name) WHERE id = ?",

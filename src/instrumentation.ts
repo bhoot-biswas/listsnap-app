@@ -3,4 +3,7 @@ export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
   const { stopGently } = await import("@/server/shutdown");
   stopGently();
+  // works through jobs by itself when PIPELINE_WORKER says so; off by default
+  const { startWorker } = await import("@/server/worker");
+  startWorker();
 }
