@@ -72,6 +72,8 @@ describe.skipIf(!enabled)("listing chat (MariaDB)", async () => {
     const asked = await chat({ message: "Post the reel to Instagram" });
     const card = items(asked).find((i) => i.kind === "approval")!;
     expect(card).toMatchObject({ name: "postReel", state: "pending", args: { destination: "instagram" } });
+    // the card plays the reel that will be posted
+    expect(card).toMatchObject({ media: { video: true } });
     // the model left the caption out, so the listing's own was filled in before the card
     expect(String((card as { args: Record<string, unknown> }).args.caption).length).toBeGreaterThan(10);
     expect(await posts()).toBe(0);
