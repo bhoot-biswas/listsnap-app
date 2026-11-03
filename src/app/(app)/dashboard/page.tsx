@@ -74,7 +74,7 @@ export default async function DashboardPage() {
             className="flex flex-wrap items-center gap-3 rounded-xl border border-destructive/40 bg-destructive/5 p-4"
           >
             <CircleAlert className="size-5 shrink-0 text-destructive" aria-hidden="true" />
-            <p className="min-w-0 flex-1 text-sm">{t("storeBroken")}</p>
+            <p className="min-w-0 flex-1 text-sm">{t("storeBroken", { kind: brokenStore.kind })}</p>
             <ButtonLink href={serviceHref(brokenStore.kind)} variant="outline" className="h-11 md:h-9">
               {t("fixConnection")}
             </ButtonLink>

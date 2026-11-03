@@ -219,7 +219,7 @@
     "storeConnected": "Store connected",
     "storeMissing": "No store connected yet",
     "storeDemo": "Demo store",
-    "storeBroken": "Your WooCommerce store isn't connecting. New listings can't be saved to it.",
+    "storeBroken": "Your {kind, select, shopify {Shopify} other {WooCommerce}} store isn't connecting. New listings can't be saved to it.",
     "facebookBroken": "Facebook stopped accepting ListSnap's access, so reels can't be posted. Connect it again.",
     "fixConnection": "Fix connection",
     "recent": "Recent listings",

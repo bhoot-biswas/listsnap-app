@@ -219,7 +219,7 @@
     "storeConnected": "স্টোর যুক্ত আছে",
     "storeMissing": "এখনো কোনো স্টোর যুক্ত হয়নি",
     "storeDemo": "ডেমো স্টোর",
-    "storeBroken": "আপনার WooCommerce স্টোরে যোগাযোগ হচ্ছে না। নতুন লিস্টিং স্টোরে রাখা যাবে না।",
+    "storeBroken": "আপনার {kind, select, shopify {Shopify} other {WooCommerce}} স্টোরে যোগাযোগ হচ্ছে না। নতুন লিস্টিং স্টোরে রাখা যাবে না।",
     "facebookBroken": "Facebook ListSnap-এর অনুমতি আর মানছে না, তাই রিল পোস্ট করা যাবে না। আবার যুক্ত করুন।",
     "fixConnection": "সংযোগ ঠিক করুন",
     "recent": "সাম্প্রতিক লিস্টিং",
