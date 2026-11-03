@@ -6,7 +6,7 @@ import { TopBar } from "@/components/app/top-bar";
 import { requireWorkspace } from "@/server/auth/session";
 import { forWorkspace } from "@/server/db/scope";
 import { mediaUrl } from "@/server/media/store";
-import { BanglaText, ListingText } from "@/lib/schemas/pipeline";
+import { BanglaText, ListingText, checkNotesFor } from "@/lib/schemas/pipeline";
 import { suggestedPrice, type ListingEdit } from "@/lib/schemas/review";
 import { listingVariants } from "@/lib/variants";
 import { lookOf, type Look } from "@/lib/schemas/looks";
@@ -208,7 +208,7 @@ export default async function ReviewPage({ params, searchParams }: PageProps<"/j
         colorPhotos={colorPhotos}
         hint={{ low: price_hint_bdt.low, high: price_hint_bdt.high }}
         confidence={listing.confidence}
-        checkNotes={listing.check_notes ?? []}
+        checkNotes={checkNotesFor(locale, listing.check_notes, bn.success ? bn.data : null)}
         voiceNote={voiceNote}
         status={listing.status}
         inStore={listing.status === "in_store" || listing.status === "posted"}

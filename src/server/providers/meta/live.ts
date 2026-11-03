@@ -1,6 +1,6 @@
 import "server-only";
 import { z } from "zod";
-import { BanglaText, ListingText, PlanResult, ProductMatch } from "@/lib/schemas/pipeline";
+import { BanglaWritten, ListingText, PlanResult, ProductMatch } from "@/lib/schemas/pipeline";
 import { logged } from "../log";
 import type { MetaProvider } from "../types";
 import { paletteSwatch } from "@/server/image-ops";
@@ -112,7 +112,7 @@ export const liveMeta: MetaProvider = {
   },
 
   translate: async (ctx, listing) => {
-    const { title, short_description, description, attributes, tags } = listing;
+    const { title, short_description, description, attributes, tags, check_notes } = listing;
     const r = await logged(
       ctx,
       info,
@@ -120,9 +120,9 @@ export const liveMeta: MetaProvider = {
         sparkJson({
           name: "BanglaListing",
           effort: SPARK_EFFORT.translate,
-          schema: BanglaText,
+          schema: BanglaWritten,
           system: BANGLA_SYSTEM,
-          userText: `Listing to localize:\n${JSON.stringify({ title, short_description, description, attributes, tags }, null, 2)}`,
+          userText: `Listing to localize:\n${JSON.stringify({ title, short_description, description, attributes, tags, check_notes }, null, 2)}`,
         }),
       (r) => ({ summary: `"${r.data.title}"${retried(r)}`, costUsd: r.costUsd }),
     );
