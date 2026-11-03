@@ -5,9 +5,10 @@ import type { UsageCall } from "@/server/db/scope";
 import { cn } from "@/lib/utils";
 
 /** The newest AI calls across the shop: real model names, timings and cost, like a job's Under the hood. */
-export async function CallLog({ calls }: { calls: UsageCall[] }) {
+export async function CallLog({ calls, money }: { calls: UsageCall[]; money: (n: number) => string }) {
   const t = await getTranslations("usage.log");
   const tCommon = await getTranslations("common");
+  const tStep = await getTranslations("usage.steps.name");
   const format = await getFormatter();
   return (
     <section aria-labelledby="log" className="space-y-3 rounded-xl border bg-card p-4 md:p-5">
@@ -39,9 +40,11 @@ export async function CallLog({ calls }: { calls: UsageCall[] }) {
                       {tCommon("mock")}
                     </Badge>
                   )}
-                  <span className="ml-auto shrink-0 tabular-nums">{(c.ms / 1000).toFixed(1)}s</span>
+                  <span className="ml-auto shrink-0 tabular-nums">
+                    {t("seconds", { s: format.number(c.ms / 1000, { maximumFractionDigits: 1 }) })}
+                  </span>
                   <span className="w-16 shrink-0 text-right tabular-nums max-sm:hidden">
-                    ${Number(c.cost_usd).toFixed(4)}
+                    {money(Number(c.cost_usd))}
                   </span>
                   <span className={cn("shrink-0", c.ok ? "text-success" : "text-destructive")}>
                     <span aria-hidden="true">{c.ok ? "✓" : "✕"}</span>
@@ -49,7 +52,7 @@ export async function CallLog({ calls }: { calls: UsageCall[] }) {
                   </span>
                 </div>
                 <p className="truncate text-muted-foreground">
-                  {c.step} → {c.summary}
+                  {tStep.has(c.step) ? tStep(c.step) : c.step} → {c.summary}
                 </p>
               </>
             );

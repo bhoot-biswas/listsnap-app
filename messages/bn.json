@@ -409,7 +409,8 @@
       "intro": "Muse Spark, SAM ও Muse Image-এর প্রতিটি কল, সময় ও খরচসহ।",
       "empty": "এখনো কোনো AI কল হয়নি।",
       "ok": "হয়েছে",
-      "failed": "হয়নি"
+      "failed": "হয়নি",
+      "seconds": "{s} সেকেন্ড"
     },
     "days": {
       "title": "প্রতিদিনের হিসাব",

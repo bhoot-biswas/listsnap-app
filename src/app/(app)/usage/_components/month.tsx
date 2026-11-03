@@ -48,7 +48,8 @@ export async function MonthChart({ days, totals }: { days: UsageDay[]; totals: {
 }
 
 /** Each day with any activity, newest first, folded away by default; the CSV has all 30. */
-export async function DayTable({ days, money }: { days: UsageDay[]; money: (n: number) => string }) {
+/** Each day's listings and photos; what they cost is in Behind the scenes and the CSV. */
+export async function DayTable({ days }: { days: UsageDay[] }) {
   const t = await getTranslations("usage.days");
   const format = await getFormatter();
   const active = days.filter((d) => d.listings || d.photos || d.calls).reverse();
@@ -80,12 +81,6 @@ export async function DayTable({ days, money }: { days: UsageDay[]; money: (n: n
                 <th scope="col" className="px-3 py-2 text-right font-medium">
                   {t("photos")}
                 </th>
-                <th scope="col" className="px-3 py-2 text-right font-medium">
-                  {t("calls")}
-                </th>
-                <th scope="col" className="px-4 py-2 text-right font-medium md:px-5">
-                  {t("cost")}
-                </th>
               </tr>
             </thead>
             <tbody className="divide-y tabular-nums">
@@ -100,9 +95,7 @@ export async function DayTable({ days, money }: { days: UsageDay[]; money: (n: n
                     })}
                   </td>
                   <td className="px-3 py-2 text-right">{format.number(d.listings)}</td>
-                  <td className="px-3 py-2 text-right">{format.number(d.photos)}</td>
-                  <td className="px-3 py-2 text-right">{format.number(d.calls)}</td>
-                  <td className="px-4 py-2 text-right md:px-5">{money(d.cost)}</td>
+                  <td className="px-4 py-2 text-right md:px-5">{format.number(d.photos)}</td>
                 </tr>
               ))}
             </tbody>
