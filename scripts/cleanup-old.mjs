@@ -14,6 +14,7 @@
  * - Old rows of the logs: Shopify webhook ids (Shopify retries for 48 hours), per-visitor
  *   counts, op runs that can no longer be undone, and calls and events older than a year.
  *   Pages read at most the last 30 days.
+ * - Expired sessions and sign-in links, and rate-limit counters older than a day.
  */
 import { readdir, rm, stat } from "node:fs/promises";
 import path from "node:path";
@@ -102,6 +103,11 @@ try {
     ],
     ["outside calls", "api_calls", "created_at < UTC_TIMESTAMP(3) - INTERVAL 365 DAY"],
     ["events", "events", "created_at < UTC_TIMESTAMP(3) - INTERVAL 365 DAY"],
+    // Better Auth never deletes these itself; an expired session still holds an IP and browser
+    ["expired sessions", "`session`", "expiresAt < UTC_TIMESTAMP(3)"],
+    ["expired sign-in links", "verification", "expiresAt < UTC_TIMESTAMP(3)"],
+    // lastRequest is epoch milliseconds; the longest rate-limit window is 10 minutes
+    ["rate-limit counters", "`rateLimit`", "lastRequest < (UNIX_TIMESTAMP() - 86400) * 1000"],
   ];
   for (const [label, table, where] of prunes) {
     if (dryRun) {
