@@ -81,6 +81,7 @@ export async function loadBatchState(
     total: batch.total,
     createdAt: batch.created_at.toISOString(),
     watch: batch.video_media_id ? await watchView(ws, batch.id, locale) : null,
+    paused: !!batch.paused_at,
     rows,
   };
 }

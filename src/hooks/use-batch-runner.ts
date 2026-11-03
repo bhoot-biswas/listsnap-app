@@ -18,8 +18,9 @@ export const JOBS_AT_ONCE = 2;
  * when it comes from one. Like the single-job
  * runner it only makes the calls the server lists as next, so pausing, a refresh or a
  * second tab never repeats finished work. It starts by itself right after the upload
- * (`autoStart`) and whenever the batch is opened again, unless the seller pressed Pause:
- * that is remembered in this browser until they press Resume.
+ * (`autoStart`) and whenever the batch is opened again, unless the seller pressed Pause.
+ * Pause is kept on the batch, so every tab, every device and the server's own worker
+ * stop starting its steps until Resume; a step already running finishes.
  * Losing the connection, or the state, isn't a pause: it carries on by itself once the
  * connection or the tab is back, and says what's happening meanwhile.
  */
@@ -64,6 +65,13 @@ export function useBatchRunner(initial: BatchState, autoStart: boolean) {
     try {
       let s = await load();
       let errors = 0;
+      // paused in another tab or on another device: this one stops starting steps too
+      const pausedElsewhere = (st: BatchState) => {
+        if (!st.paused) return false;
+        wanted.current = false;
+        if (alive.current) setPaused(true);
+        return true;
+      };
       // the answers of one round: a pause, or a stop with Try again after too many errors
       const settle = async (statuses: number[]) => {
         const p = pace(statuses, errors);
@@ -76,6 +84,7 @@ export function useBatchRunner(initial: BatchState, autoStart: boolean) {
         return true;
       };
       while (alive.current && wanted.current && s) {
+        if (pausedElsewhere(s)) break;
         if (!navigator.onLine) {
           setOffline(true);
           return;
@@ -137,28 +146,28 @@ export function useBatchRunner(initial: BatchState, autoStart: boolean) {
     };
   }, [drive]);
 
-  const resume = useCallback(() => {
+  const resume = useCallback(async () => {
     wanted.current = true;
     setPaused(false);
-    remember(id, false);
+    // the batch's flag first, or the first load would still read "paused" and stop again
+    await savePause(id, false);
     void drive();
   }, [drive, id]);
 
   const pause = useCallback(() => {
     wanted.current = false;
     setPaused(true);
-    remember(id, true);
+    void savePause(id, true);
   }, [id]);
 
-  // opened again later: carry on, unless it was the seller who paused it. Read after the
-  // first render, since the server can't know what this browser remembers.
+  // opened again later: carry on, unless the seller paused it (here or anywhere else)
   useEffect(() => {
     if (autoStart) {
       // a refresh shouldn't count as "just uploaded" again
       router.replace(`/bulk/${id}`, { scroll: false });
       return;
     }
-    if (pausedHere(id) || !hasWork(initial)) return;
+    if (initial.paused || !hasWork(initial)) return;
     const start = setTimeout(resume, 0);
     return () => clearTimeout(start);
     // only on mount
@@ -168,22 +177,13 @@ export function useBatchRunner(initial: BatchState, autoStart: boolean) {
   return { state, running, paused, offline, stalled, resume, pause, reload: load };
 }
 
-const pauseKey = (id: string) => `listsnap:batch-paused:${id}`;
-
-/** The seller's Pause, kept per batch in this browser; storage can be blocked, which counts as not paused. */
-function remember(id: string, paused: boolean) {
-  try {
-    if (paused) localStorage.setItem(pauseKey(id), "1");
-    else localStorage.removeItem(pauseKey(id));
-  } catch {}
-}
-
-function pausedHere(id: string): boolean {
-  try {
-    return localStorage.getItem(pauseKey(id)) === "1";
-  } catch {
-    return false;
-  }
+/** Keeps Pause and Resume on the batch; a dropped request leaves this tab's own pause in place. */
+async function savePause(batchId: string, paused: boolean): Promise<void> {
+  await fetch(`/api/batches/${batchId}/pause`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ paused }),
+  }).catch(() => null);
 }
 
 /** Whether the runner still has calls to make: a video to watch, or a photo with steps left. */
