@@ -18,7 +18,10 @@ export interface SocialState {
   captions: Partial<Record<ReelLang, string>>;
 }
 
-type Sending = { kind: "idle" } | { kind: "posting"; where: Destination } | { kind: "failed"; message: string };
+type Sending =
+  | { kind: "idle" }
+  | { kind: "posting"; where: Destination }
+  | { kind: "failed"; errors: { where: Destination; message: string }[] };
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -62,18 +65,17 @@ export function ReelPost({ listingId, lang, social }: { listingId: string; lang:
   }
 
   async function post() {
+    const errors: { where: Destination; message: string }[] = [];
     for (const where of chosen.filter(available)) {
       setSending({ kind: "posting", where });
-      const error = await postTo(where);
-      if (error) {
-        setSending({ kind: "failed", message: error });
-        router.refresh();
-        return;
-      }
+      const message = await postTo(where);
+      if (message) errors.push({ where, message });
     }
+    router.refresh();
+    // the ones that worked show as posted; only the failed ones stay to try again
+    if (errors.length) return setSending({ kind: "failed", errors });
     setSending({ kind: "idle" });
     setOpen(false);
-    router.refresh();
   }
 
   const done = DESTINATIONS.filter((d) => posted[d]);
@@ -165,7 +167,13 @@ export function ReelPost({ listingId, lang, social }: { listingId: string; lang:
               {t("cancel")}
             </Button>
           </div>
-          {sending.kind === "failed" && <p className="text-xs text-destructive">{sending.message}</p>}
+          {sending.kind === "failed" && (
+            <div role="alert" className="space-y-1 text-xs text-destructive">
+              {sending.errors.map((e) => (
+                <p key={e.where}>{t("failedIn", { where: t(e.where), message: e.message })}</p>
+              ))}
+            </div>
+          )}
           <p aria-live="polite" className="sr-only">
             {sending.kind === "posting" ? t("posting", { where: t(sending.where) }) : ""}
           </p>

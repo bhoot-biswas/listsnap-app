@@ -1204,6 +1204,7 @@
         "view": "View",
         "test": "Test connection: nothing is really posted, and the links are examples.",
         "failed": "Posting didn't work. Try again.",
+        "failedIn": "{where}: {message}",
         "cancel": "Cancel",
         "priceLine": "Price: {price}",
         "cta": "Message us to order."
