@@ -16,7 +16,8 @@ export interface ListingRow {
   sort: number;
   item_ids_json: string[];
   status: ListingStatus;
-  fields_json: { en?: unknown; bn?: unknown; variants?: unknown } | null;
+  /** `cover`: the photo the seller made the main one (stores/listing-product.ts). */
+  fields_json: { en?: unknown; bn?: unknown; variants?: unknown; cover?: unknown } | null;
   confidence: number | null;
   check_notes: string[] | null;
   stock_qty: number | null;
@@ -225,6 +226,8 @@ export function listingQueries(ws: string) {
         selectedMediaIds: string[];
         /** Undefined keeps the saved colours. */
         variants?: object[] | null;
+        /** Undefined keeps the saved main photo; null puts the cutout first again. */
+        coverMediaId?: string | null;
       },
     ) {
       await transaction(async (conn) => {
@@ -239,6 +242,7 @@ export function listingQueries(ws: string) {
           en: { ...(fields.en as object), ...edit.en },
           ...(edit.bn ? { bn: { ...(fields.bn as object), ...edit.bn } } : {}),
           ...(edit.variants ? { variants: edit.variants } : {}),
+          ...(edit.coverMediaId !== undefined ? { cover: edit.coverMediaId } : {}),
         };
         await conn.query(
           "UPDATE listings SET fields_json = ?, price_bdt = ?, stock_qty = ?, edited_at = UTC_TIMESTAMP(3) WHERE id = ? AND workspace_id = ?",

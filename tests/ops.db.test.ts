@@ -212,6 +212,36 @@ describe.skipIf(!enabled)("ops (MariaDB)", async () => {
     expect(await A.listingSnapshot(listingId)).toEqual(original);
   });
 
+  it("puts the seller's main photo first for the store, only while it's one they kept", async () => {
+    const { listingProduct } = await import("@/server/stores/listing-product");
+    const scene = (await A.listingMedia([listingId])).find((m) => m.kind === "studio")!;
+    const first = async () => {
+      const listing = (await A.getListing(listingId))!;
+      return (await listingProduct(A, a.workspace, listing)).images.map((i) => i.mediaId);
+    };
+    await ops.saveListingEdit.call(
+      a.workspace,
+      { listingId, edit: { ...validEdit(), selectedMediaIds: [scene.id], coverMediaId: scene.id } },
+      { via: "ui" },
+    );
+    expect((await first())[0]).toBe(scene.id);
+    // unticked, it isn't the main photo any more: the white cutout leads again
+    await ops.saveListingEdit.call(
+      a.workspace,
+      { listingId, edit: { ...validEdit(), selectedMediaIds: [], coverMediaId: scene.id } },
+      { via: "ui" },
+    );
+    expect(await first()).not.toContain(scene.id);
+    expect((await A.getListing(listingId))!.fields_json?.cover).toBeNull();
+    // a photo from another listing can't be made the main one
+    await ops.saveListingEdit.call(
+      a.workspace,
+      { listingId, edit: { ...validEdit(), selectedMediaIds: [brandPhotoId], coverMediaId: brandPhotoId } },
+      { via: "ui" },
+    );
+    expect((await A.getListing(listingId))!.fields_json?.cover).toBeNull();
+  });
+
   it("records who ran what without the seller's text", async () => {
     await ops.editListingFields.call(a.workspace, { listingId, title: "Secret wording" }, { via: "chat" });
     const runs = await A.opRuns(listingId);

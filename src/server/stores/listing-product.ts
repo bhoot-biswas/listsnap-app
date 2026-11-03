@@ -55,7 +55,8 @@ export async function listingProduct(
 
 /**
  * The white main image first, then the scenes the seller kept, in their saved order,
- * then each other colour's image, so the gallery shows every colour on sale.
+ * then each other colour's image, so the gallery shows every colour on sale. A photo the
+ * seller made the main one goes before the white image instead, while it's still kept.
  */
 function images(
   listing: ListingRow,
@@ -65,11 +66,24 @@ function images(
   colors: { color: string; mediaId: string | null }[],
 ) {
   const main = items.find((i) => i.id === listing.item_ids_json[0])?.cutout_media_id;
-  const list = [...(main ? [{ mediaId: main, alt: title }] : [])];
+  const cover = coverOf(listing, media);
+  const list = [...(cover ? [{ mediaId: cover, alt: title }] : []), ...(main ? [{ mediaId: main, alt: title }] : [])];
   // a reel is a video for social posts, never a product image
-  for (const m of media) if (m.selected && m.kind !== "reel") list.push({ mediaId: m.id, alt: title });
+  for (const m of media)
+    if (m.selected && m.kind !== "reel" && m.id !== cover) list.push({ mediaId: m.id, alt: title });
   for (const c of colors)
     if (c.mediaId && !list.some((x) => x.mediaId === c.mediaId))
       list.push({ mediaId: c.mediaId, alt: `${title}, ${c.color}` });
   return list;
+}
+
+/** The seller's main photo, when it is still one of the listing's kept photos. */
+export function coverOf(
+  listing: Pick<ListingRow, "fields_json">,
+  media: { id: string; kind: string; selected: number | boolean | null }[],
+): string | null {
+  const cover = listing.fields_json?.cover;
+  return typeof cover === "string" && media.some((m) => m.id === cover && m.selected && m.kind !== "reel")
+    ? cover
+    : null;
 }
