@@ -28,6 +28,8 @@ export interface StoreResult {
   /** Older WooCommerce results kept a number in `productId` instead. */
   productRef: string;
   editUrl: string;
+  /** ListSnap's stock at this save (stockKey); missing on results from before it was kept. */
+  stock?: string;
 }
 
 export interface StoresResult {
@@ -107,8 +109,19 @@ async function saveDraft(
 ): Promise<StoreResult> {
   // api_calls keeps one "store" step for usage, whichever store it was
   const ctx = { workspaceId: ws.id, jobId: listing.job_id, step: "store" };
-  const [product, refs] = await Promise.all([listingProduct(ws, workspace, listing), ws.storeProducts([listing.id])]);
-  const input: StoreDraftInput = { ...product, productRef: refs.get(listing.id)?.[kind] ?? null };
+  const [product, refs, before] = await Promise.all([
+    listingProduct(ws, workspace, listing),
+    ws.storeProducts([listing.id]),
+    // this save is running (an update reopened the step), but the last save's result stays
+    ws.lastStepResult<StoreResult>(listing.job_id, storeStep(kind), listing.id),
+  ]);
+  const stock = stockKey(product);
+  const productRef = refs.get(listing.id)?.[kind] ?? null;
+  const input: StoreDraftInput = {
+    ...product,
+    productRef,
+    keepStock: keepsStoreStock(productRef, before?.stock, stock),
+  };
 
   let saved;
   if (kind === "woo") {
@@ -141,7 +154,21 @@ async function saveDraft(
     }
   }
   await ws.markInStore(listing.id, kind, saved.productRef);
-  return saved;
+  return { ...saved, stock };
+}
+
+/**
+ * Once a product is in the store, its stock moves with sales there, so ListSnap sends the
+ * seller's stock again only when they change it here. A save from before the stock was
+ * kept can't tell, so it leaves the store's count alone too.
+ */
+export function keepsStoreStock(productRef: string | null, before: string | undefined, now: string): boolean {
+  return !!productRef && (!before || before === now);
+}
+
+/** The stock a save would send, the listing's and each colour's, to see whether it changed. */
+export function stockKey(product: Pick<StoreDraftInput, "stockQty" | "variants">): string {
+  return JSON.stringify([product.stockQty, (product.variants ?? []).map((v) => [v.itemId, v.stockQty])]);
 }
 
 export { suggestedPrice };

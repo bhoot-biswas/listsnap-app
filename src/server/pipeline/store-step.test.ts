@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { listingPrice } from "@/lib/schemas/review";
-import { suggestedPrice } from "./store-step";
+import { keepsStoreStock, stockKey, suggestedPrice } from "./store-step";
 
 describe("suggestedPrice", () => {
   it("takes the middle of the range, rounded the shop's way", () => {
@@ -24,5 +24,41 @@ describe("listingPrice", () => {
   it("has no price without a sensible range", () => {
     expect(listingPrice(null, undefined, 50)).toBeNull();
     expect(listingPrice(null, { low: 0, high: 0 }, 50)).toBeNull();
+  });
+});
+
+describe("keepsStoreStock", () => {
+  const three = stockKey({ stockQty: 3, variants: null });
+
+  it("sends stock to a new product", () => {
+    expect(keepsStoreStock(null, undefined, three)).toBe(false);
+    expect(keepsStoreStock(null, three, three)).toBe(false);
+  });
+
+  it("leaves the store's count alone on an update when the seller didn't change stock", () => {
+    expect(keepsStoreStock("7", three, three)).toBe(true);
+    expect(keepsStoreStock("7", three, stockKey({ stockQty: 3, variants: null }))).toBe(true);
+  });
+
+  it("sends stock again once the seller changes it, a colour's included", () => {
+    expect(keepsStoreStock("7", three, stockKey({ stockQty: 5, variants: null }))).toBe(false);
+    const red = (qty: number | null) => ({
+      itemId: "i1",
+      color: "Red",
+      regularPrice: 100,
+      stockQty: qty,
+      mediaId: null,
+    });
+    expect(
+      keepsStoreStock(
+        "7",
+        stockKey({ stockQty: 3, variants: [red(2)] }),
+        stockKey({ stockQty: 3, variants: [red(4)] }),
+      ),
+    ).toBe(false);
+  });
+
+  it("leaves stock alone for a product saved before stock was kept", () => {
+    expect(keepsStoreStock("7", undefined, three)).toBe(true);
   });
 });

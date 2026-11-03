@@ -213,6 +213,12 @@ export interface StoreDraftInput {
   images: { mediaId: string; alt: string }[];
   /** Colours sold as variants of one product; null makes a product with no options. */
   variants: StoreVariantInput[] | null;
+  /**
+   * Leave the stock of a product (and colours) the store already has as it is. Set on an
+   * update when the seller hasn't changed stock in ListSnap since the last save: the
+   * store's count has moved with every sale since, and sending ours back would undo that.
+   */
+  keepStock?: boolean;
 }
 
 export interface StoreVariantInput {
