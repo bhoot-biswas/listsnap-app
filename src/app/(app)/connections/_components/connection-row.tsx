@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useFormatter, useTranslations } from "next-intl";
 import { ChevronRight } from "lucide-react";
 import { ServiceLogo } from "@/components/app/logos/service-logo";
 import { serviceHref } from "@/lib/connectors";
@@ -9,6 +9,7 @@ import { StatusPill } from "./status-pill";
 /** One service on Connections; the whole row opens its detail page. */
 export function ConnectionRow({ s, severalStores }: { s: ServiceOverview; severalStores: boolean }) {
   const t = useTranslations("connections");
+  const format = useFormatter();
   return (
     <li>
       <Link
@@ -20,6 +21,13 @@ export function ConnectionRow({ s, severalStores }: { s: ServiceOverview; severa
           <div className="min-w-0">
             <p className="font-medium">{t(`names.${s.service}`)}</p>
             {s.address && <p className="truncate text-sm text-muted-foreground">{s.address}</p>}
+            {s.catalogEnds && (
+              <p className={s.catalogEnds.state === "expired" ? "text-xs text-destructive" : "text-xs text-warning"}>
+                {t(s.catalogEnds.state === "expired" ? "catalogEnded" : "catalogEnds", {
+                  date: format.dateTime(s.catalogEnds.until, { dateStyle: "medium" }),
+                })}
+              </p>
+            )}
           </div>
           <div className="mt-1 flex flex-wrap items-center gap-2 md:mt-0 md:contents">
             <StatusPill status={s.status} className="md:justify-self-start" />

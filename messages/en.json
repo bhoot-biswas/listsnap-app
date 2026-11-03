@@ -879,6 +879,8 @@
     "connected": "Connected",
     "broken": "Needs attention",
     "checked": "Checked {time}",
+    "catalogEnds": "Catalog access ends {date}",
+    "catalogEnded": "Catalog access ended {date}",
     "keyHint": "Key ••••{hint}",
     "defaultCategory": "Default category: {name}",
     "noDefaultCategory": "No default category",
@@ -1205,6 +1207,8 @@
         "test": "Test connection: nothing is really posted, and the links are examples.",
         "failed": "Posting didn't work. Try again.",
         "failedIn": "{where}: {message}",
+        "broken": "Facebook stopped accepting ListSnap's access to {name}, so posting may not work.",
+        "brokenLink": "Connect again",
         "cancel": "Cancel",
         "priceLine": "Price: {price}",
         "cta": "Message us to order."

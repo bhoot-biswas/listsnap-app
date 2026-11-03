@@ -13,7 +13,8 @@ import type { ReelLang } from "@/lib/schemas/reels";
 
 export interface SocialState {
   /** The connected Page and Instagram account, names only; null when nothing is connected. */
-  account: { pageName: string; igUsername: string | null; test: boolean } | null;
+  /** `broken`: Meta refused the Page's login on the last call or check. */
+  account: { pageName: string; igUsername: string | null; test: boolean; broken: boolean } | null;
   posted: Partial<Record<ReelLang, Partial<Record<Destination, { permalink: string; test: boolean }>>>>;
   captions: Partial<Record<ReelLang, string>>;
 }
@@ -99,6 +100,15 @@ export function ReelPost({ listingId, lang, social }: { listingId: string; lang:
           </a>
         </p>
       ))}
+
+      {social.account?.broken && DESTINATIONS.some(available) && (
+        <p role="status" className="text-xs text-destructive">
+          {t("broken", { name: social.account.pageName })}{" "}
+          <Link href="/connections/meta" className="font-medium underline underline-offset-4">
+            {t("brokenLink")}
+          </Link>
+        </p>
+      )}
 
       {!social.account ? (
         done.length === 0 && (

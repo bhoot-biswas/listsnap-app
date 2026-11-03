@@ -879,6 +879,8 @@
     "connected": "যুক্ত আছে",
     "broken": "দেখা দরকার",
     "checked": "পরীক্ষা হয়েছে {time}",
+    "catalogEnds": "ক্যাটালগের অনুমতি {date}-এ শেষ হবে",
+    "catalogEnded": "ক্যাটালগের অনুমতি {date}-এ শেষ হয়েছে",
     "keyHint": "Key ••••{hint}",
     "defaultCategory": "ডিফল্ট ক্যাটাগরি: {name}",
     "noDefaultCategory": "কোনো ডিফল্ট ক্যাটাগরি নেই",
@@ -1205,6 +1207,8 @@
         "test": "টেস্ট কানেকশন: আসলে কিছু পোস্ট হয় না, লিংকগুলো উদাহরণ।",
         "failed": "পোস্ট করা গেল না। আবার চেষ্টা করুন।",
         "failedIn": "{where}: {message}",
+        "broken": "Facebook {name}-এ ListSnap-এর অনুমতি আর মানছে না, তাই পোস্ট নাও হতে পারে।",
+        "brokenLink": "আবার যুক্ত করুন",
         "cancel": "বাতিল",
         "priceLine": "দাম: {price}",
         "cta": "অর্ডার করতে মেসেজ করুন।"
