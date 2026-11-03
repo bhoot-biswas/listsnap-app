@@ -89,7 +89,7 @@ export default async function ListingsPage({ searchParams }: PageProps<"/listing
               <>
                 <ListingSelection
                   key={listingsHref(filter)}
-                  rows={rows.map((r) => ({ id: r.id, jobId: r.job_id, status: r.status }))}
+                  rows={rows.map((r) => ({ id: r.id, jobId: r.job_id, status: r.status, behind: r.behind.length > 0 }))}
                   archived={archived}
                   hasWebsite={!!viewer.workspace.settings.website}
                   catalogName={readyCatalog(meta, viewer.workspace.settings.website)?.name ?? null}

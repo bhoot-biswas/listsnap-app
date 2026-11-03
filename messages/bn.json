@@ -328,6 +328,7 @@
     "selectRow": "{title} বাছুন",
     "selectedCount": "{count, number}টি বাছা হয়েছে",
     "saveCount": "{count, number}টি স্টোরে সেভ করুন",
+    "updateCount": "{count, number}টি স্টোর ড্রাফট আপডেট করুন",
     "archivedCount": "{count, number}টি লিস্টিং আর্কাইভ হয়েছে।",
     "restoredCount": "{count, number}টি লিস্টিং ফিরিয়ে আনা হয়েছে।",
     "clearSelection": "বাছাই মুছুন",

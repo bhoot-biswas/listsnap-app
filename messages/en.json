@@ -328,6 +328,7 @@
     "selectRow": "Select {title}",
     "selectedCount": "{count, plural, one {# selected} other {# selected}}",
     "saveCount": "{count, plural, one {Save # to store} other {Save # to store}}",
+    "updateCount": "{count, plural, one {Update # store draft} other {Update # store drafts}}",
     "archivedCount": "{count, plural, one {Archived # listing.} other {Archived # listings.}}",
     "restoredCount": "{count, plural, one {Restored # listing.} other {Restored # listings.}}",
     "clearSelection": "Clear selection",
