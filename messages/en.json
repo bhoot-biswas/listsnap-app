@@ -80,7 +80,7 @@
     "justLooking": "Just looking?",
     "tryDemo": "Try the demo shop",
     "startingDemo": "Opening the demo shop…",
-    "terms": "By continuing you agree to use ListSnap for products you're allowed to sell.",
+    "terms": "By continuing you agree to the <terms>Terms</terms> and the <privacy>Privacy policy</privacy>, and to list only products you're allowed to sell.",
     "devMailNote": "Development: the link is printed in the server console.",
     "errorGeneric": "Something went wrong. Try again in a moment.",
     "errorExpired": "That link has expired. Send a new one.",
@@ -661,8 +661,8 @@
     },
     "about": {
       "title": "About ListSnap",
-      "body": "Built for the Meta AI Developer Hackathon with Muse Spark, SAM 3.1 and Muse Image.",
-      "contact": "Found a problem or have an idea? <link>Tell us on GitHub.</link>"
+      "body": "ListSnap turns a phone photo, a voice note or a short video into store drafts, studio photos and reels, in English and Bangla, with Meta's Muse Spark, SAM 3.1 and Muse Image.",
+      "contact": "A question, a problem or an idea? Write to <link>{email}</link>."
     },
     "export": {
       "title": "Sell on Facebook Marketplace and other sites",

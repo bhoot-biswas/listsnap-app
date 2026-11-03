@@ -1,16 +1,11 @@
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
 import { CONTACT_EMAIL } from "@/lib/contact";
+import { LEGAL_PAGES, type LegalKey } from "@/lib/legal-pages";
 import { PublicHeader } from "./public-header";
 
 /** When the texts were last changed; shown at the top, as each policy promises. */
 const UPDATED = new Date(Date.UTC(2026, 10, 3));
-export const LEGAL_PAGES = [
-  { key: "privacy", href: "/privacy" },
-  { key: "terms", href: "/terms" },
-  { key: "deletion", href: "/data-deletion" },
-] as const;
-type LegalKey = (typeof LEGAL_PAGES)[number]["key"];
 
 /**
  * Privacy, terms and data deletion: plain text from the messages files, in the seller's

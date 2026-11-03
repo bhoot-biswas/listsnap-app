@@ -5,6 +5,9 @@ import { FormSection } from "@/components/app/form-section";
 import { TopBar } from "@/components/app/top-bar";
 import { requireWorkspace } from "@/server/auth/session";
 import { REELS_PER_DAY } from "@/server/db/limits";
+import Link from "next/link";
+import { CONTACT_EMAIL } from "@/lib/contact";
+import { LEGAL_PAGES } from "@/lib/legal-pages";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("nav"))("help") };
@@ -13,13 +16,13 @@ export async function generateMetadata(): Promise<Metadata> {
 const TIPS = ["clutter", "distance", "light"] as const;
 const EXPORT_STEPS = ["kit", "post", "many", "shopify", "website"] as const;
 const FAQ = ["keys", "draft", "edit", "colors", "labels", "limits", "missed", "data"] as const;
-const REPO = "https://github.com/bhoot-biswas/listsnap";
 
 /** S17 Help: photo tips, selling on Marketplace with an export, answers to the usual questions, shortcuts, and where to get in touch. */
 export default async function HelpPage() {
   const { workspace } = await requireWorkspace();
   const t = await getTranslations("help");
   const tNav = await getTranslations("nav");
+  const tLegal = await getTranslations("legal");
   return (
     <>
       <TopBar title={tNav("help")} />
@@ -89,17 +92,24 @@ export default async function HelpPage() {
           <p className="text-sm">{t("about.body")}</p>
           <p className="text-sm text-muted-foreground">
             {t.rich("about.contact", {
+              email: CONTACT_EMAIL,
               link: (chunks) => (
-                <a
-                  href={`${REPO}/issues`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="font-medium text-primary hover:underline"
-                >
+                <a href={`mailto:${CONTACT_EMAIL}`} className="font-medium text-primary hover:underline">
                   {chunks}
                 </a>
               ),
             })}
+          </p>
+          <p className="flex flex-wrap gap-x-5 text-sm">
+            {LEGAL_PAGES.map((p) => (
+              <Link
+                key={p.key}
+                href={p.href}
+                className="inline-flex min-h-11 items-center text-primary hover:underline"
+              >
+                {tLegal(`nav.${p.key}`)}
+              </Link>
+            ))}
           </p>
         </FormSection>
       </div>
