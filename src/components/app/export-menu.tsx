@@ -17,7 +17,7 @@ import {
 import { cn } from "@/lib/utils";
 import { EXPORT_MAX } from "@/lib/export";
 
-const CSVS = ["facebook", "woocommerce", "shopify"] as const;
+const CSVS = ["facebook", "shopify", "woocommerce"] as const;
 
 /**
  * Export for the given listings: a listing kit (photos and copy-paste text) or, for

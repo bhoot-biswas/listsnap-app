@@ -71,7 +71,7 @@ describe.skipIf(!enabled)("Shopify and two stores (MariaDB)", async () => {
 
   it("saves one listing to both stores, each under its own step, and only once", async () => {
     await A.saveConnection("woo", { baseUrl: null, credentialsEnc: null, checks: [], settings: { demo: true } });
-    expect(await storeTargets(a.workspace)).toEqual(["woo", "shopify"]);
+    expect(await storeTargets(a.workspace)).toEqual(["shopify", "woo"]);
     const first = await ops.saveDraftToStore.call(a.workspace, { listingId }, ui);
     expect(first).toMatchObject({ ok: true, value: { outcome: { state: "done" } } });
     const refs = (await A.storeProducts([listingId])).get(listingId)!;

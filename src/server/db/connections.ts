@@ -87,10 +87,10 @@ export function connectionQueries(ws: string) {
       ]);
     },
 
-    /** The shop's store connections that aren't disconnected, WooCommerce first. */
+    /** The shop's store connections that aren't disconnected, Shopify first. */
     liveStoreConnections: () =>
       select<ConnectionRow & { kind: StoreKind }>(
-        "SELECT kind, base_url, credentials_enc, status, checks_json, settings_json, last_checked_at FROM store_connections WHERE workspace_id = ? AND kind IN ('woo', 'shopify') AND status <> 'disconnected' ORDER BY kind = 'shopify'",
+        "SELECT kind, base_url, credentials_enc, status, checks_json, settings_json, last_checked_at FROM store_connections WHERE workspace_id = ? AND kind IN ('woo', 'shopify') AND status <> 'disconnected' ORDER BY kind = 'woo'",
         [ws],
       ),
 

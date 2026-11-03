@@ -368,7 +368,7 @@
     "plan": {
       "title": "Your plan",
       "free": "Free",
-      "limits": "{listings, number} listings, {photos, number} AI photos and {reels, number} reels a day, WooCommerce and Shopify, English and বাংলা.",
+      "limits": "{listings, number} listings, {photos, number} AI photos and {reels, number} reels a day, Shopify and WooCommerce, English and বাংলা.",
       "pro": "Pro is coming soon: pay per listing and bigger bulk uploads.",
       "pricing": "See pricing"
     },
@@ -686,7 +686,7 @@
       "steps": {
         "kit": "On Review, press Export and choose Listing kit. On a phone, Share photos sends them straight to the Facebook app and copies the text.",
         "post": "In Marketplace, create a listing, add the photos, and copy each block of listing-en.txt or listing-bn.txt into the matching field.",
-        "many": "To export many at once, tick them on Listings and press Export: you get a kit for each, plus CSV files for a Facebook catalog, WooCommerce and Shopify.",
+        "many": "To export many at once, tick them on Listings and press Export: you get a kit for each, plus CSV files for a Facebook catalog, Shopify and WooCommerce.",
         "shopify": "When you import the Shopify file, untick \"Publish new products to all sales channels\" in Shopify's Import window. The products arrive as drafts either way.",
         "website": "The Facebook catalog file needs your shop's website or Facebook Page, set in Settings."
       },
@@ -1485,7 +1485,7 @@
       "to": {
         "woo": "To WooCommerce",
         "shopify": "To Shopify",
-        "both": "To WooCommerce and Shopify"
+        "both": "To Shopify and WooCommerce"
       },
       "suggested": "suggested",
       "noPrice": "no price yet"

@@ -368,7 +368,7 @@
     "plan": {
       "title": "আপনার প্ল্যান",
       "free": "ফ্রি",
-      "limits": "দিনে {listings, number}টি লিস্টিং, {photos, number}টি AI ছবি ও {reels, number}টি রিল, WooCommerce ও Shopify, English ও বাংলা।",
+      "limits": "দিনে {listings, number}টি লিস্টিং, {photos, number}টি AI ছবি ও {reels, number}টি রিল, Shopify ও WooCommerce, English ও বাংলা।",
       "pro": "Pro শিগগিরই আসছে: প্রতি লিস্টিংয়ে দাম, বড় বাল্ক আপলোড।",
       "pricing": "দাম দেখুন"
     },
@@ -686,7 +686,7 @@
       "steps": {
         "kit": "রিভিউ পাতায় এক্সপোর্ট চেপে লিস্টিং কিট বেছে নিন। ফোনে \"ছবি শেয়ার করুন\" ছবিগুলো সরাসরি ফেসবুক অ্যাপে পাঠায় আর লেখা কপি করে রাখে।",
         "post": "মার্কেটপ্লেসে নতুন লিস্টিং খুলুন, ছবিগুলো দিন, আর listing-en.txt বা listing-bn.txt থেকে প্রতিটি অংশ মিলিয়ে ঘরে কপি করুন।",
-        "many": "একসাথে অনেকগুলো এক্সপোর্ট করতে লিস্টিং পাতায় টিক দিয়ে এক্সপোর্ট চাপুন: প্রতিটির কিট পাবেন, সাথে ফেসবুক ক্যাটালগ, WooCommerce ও Shopify-র CSV ফাইল।",
+        "many": "একসাথে অনেকগুলো এক্সপোর্ট করতে লিস্টিং পাতায় টিক দিয়ে এক্সপোর্ট চাপুন: প্রতিটির কিট পাবেন, সাথে ফেসবুক ক্যাটালগ, Shopify ও WooCommerce-এর CSV ফাইল।",
         "shopify": "Shopify ফাইল ইমপোর্টের সময় Shopify-র Import উইন্ডোতে \"Publish new products to all sales channels\" থেকে টিক তুলে দিন। যেভাবেই হোক পণ্যগুলো ড্রাফট হিসেবে আসবে।",
         "website": "ফেসবুক ক্যাটালগ ফাইলের জন্য সেটিংসে আপনার দোকানের ওয়েবসাইট বা ফেসবুক পেজ দিতে হয়।"
       },
@@ -1485,7 +1485,7 @@
       "to": {
         "woo": "WooCommerce-এ যাবে",
         "shopify": "Shopify-তে যাবে",
-        "both": "WooCommerce আর Shopify দুটোতেই যাবে"
+        "both": "Shopify আর WooCommerce দুটোতেই যাবে"
       },
       "suggested": "প্রস্তাবিত",
       "noPrice": "এখনো দাম নেই"
