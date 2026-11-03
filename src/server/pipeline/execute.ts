@@ -4,6 +4,7 @@ import { forWorkspace, type WorkspaceScope } from "@/server/db/scope";
 import type { Workspace } from "@/server/db/workspaces";
 import { GroupMode, Scene, writtenStatus } from "@/lib/schemas/pipeline";
 import { runStep, type StepOutcome } from "./run-step";
+import type { Visitor } from "@/server/limits";
 import { attachAngles, groupStep, planStep, segmentStep } from "./job-steps";
 import { listenStep } from "./listen-step";
 import { watchStep } from "./watch-step";
@@ -69,7 +70,7 @@ export async function executeJobStep(
 export async function executeWatchStep(
   workspace: Workspace,
   batchId: string,
-  ip: string,
+  ip: Visitor,
   force = false,
 ): Promise<ExecuteResult> {
   const ws = forWorkspace(workspace.id);
@@ -88,7 +89,7 @@ export async function executeListingStep(
   workspace: Workspace,
   listingId: string,
   step: ListingStepName,
-  opts: { scene?: string; force?: boolean; ip?: string } = {},
+  opts: { scene?: string; force?: boolean; ip?: Visitor } = {},
 ): Promise<ExecuteResult | { found: true; invalid: string }> {
   const ws = forWorkspace(workspace.id);
   const listing = await ws.getListing(listingId);
@@ -133,7 +134,7 @@ export async function executeLookStep(
   listingId: string,
   look: Look,
   force = false,
-  ip?: string,
+  ip?: Visitor,
 ): Promise<ExecuteResult | { found: true; invalid: string }> {
   const ws = forWorkspace(workspace.id);
   const listing = await ws.getListing(listingId);
@@ -158,7 +159,7 @@ export async function executeReelStep(
   lang: ReelLang,
   template: ReelTemplate,
   force = false,
-  ip?: string,
+  ip?: Visitor,
 ): Promise<ExecuteResult | { found: true; invalid: string }> {
   const ws = forWorkspace(workspace.id);
   const listing = await ws.getListing(listingId);

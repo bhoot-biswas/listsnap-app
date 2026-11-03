@@ -1,7 +1,7 @@
 import "server-only";
 import { z } from "zod";
 import { REELS_PER_DAY } from "@/server/db/limits";
-import { takeListingSlot } from "@/server/limits";
+import { takeListingSlot, visitorHash } from "@/server/limits";
 import { saveToStores } from "@/server/pipeline/store-step";
 import { connectedStores } from "@/server/stores/targets";
 import { StoreKind, STORE_NAMES } from "@/lib/stores";
@@ -114,6 +114,7 @@ export const startListing = defineOp({
       const jobId = await ws.createJob(
         ids.map((id) => ({ mediaId: id, width: byId.get(id)!.width, height: byId.get(id)!.height })),
       );
+      if (workspace.isDemo) await ws.rememberVisitor("jobs", jobId, visitorHash(meta.clientIp));
       return { ok: true, value: { jobId, href: `/job/${jobId}` }, summary: `${ids.length} photos` };
     } catch (err) {
       await release();

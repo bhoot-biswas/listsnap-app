@@ -3,7 +3,7 @@ import { apiViewer } from "@/server/auth/session";
 import { forWorkspace } from "@/server/db/scope";
 import { fail, ok, unauthorized } from "@/server/http";
 import { requestLocale, text } from "@/server/step-text";
-import { limitReached } from "@/server/limits";
+import { clientIp, limitReached, visitorHash } from "@/server/limits";
 import { MAX_BULK } from "@/lib/batch-state";
 
 const Body = z.object({ total: z.number().int().min(1).max(MAX_BULK) });
@@ -24,5 +24,6 @@ export async function POST(request: Request) {
       409,
     );
   const id = await ws.createBatch(parsed.data.total);
+  if (viewer.workspace.isDemo) await ws.rememberVisitor("batches", id, visitorHash(clientIp(request)));
   return ok({ id }, 201);
 }

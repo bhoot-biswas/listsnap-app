@@ -92,6 +92,14 @@ export function forWorkspace(workspaceId: string) {
   return {
     id: ws,
 
+    /**
+     * A demo job's or batch's visitor, as ip_daily counts them, so the server can charge
+     * work it does by itself to the same visitor. Real shops' have none.
+     */
+    async rememberVisitor(table: "jobs" | "batches", id: string, hash: string) {
+      await execute(`UPDATE ${table} SET visitor_key = ? WHERE id = ? AND workspace_id = ?`, [hash, id, ws]);
+    },
+
     async createJob(
       photos: { mediaId: string; width: number; height: number }[],
       batchId?: string,

@@ -1,7 +1,7 @@
 import { apiViewer } from "@/server/auth/session";
 import { forWorkspace } from "@/server/db/scope";
 import { fail, ok, unauthorized } from "@/server/http";
-import { clientIp, takeDemoAllowance } from "@/server/limits";
+import { clientIp, takeDemoAllowance, visitorHash } from "@/server/limits";
 import { createWriteStream } from "node:fs";
 import { rm } from "node:fs/promises";
 import { Readable } from "node:stream";
@@ -55,6 +55,7 @@ export async function POST(request: Request) {
 
     const media = await saveMediaFile(ws.id, "video", file, { mime: type, width: 0, height: 0, selected: false });
     const batchId = await ws.createVideoBatch(media.id);
+    if (viewer.workspace.isDemo) await ws.rememberVisitor("batches", batchId, visitorHash(clientIp(request)));
     return ok({ batchId }, 201);
   } catch (err) {
     // nothing was made, so the visitor's video for today is given back
