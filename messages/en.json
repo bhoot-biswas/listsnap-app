@@ -636,6 +636,22 @@
           "q": "How do I sell one product in several colors?",
           "a": "Lay every color side by side and take one photo. ListSnap finds each one; at “Several items found”, choose “One product, color options”. You get one listing, with a photo, price and stock for each color."
         },
+        "voice": {
+          "q": "Can I tell ListSnap the price and stock by voice?",
+          "a": "Yes. On Snap, press the mic and say the price, sizes and how many you have, in Bangla or English; you see the words as you speak. ListSnap fills them in, and Review shows what it heard so you can check it. A price it only heard, not read, is left for you to confirm."
+        },
+        "assistant": {
+          "q": "What can the Assistant do?",
+          "a": "Ask it in Bangla or English, typed or spoken: which listings need review, change a title or price, make photos or a reel, start a listing from a photo, or save drafts to your store. Anything that goes to your store or your Page waits for you to press yes on a card first."
+        },
+        "reels": {
+          "q": "How do reels work?",
+          "a": "On Review, open Extras and make a reel in English or Bangla: a 12-second video from your ticked photos, title and price. With Facebook connected, Post this reel shows the caption and where it goes; nothing is posted until you press Post reel."
+        },
+        "facebook": {
+          "q": "I don't have a website. Can I still use ListSnap?",
+          "a": "Yes. Connect your Facebook Page in Connections, and ListSnap writes each listing, makes its photos and reels, and posts reels to your Page and its Instagram account. Export gives you the text and photos for Marketplace too. You can connect a store later."
+        },
         "labels": {
           "q": "What do the AI labels mean?",
           "a": "AI background: your real product photo on a background made by AI. AI scene: the whole picture is an AI edit around your product, so check it still looks like what you sell."

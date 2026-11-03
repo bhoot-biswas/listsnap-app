@@ -15,7 +15,20 @@ export async function generateMetadata(): Promise<Metadata> {
 
 const TIPS = ["clutter", "distance", "light"] as const;
 const EXPORT_STEPS = ["kit", "post", "many", "shopify", "website"] as const;
-const FAQ = ["keys", "draft", "edit", "colors", "labels", "limits", "missed", "data"] as const;
+const FAQ = [
+  "keys",
+  "draft",
+  "edit",
+  "colors",
+  "voice",
+  "assistant",
+  "reels",
+  "facebook",
+  "labels",
+  "limits",
+  "missed",
+  "data",
+] as const;
 
 /** S17 Help: photo tips, selling on Marketplace with an export, answers to the usual questions, shortcuts, and where to get in touch. */
 export default async function HelpPage() {
