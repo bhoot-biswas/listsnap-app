@@ -59,3 +59,14 @@ export const PostResult = z.object({
   test: z.boolean(),
 });
 export type PostResult = z.infer<typeof PostResult>;
+
+/**
+ * How far a post got before its answer was lost or the server restarted: the Facebook
+ * video it uploads into, or the Instagram container it publishes. Saved on the step
+ * before publishing, so a retry finishes that one instead of posting a second reel.
+ */
+export const PostProgress = z.union([
+  z.object({ videoId: z.string().min(1), uploadUrl: z.string().url() }),
+  z.object({ container: z.string().min(1) }),
+]);
+export type PostProgress = z.infer<typeof PostProgress>;

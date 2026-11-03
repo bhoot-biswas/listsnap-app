@@ -89,6 +89,8 @@ export async function runStep<T>(
   else if (before?.status === "done") return { state: "done", result: before.result as T, fresh: false };
   if (opts.force && before?.status === "failed") await store.reset(key);
 
+  // the server is stopping: the next process starts it, and the caller polls as for a held lock
+  if (steps.draining) return { state: "running" };
   const token = await store.claim(key, opts.lockMs, maxAttempts);
   if (!token) {
     const row = await store.get(key);
@@ -106,6 +108,7 @@ export async function runStep<T>(
   }
 
   const heartbeat = keepLocked(store, key, token, opts.lockMs);
+  steps.running++;
   try {
     const result = await work();
     if (await store.complete(key, token, result)) return { state: "done", result, fresh: true };
@@ -125,7 +128,27 @@ export async function runStep<T>(
     return { state: "failed", error, attempts, exhausted: attempts >= maxAttempts };
   } finally {
     clearInterval(heartbeat);
+    steps.running--;
   }
+}
+
+/**
+ * Steps at work in this process. On a restart a post cut off between Meta's calls, or a
+ * reel half rendered, is what goes wrong, so the process stops taking new steps and lets
+ * the running ones finish first. One object for the process: Next loads this module in
+ * more than one bundle.
+ */
+const steps = ((globalThis as { __listsnapSteps?: { running: number; draining: boolean } }).__listsnapSteps ??= {
+  running: 0,
+  draining: false,
+});
+
+/** Stops new steps from starting; resolves with how many still run when they're done or `ms` is up. */
+export async function drainSteps(ms: number, poll = 250): Promise<number> {
+  steps.draining = true;
+  const until = Date.now() + ms;
+  while (steps.running > 0 && Date.now() < until) await new Promise((r) => setTimeout(r, poll));
+  return steps.running;
 }
 
 /**

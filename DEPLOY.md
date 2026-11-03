@@ -286,7 +286,7 @@ After merging to `main`:
 ssh root@YOUR_SERVER_IP listsnap-deploy
 ```
 
-Only one deploy runs at a time; a second one stops and says so. Before new migrations run it dumps the databases (`db-predeploy-*.sql.gz`), and the migrations run before the switch, while the old release still serves. So a migration must leave the database usable by the release before it: add columns and tables, and rename or drop them only in a later deploy. The site keeps serving while the new release builds; it is away only for the few seconds of the restart.
+Only one deploy runs at a time; a second one stops and says so. Before new migrations run it dumps the databases (`db-predeploy-*.sql.gz`), and the migrations run before the switch, while the old release still serves. So a migration must leave the database usable by the release before it: add columns and tables, and rename or drop them only in a later deploy. The site keeps serving while the new release builds; it is away only for the few seconds of the restart. On the way down the app stops taking new steps and lets running ones (a reel render, a post) finish, for up to a minute, so a deploy can take that much longer; the pages keep answering meanwhile.
 
 To go back to the release before:
 
