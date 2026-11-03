@@ -4,6 +4,15 @@
 
 ListSnap is for small social-commerce sellers in Bangladesh. One phone photo, a voice note or a short video of the products becomes a Shopify or WooCommerce draft with a written listing, clean cutouts, studio photos and a reel for Facebook and Instagram, in English and Bangla. Built for the Meta Global AI Developer Hackathon (Indie track, "Build for Your World").
 
+## Try it
+
+- **Hosted:** open [getlistsnap.com](https://getlistsnap.com) and choose **Try the demo shop** on the sign-in page. It needs no account or password. A demo shop starts with three sample listings, offers sample photos on Snap, saves drafts to our test store and ends after 24 hours. Each visitor has daily limits on listings and AI calls.
+- **On your own machine:** follow [Run it locally](#run-it-locally). Every outside service is mocked by default, so it needs no keys and no accounts.
+
+Demo shops can't connect a seller's own store or Facebook Page. To see those flows, run it locally, sign in with an email link and connect the mock services under Connections.
+
+On any job, the **Details** panel lists each model call with its real model name, timing and cost, and marks calls that were mocked.
+
 ## What it does
 
 - **Snap:** one photo becomes a listing. A voice note adds what the seller said (price, sizes, stock, fabric), which the listing uses over guesses from the photo.
@@ -18,13 +27,15 @@ ListSnap is for small social-commerce sellers in Bangladesh. One phone photo, a 
 
 Every model ListSnap calls at runtime is a Meta model.
 
-| Model                 | Where it runs                 | What it does in ListSnap                                                                                                                                                     |
-| --------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Muse Spark            | Meta Model API (dev.meta.ai)  | Plans each photo, groups items into products, sets or colour variants, writes the English listing and its natural Bangla version, the Review help buttons and the chat       |
-| SAM 3.1               | Meta Model API (dev.meta.ai)  | Finds every matching item and cuts it out; checks fill, sharpness, light, overlap and colour on its mask                                                                     |
-| Muse Image            | Meta Model API (dev.meta.ai)  | Studio, banner and lifestyle photos, and campaign looks, around the real cutout                                                                                              |
-| Muse Voice Transcribe | Meta Model API (dev.meta.ai)  | Writes down voice notes and a video's speech turn by turn with times; streams the words of a chat message live, over its realtime socket, while the seller is still talking  |
-| Muse Spark Open       | Baseten (Meta's open weights) | Reads the price, sizes and stock out of what the seller said; watches a product video with its transcript and lists each product; hears the audio itself if Transcribe fails |
+| Model                 | Model ID                           | Where it runs                 | What it does in ListSnap                                                                                                                                                     |
+| --------------------- | ---------------------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Muse Spark            | `muse-spark-1.3`                   | Meta Model API (dev.meta.ai)  | Plans each photo, groups items into products, sets or colour variants, writes the English listing and its natural Bangla version, the Review help buttons and the chat       |
+| SAM 3.1               | `sam-3.1`                          | Meta Model API (dev.meta.ai)  | Finds every matching item and cuts it out; ListSnap's photo checks (fill, sharpness, light, overlap, colour) work from what it finds                                         |
+| Muse Image            | `muse-image-1.0`                   | Meta Model API (dev.meta.ai)  | Studio, banner and lifestyle photos, and campaign looks, around the real cutout                                                                                              |
+| Muse Voice Transcribe | `muse-voice-transcribe-1.0`        | Meta Model API (dev.meta.ai)  | Writes down voice notes and a video's speech turn by turn with times; streams the words of a chat message live, over its realtime socket, while the seller is still talking  |
+| Muse Spark Open       | `meta-models/muse-spark-open-1026` | Baseten (Meta's open weights) | Reads the price, sizes and stock out of what the seller said; watches a product video with its transcript and lists each product; hears the audio itself if Transcribe fails |
+
+Muse Spark Open is the open-weight model: voice notes and product videos go through it on Baseten, called from [`src/server/providers/baseten/`](src/server/providers/baseten/). The Meta Model API calls are in [`src/server/providers/meta/`](src/server/providers/meta/).
 
 ## How a listing is made
 
@@ -39,7 +50,7 @@ Every model ListSnap calls at runtime is a Meta model.
 | Render    | Muse Image                             | Studio and banner photos keep the product's real pixels on a generated background; the lifestyle scene is labelled "AI scene" |
 | Save      | Shopify, WooCommerce                   | Creates or updates a **draft** product in each connected store                                                                |
 
-Each step is one short request driven by the browser, with its state and lock in MySQL. A refresh, a second tab or a server restart repeats nothing that already finished.
+Each step is one short request, with its state and lock in MySQL. The browser drives the steps by default; with `PIPELINE_WORKER` set to `batches` or `all`, the server also works through them, so a closed tab doesn't stop a job. A refresh, a second tab or a server restart repeats nothing that already finished.
 
 ## Run it locally
 
@@ -53,7 +64,7 @@ pnpm db:migrate
 pnpm dev                            # http://localhost:3000
 ```
 
-Every outside service is mocked by default (`PROVIDER_MODE_*=mock`), so the whole flow works with no keys and no account. Use **Try the demo shop** on the sign-in page, or an email link (in development the link is printed in the server console). Google sign-in appears once `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are set.
+Every outside service is mocked by default (`PROVIDER_MODE_*=mock`), so the whole flow works with no keys and no account. Use **Try the demo shop** on the sign-in page, where the sample listings and photos from [`public/samples/`](public/samples/) are ready to try, or an email link (in development the link is printed in the server console). Google sign-in appears once `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` are set.
 
 In mock mode a photo at least twice as wide as it is tall is treated as three different products, which shows the Choose items step.
 
