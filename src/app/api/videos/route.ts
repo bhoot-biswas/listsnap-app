@@ -2,8 +2,13 @@ import { apiViewer } from "@/server/auth/session";
 import { forWorkspace } from "@/server/db/scope";
 import { fail, ok, unauthorized } from "@/server/http";
 import { clientIp, takeDemoAllowance } from "@/server/limits";
-import { saveMedia } from "@/server/media/store";
-import { openVideo } from "@/server/media/video";
+import { createWriteStream } from "node:fs";
+import { rm } from "node:fs/promises";
+import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
+import type { ReadableStream } from "node:stream/web";
+import { incomingPath, saveMediaFile } from "@/server/media/store";
+import { openVideoFile } from "@/server/media/video";
 import { VIDEO_MAX_MB, VIDEO_MAX_S } from "@/lib/schemas/video";
 
 const TYPES = new Set(["video/mp4", "video/quicktime", "video/webm"]);
@@ -32,49 +37,51 @@ export async function POST(request: Request) {
   if (!release) return fail(429, "limit", "videoLimit");
   const refuse = async (response: Promise<Response>) => (await release(), response);
 
-  const data = await readCapped(request, max);
-  if (!data) return refuse(fail(413, "too_large", "videoTooLarge", { mb: VIDEO_MAX_MB }));
-  const video = await openVideo(data).catch(async (err: unknown) => {
-    await release();
-    throw err;
-  });
-  let seconds: number | null;
+  // the body goes straight to a file as it arrives: a 200 MB video is never held in memory
+  const file = await incomingPath();
   try {
-    seconds = await video.seconds();
-  } finally {
-    await video.done();
-  }
-  if (!seconds) return refuse(fail(415, "unsupported_file", "unreadableVideo"));
-  // a second over is a rounding of the phone's own limit, not a longer video
-  if (seconds > VIDEO_MAX_S + 1) return refuse(fail(400, "too_long", "videoTooLong", { minutes: VIDEO_MAX_S / 60 }));
+    const size = await receiveCapped(request, file, max);
+    if (size === null) return refuse(fail(413, "too_large", "videoTooLarge", { mb: VIDEO_MAX_MB }));
+    const video = await openVideoFile(file);
+    let seconds: number | null;
+    try {
+      seconds = await video.seconds();
+    } finally {
+      await video.done();
+    }
+    if (!seconds) return refuse(fail(415, "unsupported_file", "unreadableVideo"));
+    // a second over is a rounding of the phone's own limit, not a longer video
+    if (seconds > VIDEO_MAX_S + 1) return refuse(fail(400, "too_long", "videoTooLong", { minutes: VIDEO_MAX_S / 60 }));
 
-  let batchId: string;
-  try {
-    const media = await saveMedia(ws.id, "video", data, { mime: type, width: 0, height: 0, selected: false });
-    batchId = await ws.createVideoBatch(media.id);
+    const media = await saveMediaFile(ws.id, "video", file, { mime: type, width: 0, height: 0, selected: false });
+    const batchId = await ws.createVideoBatch(media.id);
+    return ok({ batchId }, 201);
   } catch (err) {
     // nothing was made, so the visitor's video for today is given back
     await release();
     throw err;
+  } finally {
+    // kept videos were moved into place; anything still here was refused or failed
+    await rm(file, { force: true });
   }
-  return ok({ batchId }, 201);
 }
 
-/** The body, or null once it passes `max` bytes, whatever Content-Length claimed. */
-async function readCapped(request: Request, max: number): Promise<Buffer | null> {
+/** Writes the body to `file`; its size, or null when empty or once it passes `max` bytes, whatever Content-Length claimed. */
+async function receiveCapped(request: Request, file: string, max: number): Promise<number | null> {
   if (!request.body) return null;
-  const chunks: Uint8Array[] = [];
   let size = 0;
-  const reader = request.body.getReader();
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    size += value.length;
-    if (size > max) {
-      await reader.cancel();
-      return null;
-    }
-    chunks.push(value);
+  const capped = new TransformStream<Uint8Array, Uint8Array>({
+    transform(chunk, controller) {
+      size += chunk.length;
+      if (size > max) controller.error(new Error("too large"));
+      else controller.enqueue(chunk);
+    },
+  });
+  try {
+    await pipeline(Readable.fromWeb(request.body.pipeThrough(capped) as ReadableStream), createWriteStream(file));
+  } catch (err) {
+    if (size > max) return null;
+    throw err;
   }
-  return size ? Buffer.concat(chunks) : null;
+  return size ? size : null;
 }

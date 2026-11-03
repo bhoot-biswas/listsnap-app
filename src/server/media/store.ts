@@ -1,6 +1,6 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
-import { access, constants, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { access, constants, mkdir, readFile, rename, rm, stat, writeFile } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 import { env } from "@/server/env";
@@ -88,6 +88,40 @@ export async function saveMedia(
     selected?: boolean;
   },
 ): Promise<MediaRecord> {
+  const { id, rel, abs } = await place(workspaceId, meta.mime);
+  await writeFile(abs, data);
+  return record(workspaceId, kind, id, rel, data.length, meta);
+}
+
+type MediaMeta = Parameters<typeof saveMedia>[3];
+
+/**
+ * Like saveMedia, for a file already on disk under incomingPath(): it is moved into
+ * place, not read, so a 200 MB video never sits in the server's memory.
+ */
+export async function saveMediaFile(
+  workspaceId: string,
+  kind: MediaKind,
+  file: string,
+  meta: MediaMeta,
+): Promise<MediaRecord> {
+  const { id, rel, abs } = await place(workspaceId, meta.mime);
+  await rename(file, abs);
+  return record(workspaceId, kind, id, rel, (await stat(abs)).size, meta);
+}
+
+/**
+ * Where an upload is written while it arrives, inside the media folder so moving it into
+ * place is a rename on the same disk. The nightly sweep only looks in shop folders, so a
+ * caller removes what it doesn't keep.
+ */
+export async function incomingPath(): Promise<string> {
+  const dir = path.join(/*turbopackIgnore: true*/ env().mediaDir, ".incoming");
+  await mkdir(dir, { recursive: true });
+  return path.join(dir, randomUUID());
+}
+
+async function place(workspaceId: string, mime: string) {
   const id = randomUUID();
   const ext =
     {
@@ -96,11 +130,21 @@ export async function saveMedia(
       "video/quicktime": "mov",
       "video/webm": "webm",
       "audio/wav": "wav",
-    }[meta.mime] ?? "jpg";
+    }[mime] ?? "jpg";
   const rel = path.join(/*turbopackIgnore: true*/ workspaceId, new Date().toISOString().slice(0, 7), `${id}.${ext}`);
   const abs = path.join(/*turbopackIgnore: true*/ env().mediaDir, rel);
   await mkdir(path.dirname(/*turbopackIgnore: true*/ abs), { recursive: true });
-  await writeFile(abs, data);
+  return { id, rel, abs };
+}
+
+async function record(
+  workspaceId: string,
+  kind: MediaKind,
+  id: string,
+  rel: string,
+  bytes: number,
+  meta: MediaMeta,
+): Promise<MediaRecord> {
   await execute(
     "INSERT INTO media (id, workspace_id, kind, path, mime, bytes, width, height, listing_id, from_media_id, sort, selected) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     [
@@ -109,7 +153,7 @@ export async function saveMedia(
       kind,
       rel,
       meta.mime,
-      data.length,
+      bytes,
       meta.width,
       meta.height,
       meta.listingId ?? null,
@@ -118,7 +162,7 @@ export async function saveMedia(
       meta.selected ?? true,
     ],
   );
-  return { id, kind, mime: meta.mime, width: meta.width, height: meta.height, bytes: data.length };
+  return { id, kind, mime: meta.mime, width: meta.width, height: meta.height, bytes };
 }
 
 /** A media file on disk: where it is and what it is. */

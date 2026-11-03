@@ -30,6 +30,7 @@ const mediaDir = path.resolve(process.env.MEDIA_DIR || "./.data/media");
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 // a bounded night, so one run never holds a table long
 const BATCH = 5000;
+const ROUNDS = 40;
 // a file younger than this may be one whose row is being written right now
 const ORPHAN_AGE_MS = 24 * 3600_000;
 const log = (msg) => console.log(`[cleanup-old] ${msg}`);
@@ -115,8 +116,15 @@ try {
       log(`would delete ${n} ${label}`);
       continue;
     }
-    const [r] = await db.query(`DELETE FROM ${table} WHERE ${where} LIMIT ${BATCH}`);
-    log(`deleted ${r.affectedRows} ${label}`);
+    // batch after batch until caught up, so a busy day can't leave the table growing for
+    // good; each batch is short, and a night still ends after ROUNDS of them
+    let deleted = 0;
+    for (let round = 0; round < ROUNDS; round++) {
+      const [r] = await db.query(`DELETE FROM ${table} WHERE ${where} LIMIT ${BATCH}`);
+      deleted += r.affectedRows;
+      if (r.affectedRows < BATCH) break;
+    }
+    log(`deleted ${deleted} ${label}`);
   }
 } finally {
   await db.end();

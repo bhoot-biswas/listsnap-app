@@ -4,9 +4,12 @@ import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { promisify } from "node:util";
+import { heavy } from "@/server/heavy";
 import { VIDEO_MAX_S } from "@/lib/schemas/video";
 
-const run = promisify(execFile);
+const exec = promisify(execFile);
+// every ffmpeg and ffprobe run waits for one of the server's heavy-work slots
+const run: typeof exec = ((...args: Parameters<typeof exec>) => heavy(() => exec(...args))) as typeof exec;
 const FF = ["-hide_banner", "-loglevel", "error", "-y"];
 /**
  * Read the upload only as a phone video, and only from its own file. ffmpeg guesses the
@@ -26,8 +29,20 @@ const FRAME_MS = 30_000;
  */
 export async function openVideo(data: Buffer) {
   const dir = await mkdtemp(path.join(tmpdir(), "listsnap-video-"));
-  const file = path.join(dir, "video");
-  await writeFile(file, data);
+  await writeFile(path.join(dir, "video"), data);
+  return videoAt(path.join(dir, "video"), dir);
+}
+
+/**
+ * A video already on disk (an upload as it arrived, or a stored one), read in place:
+ * only what ffmpeg makes from it goes in a temporary folder, and `done` removes that
+ * folder, never the video.
+ */
+export async function openVideoFile(file: string) {
+  return videoAt(file, await mkdtemp(path.join(tmpdir(), "listsnap-video-")));
+}
+
+function videoAt(file: string, dir: string) {
   const at = (name: string) => path.join(dir, name);
 
   return {
