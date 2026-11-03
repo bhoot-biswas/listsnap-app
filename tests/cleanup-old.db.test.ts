@@ -14,7 +14,7 @@ import { createTestWorkspace, dbEnv, sampleVideo } from "./db-helpers";
 const enabled = dbEnv();
 
 describe.skipIf(!enabled)("nightly cleanup of old videos, stray files and log rows (MariaDB)", async () => {
-  const { execute, getPool, selectOne } = await import("@/server/db/pool");
+  const { execute, getPool, select, selectOne } = await import("@/server/db/pool");
   const { forWorkspace } = await import("@/server/db/scope");
   const { saveMedia } = await import("@/server/media/store");
   const { loadBatchState } = await import("@/server/pipeline/batch-state");
@@ -139,5 +139,41 @@ describe.skipIf(!enabled)("nightly cleanup of old videos, stray files and log ro
     );
     await execute("DELETE FROM ip_daily WHERE ip_hash = ?", [ipNew]);
     await execute("DELETE FROM shopify_webhooks WHERE webhook_id = ?", [`new-${tag}`]);
+  });
+
+  it("deletes expired sessions and sign-in links, and day-old rate-limit counters", async () => {
+    const tag = randomUUID().slice(0, 8);
+    const userId = randomUUID();
+    await execute("INSERT INTO `user` (id, name, email) VALUES (?, 'probe', ?)", [userId, `${tag}@cleanup.invalid`]);
+    const [oldSession, newSession] = [randomUUID(), randomUUID()];
+    await execute(
+      `INSERT INTO \`session\` (id, expiresAt, token, userId) VALUES
+         (?, UTC_TIMESTAMP(3) - INTERVAL 1 HOUR, ?, ?), (?, UTC_TIMESTAMP(3) + INTERVAL 1 DAY, ?, ?)`,
+      [oldSession, `old-${tag}`, userId, newSession, `new-${tag}`, userId],
+    );
+    await execute(
+      `INSERT INTO verification (id, identifier, value, expiresAt) VALUES
+         (?, ?, 'x', UTC_TIMESTAMP(3) - INTERVAL 1 MINUTE), (?, ?, 'x', UTC_TIMESTAMP(3) + INTERVAL 10 MINUTE)`,
+      [randomUUID(), `old-${tag}`, randomUUID(), `new-${tag}`],
+    );
+    await execute("INSERT INTO `rateLimit` (id, `key`, `count`, lastRequest) VALUES (?, ?, 1, ?), (?, ?, 1, ?)", [
+      randomUUID(),
+      `old-${tag}`,
+      Date.now() - 2 * 86_400_000,
+      randomUUID(),
+      `new-${tag}`,
+      Date.now(),
+    ]);
+
+    await run();
+
+    const left = async (sql: string) =>
+      (await select<{ k: string }>(sql, [`old-${tag}`, `new-${tag}`])).map((r) => r.k);
+    expect(await left("SELECT token AS k FROM `session` WHERE token IN (?, ?)")).toEqual([`new-${tag}`]);
+    expect(await left("SELECT identifier AS k FROM verification WHERE identifier IN (?, ?)")).toEqual([`new-${tag}`]);
+    expect(await left("SELECT `key` AS k FROM `rateLimit` WHERE `key` IN (?, ?)")).toEqual([`new-${tag}`]);
+    await execute("DELETE FROM `user` WHERE id = ?", [userId]);
+    await execute("DELETE FROM verification WHERE identifier = ?", [`new-${tag}`]);
+    await execute("DELETE FROM `rateLimit` WHERE `key` = ?", [`new-${tag}`]);
   });
 });

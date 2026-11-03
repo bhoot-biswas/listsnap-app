@@ -58,9 +58,19 @@ function build() {
         },
       },
     },
-    // deleting an account needs a sign-in from the last day, so an old stolen session can't
-    session: { freshAge: DAY },
+    session: {
+      // sellers open the app every few days from a phone; Better Auth's default is 7 days
+      expiresIn: 30 * DAY,
+      updateAge: DAY,
+      // deleting an account needs a sign-in from the last day, so an old stolen session can't
+      freshAge: DAY,
+      // saves a session lookup on every request and runner poll; a revoked session or a
+      // deleted account still works for up to this long
+      cookieCache: { enabled: true, maxAge: MINUTE },
+    },
     rateLimit: {
+      // Better Auth only turns it on when NODE_ENV is production
+      enabled: true,
       storage: "database",
       customRules: {
         // each demo seeds a shop with photos; a script mustn't be able to fill the disk
@@ -96,6 +106,8 @@ function build() {
     plugins: [
       magicLink({
         expiresIn: LINK_MINUTES * MINUTE,
+        // a leaked dump or a DB reader can't use a pending link
+        storeToken: "hashed",
         sendMagicLink: async ({ email, url }) => {
           const confirm = new URL("/sign-in/confirm", e.siteUrl);
           confirm.search = new URL(url).search;

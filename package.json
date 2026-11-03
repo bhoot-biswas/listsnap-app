@@ -27,7 +27,7 @@
     "@fontsource-variable/bricolage-grotesque": "^5.3.0",
     "@fontsource/hind-siliguri": "^5.3.0",
     "@meta-sam/parser": "0.1.0",
-    "better-auth": "1.7.7",
+    "better-auth": "1.7.15",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cn": "^0.5.0",
