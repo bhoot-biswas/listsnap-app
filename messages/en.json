@@ -1756,7 +1756,7 @@
       "sections": {
         "collect": {
           "h": "What we keep",
-          "p": "Your account: your name and email, and your Google profile picture if you sign in with Google.\n\nYour shop: its name, settings and brand kit.\n\nWhat you upload and what is made from it: product photos, voice notes, videos and chat messages, and the listings, photos and reels made from them.\n\nYour connections: your WooCommerce store's address and keys, and the access tokens for Shopify and Facebook, all stored encrypted; the names and ids of your Facebook Page and Instagram account.\n\nHow the service is used: a log of each AI call (the step, the time and the cost, never your photos), and the daily counts behind the limits. For demo shops, a salted hash of your internet address to cap free use, never the address itself."
+          "p": "Your account: your name and email, and your Google profile picture if you sign in with Google.\n\nYour shop: its name, settings and brand kit.\n\nWhat you upload and what is made from it: product photos, voice notes, videos and chat messages, and the listings, photos and reels made from them.\n\nYour connections: the access tokens for Shopify and Facebook, and your WooCommerce store's address and keys, all stored encrypted; the names and ids of your Facebook Page and Instagram account.\n\nHow the service is used: a log of each AI call (the step, the time and the cost, never your photos), and the daily counts behind the limits. For demo shops, a salted hash of your internet address to cap free use, never the address itself."
         },
         "use": {
           "h": "What we use it for",
@@ -1764,7 +1764,7 @@
         },
         "share": {
           "h": "Who it goes to",
-          "p": "Meta's Model API (Muse Spark, SAM, Muse Image and Muse Voice Transcribe) receives your photos, voice notes, videos and text to make each listing. Baseten runs Meta's open Muse Spark model to read prices from what you said and to watch product videos.\n\nYour own store (WooCommerce or Shopify) and Meta (your Facebook Page, Instagram account and catalog) receive what you choose to save or post there. Google is involved only if you sign in with it. Sign-in links are sent by email.\n\nEverything else stays on our server. We give your data to no one else, unless the law requires it."
+          "p": "Meta's Model API (Muse Spark, SAM, Muse Image and Muse Voice Transcribe) receives your photos, voice notes, videos and text to make each listing. Baseten runs Meta's open Muse Spark model to read prices from what you said and to watch product videos.\n\nYour own store (Shopify or WooCommerce) and Meta (your Facebook Page, Instagram account and catalog) receive what you choose to save or post there. Google is involved only if you sign in with it. Sign-in links are sent by email.\n\nEverything else stays on our server. We give your data to no one else, unless the law requires it."
         },
         "keep": {
           "h": "How long we keep it",
@@ -1840,7 +1840,7 @@
         },
         "stays": {
           "h": "What stays",
-          "p": "Drafts already in your WooCommerce or Shopify store, and posts on your Facebook Page or Instagram, belong to your store and Page. Delete them there."
+          "p": "Drafts already in your Shopify or WooCommerce store, and posts on your Facebook Page or Instagram, belong to your store and Page. Delete them there."
         }
       }
     }
