@@ -4,6 +4,7 @@ import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Providers } from "@/components/app/providers";
 import "./globals.css";
+import { env } from "@/server/env";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter", display: "swap" });
 const bricolage = Bricolage_Grotesque({
@@ -22,7 +23,14 @@ const mono = JetBrains_Mono({ subsets: ["latin"], variable: "--font-jetbrains", 
 
 export async function generateMetadata(): Promise<Metadata> {
   const t = await getTranslations("common");
-  return { title: { default: "ListSnap", template: "%s · ListSnap" }, description: t("tagline") };
+  return {
+    title: { default: "ListSnap", template: "%s · ListSnap" },
+    description: t("tagline"),
+    // the link-preview image needs an absolute address when a link is shared on Facebook or WhatsApp
+    metadataBase: new URL(env().siteUrl),
+    openGraph: { siteName: "ListSnap", type: "website" },
+    appleWebApp: { title: "ListSnap", statusBarStyle: "default" },
+  };
 }
 
 export const viewport: Viewport = {
