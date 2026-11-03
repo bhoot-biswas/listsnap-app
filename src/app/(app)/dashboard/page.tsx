@@ -45,6 +45,7 @@ export default async function DashboardPage() {
   const brandNew = recent.length === 0;
   const brokenStore = stores.find((s) => s.broken);
   const allDone = Object.values(done).every(Boolean);
+  const starting = !done.store || !done.listing;
 
   return (
     <>
@@ -65,8 +66,6 @@ export default async function DashboardPage() {
             {isDemo ? t("storeDemo") : stores.some((s) => !s.broken) ? t("storeConnected") : t("storeMissing")}
           </p>
         </section>
-
-        <AskBox needsReview={stats.waiting} />
 
         {brokenStore && (
           <div
@@ -93,6 +92,11 @@ export default async function DashboardPage() {
             </ButtonLink>
           </div>
         )}
+
+        {/* a seller without a store or a first listing yet sees what to do before anything else */}
+        {starting && <GetStarted done={done} />}
+
+        <AskBox needsReview={stats.waiting} />
 
         {brandNew ? (
           <div className="flex flex-col items-center gap-4 rounded-xl border border-dashed bg-card px-6 py-12 text-center">
@@ -126,14 +130,17 @@ export default async function DashboardPage() {
             )}
             <Activity rows={activity} />
           </div>
-          <div className="space-y-6">
-            <UsageToday
-              listings={used.listings}
-              images={used.images}
-              reels={used.reels}
-              limits={{ ...viewer.workspace.limits, reels: REELS_PER_DAY }}
-            />
-            {!allDone && <GetStarted done={done} />}
+          {/* usage last on a phone: it's a meter to glance at, not a next step */}
+          <div className="flex flex-col gap-6">
+            <div className="max-lg:order-last">
+              <UsageToday
+                listings={used.listings}
+                images={used.images}
+                reels={used.reels}
+                limits={{ ...viewer.workspace.limits, reels: REELS_PER_DAY }}
+              />
+            </div>
+            {!allDone && !starting && <GetStarted done={done} />}
             {!brandNew && <WeekBars days={days} />}
           </div>
         </div>
