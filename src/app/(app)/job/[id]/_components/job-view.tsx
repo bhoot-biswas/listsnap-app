@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
 import { CircleAlert, Lightbulb, WifiOff } from "lucide-react";
@@ -49,6 +50,20 @@ export function JobView({
     photo && box
       ? { x: ((box.x + box.w / 2) / photo.width) * 100, y: ((box.y + box.h / 2) / photo.height) * 100 }
       : { x: 50, y: 50 };
+  // when the job stops for the seller while they watch (choose items, or finished), bring
+  // that next step into view and focus, instead of leaving it below the photo
+  const next = useRef<HTMLDivElement>(null);
+  const started = useRef(initial.status);
+  useEffect(() => {
+    if (state.status === started.current) return;
+    started.current = state.status;
+    if (state.status !== "awaiting_choice" && state.status !== "ready") return;
+    if (document.visibilityState !== "visible") return;
+    const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    next.current?.scrollIntoView({ behavior: reduce ? "auto" : "smooth", block: "start" });
+    next.current?.focus({ preventScroll: true });
+  }, [state.status]);
+
   /** Scenes still being made for a listing, shown as placeholder tiles. */
   const pendingScenes = (l: (typeof state.listings)[number]) =>
     finished || l.status === "failed"
@@ -84,11 +99,17 @@ export function JobView({
       <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-6 md:px-6 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="space-y-6">
           <div className="grid gap-6 md:grid-cols-[320px_minmax(0,1fr)]">
-            <div className="space-y-4">
+            {/* on a phone the steps come first and the photo is smaller, so progress and the
+                next step aren't a screen below the picture */}
+            <div className="space-y-4 max-md:order-2 max-md:mx-auto max-md:w-3/5">
               {photo && <PhotoStage photo={photo} items={state.items} />}
-              {photo && compare && <BeforeAfter before={photo.url} after={compare} focus={focus} />}
+              {photo && compare && (
+                <div className="max-md:hidden">
+                  <BeforeAfter before={photo.url} after={compare} focus={focus} />
+                </div>
+              )}
             </div>
-            <div className="space-y-4">
+            <div className="space-y-4 max-md:order-1">
               <StepList state={state} onRetry={retry} />
               {state.status === "processing" && <p className="text-sm text-muted-foreground">{t("keepOpen")}</p>}
               {state.check && state.check.hints.length > 0 && (
@@ -110,12 +131,16 @@ export function JobView({
             </div>
           </div>
 
-          {state.status === "awaiting_choice" && <ChooseItems state={state} onChoose={choose} />}
+          {state.status === "awaiting_choice" && (
+            <div ref={next} tabIndex={-1} className="scroll-mt-20 outline-none">
+              <ChooseItems state={state} onChoose={choose} />
+            </div>
+          )}
 
           {state.listings.length > 0 && (
             <section className="space-y-3">
               {finished && state.listings.some((l) => l.status !== "failed") && (
-                <div className="space-y-1">
+                <div ref={next} tabIndex={-1} className="scroll-mt-20 space-y-1 outline-none">
                   <h2 className="text-xl font-semibold">{t("doneTitle", { count: state.listings.length })}</h2>
                   <p className="text-sm text-muted-foreground">{t(hasStore ? "doneBody" : "doneBodyNoStore")}</p>
                 </div>
@@ -207,6 +232,12 @@ export function JobView({
                 </div>
               )}
             </section>
+          )}
+
+          {photo && compare && (
+            <div className="md:hidden">
+              <BeforeAfter before={photo.url} after={compare} focus={focus} />
+            </div>
           )}
         </div>
 
