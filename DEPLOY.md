@@ -103,7 +103,9 @@ listsnap-deploy
 
 The deploy pulls `main` into `/srv/listsnap`, then unpacks it into a release folder of its own (`/srv/listsnap-releases/<time>-<commit>`). There it installs packages, migrates the database and builds. The build runs in a cage of 3 GB and one CPU, so it can't starve the live site; it reuses the live release's build cache, which brings it down to seconds. Only then does the deploy point `/srv/listsnap-current` at the new release and restart the app. It ends with `✓ Live:` and the health report: `"database":"ok"`, `"media":"ok"`, `"config":"ok"`, and all secrets `true`.
 
-If the new release fails the health check, the deploy switches straight back to the one before. It keeps the last three releases.
+Before building, the deploy waits for GitHub's CI to pass on the exact commit it is about to put live (up to 15 minutes; the repository is public, so no token is needed). If CI failed, or never finished, nothing changes. `listsnap-deploy --force` skips the wait, for a fix that can't wait for CI.
+
+The health check asks `/api/health`, Better Auth's `/api/auth/ok` and the sign-in page, and the database must report the newest migration file. If the new release fails any of these, the deploy switches straight back to the one before and removes the new folder. It keeps the live release and the two newest finished ones before it; a build that failed is removed, so it can never push a good release out of those kept.
 
 When `main` changes one of the files above, the deploy stops before building. It shows the diff and the `install` commands to run; read the diff, run them, and deploy again.
 

@@ -5,7 +5,8 @@
 # straight back. The last few releases stay, so going back is one command.
 #
 # Runs as root from a root-owned copy, installed by DEPLOY.md step 5:
-#   /usr/local/sbin/listsnap-deploy              deploy origin/main
+#   /usr/local/sbin/listsnap-deploy              deploy origin/main once its CI has passed
+#   /usr/local/sbin/listsnap-deploy --force      deploy origin/main without waiting for CI
 #   /usr/local/sbin/listsnap-deploy --rebuild    build the live commit again (after changing
 #                                                NEXT_PUBLIC_SITE_URL, which is built in)
 #   /usr/local/sbin/listsnap-deploy --rollback   go back to the release before this one
@@ -20,6 +21,8 @@ CURRENT=/srv/listsnap-current
 ENV=/etc/listsnap/env
 SELF=/usr/local/sbin/listsnap-deploy
 KEEP=3
+# CI takes about six minutes; a deploy started right after a merge waits for it
+CI_WAIT_S=900
 
 # The app user owns $APP, so anything that runs as it (the app, a package's install
 # script, the build) can change this file there. Root only runs a copy that the app user
@@ -43,9 +46,9 @@ ROOT_FILES=(
 
 # anything else (a typo, --help) used to fall through to a real deploy
 case "${1:-}" in
-  "" | --rebuild | --rollback) ;;
+  "" | --force | --rebuild | --rollback) ;;
   *)
-    echo "Usage: $SELF [--rebuild | --rollback]" >&2
+    echo "Usage: $SELF [--force | --rebuild | --rollback]" >&2
     exit 2
     ;;
 esac
@@ -69,14 +72,66 @@ caged() {
     sudo -u listsnap -H env COREPACK_ENABLE_DOWNLOAD_PROMPT=0 bash -c "$*"
 }
 
+# The health report, once the app answers it and can show its sign-in page: a release whose
+# auth setup or pages crash still reports a healthy database, so those are asked too.
 health() {
+  local app=http://127.0.0.1:3000
   for _ in $(seq 1 30); do
-    if body=$(curl -fsS http://127.0.0.1:3000/api/health 2>/dev/null); then
+    if body=$(curl -fsS "$app/api/health" 2>/dev/null) &&
+      curl -fsS -o /dev/null "$app/api/auth/ok" 2>/dev/null &&
+      curl -fsS -o /dev/null "$app/sign-in" 2>/dev/null; then
       echo "$body"
       return 0
     fi
     sleep 1
   done
+  return 1
+}
+
+# Keeps the live release and the newest few finished ones before it for --rollback. A
+# folder without a BUILD_ID is a build that failed; it is never one of those kept.
+prune_releases() {
+  local live=$1 kept=0 d
+  for d in $(ls -1dt "$RELEASES"/*/); do
+    d=${d%/}
+    [ "$d" = "$live" ] && continue
+    if [ -f "$d/.next/BUILD_ID" ] && [ $kept -lt $((KEEP - 1)) ]; then
+      kept=$((kept + 1))
+    else
+      rm -rf "$d"
+    fi
+  done
+}
+
+# Whether CI passed for a commit of main, from GitHub's API (the repository is public, so
+# no token): success, failure, pending (no finished run yet) or unknown (GitHub didn't answer).
+ci_state() {
+  local repo=$1 sha=$2
+  curl -fsS --max-time 15 "https://api.github.com/repos/$repo/actions/runs?head_sha=$sha&event=push&per_page=20" 2>/dev/null |
+    python3 -I -c '
+import json, sys
+runs = [r for r in json.load(sys.stdin).get("workflow_runs", []) if r.get("name") == "CI"]
+if any(r["status"] == "completed" and r["conclusion"] == "success" for r in runs): print("success")
+elif not runs or any(r["status"] != "completed" for r in runs): print("pending")
+else: print("failure")' 2>/dev/null || echo unknown
+}
+
+# Waits for CI on the commit about to go live. A merge is deployed minutes after it lands,
+# before CI on main has run on it; this is what stops a commit whose tests failed.
+wait_for_ci() {
+  local sha=$1 repo state
+  repo=$(as_app "cd $APP && git remote get-url origin" | sed -E 's#^(https://|git@)github\.com[:/]##; s#\.git$##')
+  for _ in $(seq 1 $((CI_WAIT_S / 15))); do
+    state=$(ci_state "$repo" "$sha")
+    case $state in
+      success) echo "  CI passed."; return 0 ;;
+      failure) echo "✗ CI failed for $sha, so it isn't deployed. Fix main, or deploy anyway with --force." >&2; return 1 ;;
+    esac
+    [ "${said:-}" = "$state" ] || echo "  CI on $sha: $state, waiting…"
+    said=$state
+    sleep 15
+  done
+  echo "✗ No passing CI for $sha after $((CI_WAIT_S / 60)) minutes. Deploy again later, or with --force." >&2
   return 1
 }
 
@@ -142,9 +197,23 @@ if [ "${1:-}" != "--rebuild" ] && [[ "$(readlink -f "$CURRENT" 2>/dev/null || tr
   echo "✓ $SHA is already live. To build it again, add --rebuild."
   exit 0
 fi
+# a rebuild is of the commit already live; --force is a person deciding not to wait
+if [ -z "${1:-}" ]; then
+  echo "→ Checking CI"
+  wait_for_ci "$(as_app "cd $APP && git rev-parse HEAD")"
+fi
 # a new folder even for the same commit, so the live one is never rebuilt in place
 REL=$RELEASES/$(date +%Y%m%d-%H%M%S)-$SHA
 live=$(readlink -f "$CURRENT" 2>/dev/null || true)
+# A release that never went live, or failed its health check, is removed on the way out.
+# Left behind, failed folders would crowd the good ones out of the KEEP kept for rollback.
+went_live=
+leave() {
+  if [ -z "$went_live" ] && [ -d "$REL" ] && [ "$(readlink -f "$CURRENT" 2>/dev/null)" != "$REL" ]; then
+    rm -rf "$REL"
+  fi
+}
+trap leave EXIT
 
 echo "→ Unpacking $SHA"
 install -d -o listsnap -g listsnap "$RELEASES"
@@ -184,16 +253,16 @@ as_app "mkdir -p $REL/.next/cache"
 
 echo "→ Switching to $SHA"
 switch_to "$REL"
-if body=$(health); then
+# the newest migration file is the one the database says it has, or migrating went wrong
+newest=$(cd "$REL/db/migrations" && ls -1 | grep -E '^[0-9]{4}_[a-z0-9_]+\.sql$' | sort | tail -n 1)
+if body=$(health) && [[ "$body" == *"\"migration\":\"$newest\""* ]]; then
+  went_live=1
   echo "✓ Live: $body"
-  # keep the newest few, and always the live one
-  for d in $(ls -1dt "$RELEASES"/*/ | tail -n +$((KEEP + 1))); do
-    if [ "${d%/}" != "$REL" ]; then rm -rf "${d%/}"; fi
-  done
+  prune_releases "$REL"
   exit 0
 fi
 
-echo "✗ $SHA didn't pass the health check." >&2
+echo "✗ $SHA didn't pass the health check (or the database isn't at $newest)." >&2
 if [ -n "$live" ] && [ -d "$live" ]; then
   echo "→ Switching back to $(basename "$live")" >&2
   switch_to "$live"

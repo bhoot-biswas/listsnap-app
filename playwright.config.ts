@@ -9,6 +9,15 @@ import { defineConfig, devices } from "@playwright/test";
  * server that is the live site. E2E_CHROME points at a Chrome already on the machine
  * instead of Playwright's own download.
  */
+// The app it starts reads .env.local, and the run makes demo shops in that database: like
+// the DB tests, only a *_test one (GitHub Actions' throwaway service aside).
+try {
+  process.loadEnvFile(".env.local");
+} catch {}
+const db = process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL).pathname.slice(1) : "";
+if (db && !db.endsWith("_test") && process.env.GITHUB_ACTIONS !== "true")
+  throw new Error(`The smoke run only uses a database whose name ends in _test, not "${db}".`);
+
 const PORT = Number(process.env.E2E_PORT ?? 3210);
 const base = `http://localhost:${PORT}`;
 

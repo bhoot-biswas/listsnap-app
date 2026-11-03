@@ -16,9 +16,9 @@ export function dbEnv(): boolean {
   } catch {}
   // These tests insert and delete rows. On a server that also holds the real database, one
   // wrong line in .env.local would point them at it, so only a *_test database is used
-  // (CI's own throwaway service is the one exception).
+  // (GitHub Actions' own throwaway service is the one exception; a stray CI=1 isn't).
   const db = process.env.DATABASE_URL ? new URL(process.env.DATABASE_URL).pathname.slice(1) : "";
-  if (db && !db.endsWith("_test") && !process.env.CI)
+  if (db && !db.endsWith("_test") && process.env.GITHUB_ACTIONS !== "true")
     throw new Error(`DB tests only run against a database whose name ends in _test, not "${db}".`);
   process.env.MEDIA_DIR = mkdtempSync(path.join(tmpdir(), "listsnap-media-"));
   process.env.PROVIDER_MODE_META = "mock";
@@ -27,6 +27,8 @@ export function dbEnv(): boolean {
   process.env.PROVIDER_MODE_INSTAGRAM = "mock";
   process.env.PROVIDER_MODE_FACEBOOK = "mock";
   process.env.PROVIDER_MODE_VIDEO = "mock";
+  // .env.local may hold a real Baseten key; a test must never make a paid call
+  process.env.PROVIDER_MODE_BASETEN = "mock";
   process.env.MOCK_DELAY_MS = "0";
   return !!process.env.DATABASE_URL;
 }
