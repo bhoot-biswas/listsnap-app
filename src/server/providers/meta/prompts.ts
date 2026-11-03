@@ -23,7 +23,8 @@ export const BANGLA_SYSTEM =
   "everything in Bangla script, including product words (শাড়ি, কুর্তি, চুড়ি, মগ) and common English loanwords " +
   "(জরি, কটন, ফেস্টিভ); never leave Latin-script words inside Bangla sentences. Only the tags may mix: give " +
   "mostly Bangla tags plus two or three English ones buyers type (e.g. 'jamdani saree'). Keep facts identical: " +
-  "do not add or drop details.";
+  "do not add or drop details. check_notes are for the seller, not buyers: translate each one plainly, keeping " +
+  "its order, any prices and numbers.";
 
 /**
  * The fidelity judge. Setting, light, pose and fold may change in an AI photo; the item

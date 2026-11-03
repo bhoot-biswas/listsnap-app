@@ -231,6 +231,12 @@ export const mockMeta: MetaProvider = {
           tags: bag
             ? ["টোট ব্যাগ", "হ্যান্ডলুম", "কটন ব্যাগ", "tote bag"]
             : ["জামদানি", "শাড়ি", "তাঁতের শাড়ি", "jamdani saree"],
+          check_notes: listing.check_notes.map((n) => {
+            const price = n.match(/৳(\d+)/)?.[1];
+            return price
+              ? `দামটা দেখে নিন: ভয়েস নোটে আমরা ৳${price} শুনেছি।`
+              : "কাপড়টা দেখে নিন: হ্যান্ডলুম না পাওয়ারলুম, কটন না সিল্ক ব্লেন্ড।";
+          }),
         };
       },
       (r) => ({ summary: `"${r.title}"`, costUsd: 0 }),

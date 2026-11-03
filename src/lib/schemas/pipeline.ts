@@ -143,8 +143,28 @@ export const BanglaText = z.object({
   description: z.string(),
   attributes: z.array(Attribute),
   tags: z.array(z.string()),
+  /** The English check_notes in Bangla, same order; missing on listings translated before them. */
+  check_notes: z.array(z.string()).optional(),
 });
 export type BanglaText = z.infer<typeof BanglaText>;
+
+/** What Spark is asked for: every Bangla field, the notes included. */
+export const BanglaWritten = BanglaText.extend({
+  check_notes: z
+    .array(z.string())
+    .describe("Each of the listing's check_notes in Bangla, in the same order and the same count"),
+});
+
+/** The notes to show a seller reading in this language: the Bangla ones when they line up. */
+export function checkNotesFor(
+  locale: string,
+  en: string[] | null,
+  bn: { check_notes?: string[] } | null | undefined,
+): string[] {
+  const notes = en ?? [];
+  const translated = bn?.check_notes;
+  return locale === "bn" && translated?.length === notes.length ? translated : notes;
+}
 
 export const Scene = z.enum(["studio", "lifestyle", "banner"]);
 export type Scene = z.infer<typeof Scene>;

@@ -1081,7 +1081,15 @@
     "include": "Include {name}",
     "english": "English",
     "bangla": "বাংলা",
-    "banglaMissing": "The Bangla version isn't ready yet.",
+    "banglaMissing": {
+      "notWritten": "The Bangla version couldn't be written.",
+      "off": "This shop writes listings in English only, so there's no Bangla version.",
+      "write": "Write it in Bangla",
+      "writing": "Writing the Bangla…",
+      "failed": "That didn't work. Try again in a minute.",
+      "settingsHint": "To have every new listing in Bangla too, turn Bangla on in",
+      "settingsLink": "Settings"
+    },
     "titleField": "Title",
     "shortField": "Short description",
     "descriptionField": "Description",
