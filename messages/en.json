@@ -1146,6 +1146,16 @@
     "offline": "Offline, will save",
     "saveToStore": "Save draft to store",
     "postOnFacebook": "Post on Facebook",
+    "whereItIs": {
+      "title": "Where it is:",
+      "store": "In {store}",
+      "catalog": "In Facebook catalog",
+      "facebook": "On Facebook",
+      "instagram": "On Instagram",
+      "marketplace": "On Marketplace",
+      "behind": "out of date",
+      "opens": "(opens in a new tab)"
+    },
     "updateStore": "Update store draft",
     "storeBehindIn": "Out of date in {stores}. Update to send your changes.",
     "storeMissing": "Not in {stores} yet. Update to save it there too.",
