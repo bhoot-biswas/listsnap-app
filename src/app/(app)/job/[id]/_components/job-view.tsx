@@ -160,7 +160,7 @@ export function JobView({
                       </div>
                       <StatusBadge status={l.status} />
                     </div>
-                    {l.stockQty && <p className="text-sm">{t("stock", { qty: l.stockQty })}</p>}
+                    {l.stockQty != null && <p className="text-sm">{t("stock", { qty: l.stockQty })}</p>}
                     <div className="grid grid-cols-4 gap-2" aria-busy={pendingScenes(l) > 0}>
                       {l.images.map((img) => (
                         <figure
