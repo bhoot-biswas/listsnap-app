@@ -27,13 +27,13 @@ On any job, the **Details** panel lists each model call with its real model name
 
 Every model ListSnap calls at runtime is a Meta model.
 
-| Model                 | Model ID                           | Where it runs                 | What it does in ListSnap                                                                                                                                                     |
-| --------------------- | ---------------------------------- | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Muse Spark            | `muse-spark-1.3`                   | Meta Model API (dev.meta.ai)  | Plans each photo, groups items into products, sets or colour variants, writes the English listing and its natural Bangla version, the Review help buttons and the chat       |
-| SAM 3.1               | `sam-3.1`                          | Meta Model API (dev.meta.ai)  | Finds every matching item and cuts it out; ListSnap's photo checks (fill, sharpness, light, overlap, colour) work from what it finds                                         |
-| Muse Image            | `muse-image-1.0`                   | Meta Model API (dev.meta.ai)  | Studio, banner and lifestyle photos, and campaign looks, around the real cutout                                                                                              |
-| Muse Voice Transcribe | `muse-voice-transcribe-1.0`        | Meta Model API (dev.meta.ai)  | Writes down voice notes and a video's speech turn by turn with times; streams the words of a chat message live, over its realtime socket, while the seller is still talking  |
-| Muse Spark Open       | `meta-models/muse-spark-open-1026` | Baseten (Meta's open weights) | Reads the price, sizes and stock out of what the seller said; watches a product video with its transcript and lists each product; hears the audio itself if Transcribe fails |
+| Model                 | Model ID                           | Where it runs                 | What it does in ListSnap                                                                                                                                                                                                                          |
+| --------------------- | ---------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Muse Spark            | `muse-spark-1.3`                   | Meta Model API (dev.meta.ai)  | Plans each photo, groups items into products, sets or colour variants, writes the English listing and its natural Bangla version, the Review help buttons and the chat                                                                            |
+| SAM 3.1               | `sam-3.1`                          | Meta Model API (dev.meta.ai)  | Finds every matching item from a short phrase, and its masks make the cutouts. ListSnap uses its boxes for the fill, cut-off and overlap hints. It also finds the product again in AI scenes, so ListSnap can compare the colours with the cutout |
+| Muse Image            | `muse-image-1.0`                   | Meta Model API (dev.meta.ai)  | Studio, banner and lifestyle photos, and campaign looks, around the real cutout                                                                                                                                                                   |
+| Muse Voice Transcribe | `muse-voice-transcribe-1.0`        | Meta Model API (dev.meta.ai)  | Writes down voice notes and a video's speech turn by turn with times; streams the words of a chat message live, over its realtime socket, while the seller is still talking                                                                       |
+| Muse Spark Open       | `meta-models/muse-spark-open-1026` | Baseten (Meta's open weights) | Reads the price, sizes and stock out of what the seller said; watches a product video with its transcript and lists each product; hears the audio itself if Transcribe fails                                                                      |
 
 Muse Spark Open is the open-weight model: voice notes and product videos go through it on Baseten, called from [`src/server/providers/baseten/`](src/server/providers/baseten/). The Meta Model API calls are in [`src/server/providers/meta/`](src/server/providers/meta/).
 
@@ -50,7 +50,7 @@ Muse Spark Open is the open-weight model: voice notes and product videos go thro
 | Render    | Muse Image                             | Studio and banner photos keep the product's real pixels on a generated background; the lifestyle scene is labelled "AI scene" |
 | Save      | Shopify, WooCommerce                   | Creates or updates a **draft** product in each connected store                                                                |
 
-Each step is one short request, with its state and lock in MySQL. The browser drives the steps by default; with `PIPELINE_WORKER` set to `batches` or `all`, the server also works through them, so a closed tab doesn't stop a job. A refresh, a second tab or a server restart repeats nothing that already finished.
+Each step is one short request, with its state and lock in MySQL. By default the browser drives the steps, so a job waits while its tab is closed. With `PIPELINE_WORKER` set to `all`, or `batches` for video batches only, the server runs the automatic steps too, under the same locks, so the job carries on without the tab. A refresh, a second tab or a server restart repeats nothing that already finished.
 
 ## Run it locally
 
