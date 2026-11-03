@@ -263,8 +263,9 @@
       "title": "Get started",
       "progress": "{count}/{total}",
       "done": "Done:",
-      "store": "Connect your store",
+      "store": "Connect your store or Facebook Page",
       "listing": "Make your first listing",
+      "reel": "Post your first reel",
       "bulk": "Try a bulk upload",
       "colors": "Sell one product in several colors"
     },
@@ -619,6 +620,10 @@
         "edit": {
           "q": "Can I edit after saving to the store?",
           "a": "Yes. Change anything on Review and press Update store draft: the same draft is updated, never copied."
+        },
+        "colors": {
+          "q": "How do I sell one product in several colors?",
+          "a": "Lay every color side by side and take one photo. ListSnap finds each one; at “Several items found”, choose “One product, color options”. You get one listing, with a photo, price and stock for each color."
         },
         "labels": {
           "q": "What do the AI labels mean?",

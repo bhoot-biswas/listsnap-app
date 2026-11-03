@@ -38,11 +38,12 @@ export async function UsageToday({
 const STEPS = [
   { key: "store", href: "/connections/add" },
   { key: "listing", href: "/snap" },
+  { key: "reel", href: "/listings" },
   { key: "bulk", href: "/bulk" },
-  { key: "colors", href: "/snap" },
+  { key: "colors", href: "/help#faq-colors" },
 ] as const;
 
-/** Four first steps; the Dashboard hides this once all are done. */
+/** The first steps; the Dashboard hides this once all are done. */
 export async function GetStarted({ done }: { done: Checklist }) {
   const t = await getTranslations("dashboard.getStarted");
   const count = STEPS.filter((s) => done[s.key]).length;

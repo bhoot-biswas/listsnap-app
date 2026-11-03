@@ -91,10 +91,12 @@ export interface DashboardStats {
 }
 
 export interface Checklist {
+  /** A store or, for a seller without a website, a Facebook Page. */
   store: boolean;
   listing: boolean;
   bulk: boolean;
   colors: boolean;
+  reel: boolean;
 }
 
 const TITLE = "JSON_UNQUOTE(JSON_EXTRACT(l.fields_json, '$.en.title'))";
@@ -291,14 +293,21 @@ export function overviewQueries(ws: string) {
 
     async checklist(): Promise<Checklist> {
       const row = await selectOne<Record<keyof Checklist, number>>(
-        `SELECT EXISTS(SELECT 1 FROM store_connections WHERE workspace_id = ? AND kind IN ('woo', 'shopify') AND status = 'connected') AS store,
+        `SELECT EXISTS(SELECT 1 FROM store_connections WHERE workspace_id = ? AND kind IN ('woo', 'shopify', 'meta') AND status = 'connected') AS store,
                 EXISTS(SELECT 1 FROM listings WHERE workspace_id = ?) AS listing,
                 EXISTS(SELECT 1 FROM batches WHERE workspace_id = ?) AS bulk,
                 EXISTS(SELECT 1 FROM listings l JOIN jobs j ON j.id = l.job_id
-                        WHERE l.workspace_id = ? AND j.group_mode = 'variants' AND JSON_LENGTH(l.item_ids_json) > 1) AS colors`,
-        [ws, ws, ws, ws],
+                        WHERE l.workspace_id = ? AND j.group_mode = 'variants' AND JSON_LENGTH(l.item_ids_json) > 1) AS colors,
+                EXISTS(SELECT 1 FROM listings WHERE workspace_id = ? AND posted_at IS NOT NULL) AS reel`,
+        [ws, ws, ws, ws, ws],
       );
-      return { store: !!row?.store, listing: !!row?.listing, bulk: !!row?.bulk, colors: !!row?.colors };
+      return {
+        store: !!row?.store,
+        listing: !!row?.listing,
+        bulk: !!row?.bulk,
+        colors: !!row?.colors,
+        reel: !!row?.reel,
+      };
     },
   };
 }
