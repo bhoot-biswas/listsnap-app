@@ -200,7 +200,8 @@ export default async function ReviewPage({ params, searchParams }: PageProps<"/j
     <>
       <TopBar title={t("title")} />
       <ReviewForm
-        key={listing.id}
+        // remounted once the Bangla is written, so the form picks it up
+        key={`${listing.id}:${bn.success}`}
         jobId={id}
         listingId={listing.id}
         initial={initial}
@@ -209,6 +210,7 @@ export default async function ReviewPage({ params, searchParams }: PageProps<"/j
         hint={{ low: price_hint_bdt.low, high: price_hint_bdt.high }}
         confidence={listing.confidence}
         checkNotes={checkNotesFor(locale, listing.check_notes, bn.success ? bn.data : null)}
+        banglaOff={!viewer.workspace.settings.listingLanguages.includes("bn")}
         voiceNote={voiceNote}
         status={listing.status}
         inStore={listing.status === "in_store" || listing.status === "posted"}

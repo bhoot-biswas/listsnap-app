@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { STORE_NAMES, type StoreKind } from "@/lib/stores";
 import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { ArrowRight, Check, ChevronDown, CloudOff, Loader2 } from "lucide-react";
 import { StatusBadge, type ListingStatus } from "@/components/app/status-badge";
 import { Input } from "@/components/ui/input";
@@ -29,6 +29,7 @@ import { ListingChat } from "./listing-chat";
 import { ArchiveButton } from "@/components/app/archive-button";
 import type { ChatItem } from "@/lib/schemas/chat";
 import { VoiceNoteCard, type VoiceNoteView } from "./voice-note-card";
+import { BanglaMissing } from "./bangla-missing";
 
 export type { ReviewPhoto } from "./review-side";
 
@@ -45,6 +46,7 @@ export function ReviewForm({
   hint,
   confidence,
   checkNotes,
+  banglaOff,
   voiceNote,
   status,
   inStore,
@@ -72,6 +74,8 @@ export function ReviewForm({
   hint: { low: number; high: number };
   confidence: number | null;
   checkNotes: string[];
+  /** The shop writes listings in English only, so a missing Bangla version is expected. */
+  banglaOff: boolean;
   /** The seller's voice note for this job, when there was one. */
   voiceNote: VoiceNoteView | null;
   status: ListingStatus;
@@ -96,7 +100,9 @@ export function ReviewForm({
   const t = useTranslations("review");
   const tArchive = useTranslations("archive");
   const [edit, setEdit] = useState(initial);
-  const [lang, setLang] = useState<"en" | "bn">("en");
+  // a seller using ListSnap in Bangla starts on the Bangla text, when there is one
+  const locale = useLocale();
+  const [lang, setLang] = useState<"en" | "bn">(locale === "bn" && initial.bn ? "bn" : "en");
   const [state, setState] = useState<SaveState>("saved");
   const [saver] = useState(
     () =>
@@ -347,7 +353,7 @@ export function ReviewForm({
             />
           ) : (
             <>
-              <p className="text-sm text-muted-foreground">{t("banglaMissing")}</p>
+              <BanglaMissing listingId={listingId} off={banglaOff} beforeWrite={() => saver.flush()} />
               {priceAndColors}
             </>
           )}
