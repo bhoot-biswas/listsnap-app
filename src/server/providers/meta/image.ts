@@ -47,7 +47,13 @@ const NO_TEXT = "nothing on it, no objects, no people, no text, no logos.";
 
 const BACKGROUNDS = {
   flatlay: `Top-down flat lay photograph of an empty smooth light-grey linen surface seen from directly above, soft even daylight, very subtle texture, ${NO_TEXT}`,
-  studio: `Empty seamless studio backdrop for product photography, soft light-grey paper sweep, gentle even lighting, subtle floor shadow area, ${NO_TEXT}`,
+  // "paper sweep" drew the roll of paper itself, curled edges and all, so the surface is described
+  // as one piece that fills the frame, and the edges are ruled out by name
+  studio:
+    "Empty professional product photography backdrop filling the whole frame edge to edge: one continuous seamless " +
+    "light-grey surface that blends smoothly from floor to background with no visible horizon line, soft even " +
+    "diffused studio light, a very gentle lighter glow behind the centre. Completely plain and smooth. No paper roll, " +
+    "no curled or visible edges, no folds, no corners, no walls, no objects, no people, no text, no logos.",
 } as const;
 
 /**

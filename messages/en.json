@@ -130,12 +130,12 @@
       "photos": {
         "title": "Studio photos and seasonal looks",
         "body": "Your real product on a clean background, and AI scenes for a wedding, a festival or an outdoor shoot, always labelled.",
-        "alt": "One bangle on a clean studio background"
+        "alt": "A painted tray on a clean studio background"
       },
       "draft": {
         "title": "Saved as a draft, ready to post",
         "body": "Goes to your Shopify or WooCommerce store as a draft. Make a reel and post it to Facebook and Instagram when you're ready.",
-        "alt": "A kurti on a clean studio background",
+        "alt": "A nakshi kantha on a clean studio background",
         "storeDraft": "Store draft",
         "post": "Instagram post"
       },
@@ -713,8 +713,8 @@
     "samplesTitle": "Try a sample",
     "samples": {
       "saree": "Saree",
-      "bangles": "Bangles",
-      "kurti": "Kurti"
+      "kantha": "Nakshi kantha",
+      "tray": "Painted tray"
     },
     "sampleFailed": "The sample photo didn’t load. Try again.",
     "several": "{count} photos: how should they be listed?",

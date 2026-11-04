@@ -2,9 +2,21 @@ import Image from "next/image";
 import { getTranslations } from "next-intl/server";
 import { ScanSearch } from "lucide-react";
 import { StatusBadge } from "@/components/app/status-badge";
-import { DEMO_SAMPLES, SAMPLE_SOURCE_SIZE } from "@/server/demo/samples";
+import { SAMPLE_SOURCE_SIZE } from "@/server/demo/samples";
 
-const bangles = DEMO_SAMPLES.find((s) => s.key === "bangles")!;
+/** A real run on the bangles photo, kept here because it shows several items found in one photo. */
+const bangles = {
+  title: { en: "Chunky Colorful Resin Bangle for Women", bn: "রঙিন চওড়া রেজিন চুড়ি" },
+  phrase: "resin bangle",
+  boxes: [
+    { x: 31, y: 636, w: 249, h: 334 },
+    { x: 282, y: 594, w: 213, h: 331 },
+    { x: 528, y: 581, w: 167, h: 330 },
+    { x: 744, y: 581, w: 136, h: 329 },
+    { x: 931, y: 590, w: 135, h: 328 },
+    { x: 1130, y: 598, w: 138, h: 340 },
+  ],
+};
 const tag = "rounded-full px-2.5 py-0.5 text-xs font-medium";
 
 /** Section 2: three things a seller walks away with, each shown on a real sample. */
@@ -45,15 +57,15 @@ export async function Outcomes() {
           </svg>
           <div className="absolute inset-x-3 bottom-3 rounded-xl bg-background/90 p-3 backdrop-blur">
             <p lang="en" className="truncate text-sm font-semibold">
-              {bangles.en.title}
+              {bangles.title.en}
             </p>
             <p lang="bn" className="truncate text-sm text-muted-foreground">
-              {bangles.bn.title}
+              {bangles.title.bn}
             </p>
           </div>
           <span className={`absolute top-3 left-3 inline-flex items-center gap-1 bg-black/60 text-white ${tag}`}>
             <ScanSearch className="size-3.5" aria-hidden="true" />
-            {bangles.plan.sam_phrase}
+            {bangles.phrase}
           </span>
         </>
       ),
@@ -63,7 +75,7 @@ export async function Outcomes() {
       media: (
         <>
           <Image
-            src="/samples/bangles-studio.jpg"
+            src="/samples/tray-studio.jpg"
             alt={t("outcomes.photos.alt")}
             fill
             sizes="(min-width: 768px) 320px, 80vw"
@@ -80,7 +92,7 @@ export async function Outcomes() {
       media: (
         <>
           <Image
-            src="/samples/kurti-studio.jpg"
+            src="/samples/kantha-studio.jpg"
             alt={t("outcomes.draft.alt")}
             fill
             sizes="(min-width: 768px) 320px, 80vw"
