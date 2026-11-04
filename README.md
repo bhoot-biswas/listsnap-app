@@ -117,6 +117,10 @@ To run it on a server, follow [DEPLOY.md](DEPLOY.md). `GET /api/health` reports 
 
 Next.js 16 (App Router) · React 19 · TypeScript · MariaDB/MySQL via `mysql2` · Better Auth (Google, magic link, demo) · shadcn/ui (Base UI) · Tailwind CSS v4 · next-intl (English and Bangla) · sharp · HyperFrames and GSAP for reels · Vitest.
 
+## Demo media
+
+The input product photos were generated with Muse Image, and the input voice notes and videos were generated with AI, for demonstration purposes only. They don't come from real sellers. The output images were produced by the real ListSnap workflow.
+
 ## License
 
 [MIT](LICENSE)
