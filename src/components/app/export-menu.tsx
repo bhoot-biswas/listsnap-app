@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -77,7 +78,10 @@ export function ExportMenu({
       <DropdownMenuContent align="end" side="top" className="w-72">
         {unchecked && (
           <>
-            <DropdownMenuLabel className="text-warning">{t("notChecked")}</DropdownMenuLabel>
+            {/* Base UI throws for a label outside a group, which takes the whole page down */}
+            <DropdownMenuGroup>
+              <DropdownMenuLabel className="text-warning">{t("notChecked")}</DropdownMenuLabel>
+            </DropdownMenuGroup>
             <DropdownMenuSeparator />
           </>
         )}
