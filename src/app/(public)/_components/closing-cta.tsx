@@ -5,7 +5,7 @@ import { ArrowRight } from "lucide-react";
 import { ButtonLink } from "@/components/app/button-link";
 import { DemoButton } from "./demo-button";
 
-const SAMPLES = ["saree", "bangles", "kurti"] as const;
+const SAMPLES = ["saree", "tray", "kantha"] as const;
 
 /** Section 4: one last, single way in. */
 export async function ClosingCta({ signedIn }: { signedIn: boolean }) {
