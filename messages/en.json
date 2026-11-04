@@ -839,6 +839,7 @@
     "title": "Saved to your store",
     "heading": "{count, plural, one {Draft saved} other {# drafts saved}}",
     "body": "“{title}” is in your store as a draft.",
+    "demoStore": "This draft is in our test store, so there's nothing for you to open there. Drafts in your own store get a link here.",
     "open": "Open",
     "snapAnother": "Snap another",
     "toDashboard": "Back to dashboard",
@@ -868,6 +869,7 @@
     "defaultCategory": "Default category",
     "defaultCategoryHint": "Used when your store has no category that matches the product.",
     "createCategories": "Let ListSnap create a matching category",
+    "demoStore": "No store yet? Use the demo store for now",
     "errors": {
       "url": "Enter your store’s web address, like https://myshop.com.",
       "keys": "Paste both the consumer key and the consumer secret.",
@@ -918,6 +920,7 @@
     "keyHint": "Key ••••{hint}",
     "defaultCategory": "Default category: {name}",
     "noDefaultCategory": "No default category",
+    "demoStore": "Demo store",
     "demoShopBody": "Demo shops save their drafts to our test store.",
     "usingDemoBody": "You’re saving drafts to our test store for now. Connect your own store any time.",
     "testNow": "Test now",

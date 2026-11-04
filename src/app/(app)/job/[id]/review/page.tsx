@@ -23,7 +23,7 @@ import { StillMaking } from "./_components/still-making";
 import type { VoiceNoteView } from "./_components/voice-note-card";
 import { ListenResult } from "@/lib/schemas/voice-note";
 import { catalogAccess } from "@/lib/meta-access";
-import { storeTargets } from "@/server/stores/targets";
+import { connectedStores, storeTargets } from "@/server/stores/targets";
 import { coverOf } from "@/server/stores/listing-product";
 import { storeStep } from "@/lib/stores";
 import type { WhereItIs } from "./_components/where-it-is";
@@ -116,7 +116,11 @@ export default async function ReviewPage({ params, searchParams }: PageProps<"/j
   ]);
   const chatId = await ws.listingChat(listing.id);
   // each store the shop saves drafts to, on its own: behind since the seller's last change, or missing
-  const [saves, targets] = await Promise.all([ws.storeSaves(listing.id), storeTargets(viewer.workspace)]);
+  const [saves, targets, connected] = await Promise.all([
+    ws.storeSaves(listing.id),
+    storeTargets(viewer.workspace),
+    connectedStores(viewer.workspace),
+  ]);
   const kept = saves.filter((s) => targets.includes(s.kind));
   const stores = {
     behind: kept.filter((s) => !!listing.edited_at && listing.edited_at > s.saved_at).map((s) => s.kind),
@@ -149,7 +153,10 @@ export default async function ReviewPage({ params, searchParams }: PageProps<"/j
   const storeLinks = await Promise.all(
     kept.map(async (s) => ({
       kind: s.kind,
-      url: (await ws.lastStepResult<{ editUrl?: string }>(id, storeStep(s.kind), listing.id))?.editUrl ?? null,
+      // a demo store's admin isn't the seller's to open, so its chip is no link
+      url: connected.some((c) => c.kind === s.kind && c.demo)
+        ? null
+        : ((await ws.lastStepResult<{ editUrl?: string }>(id, storeStep(s.kind), listing.id))?.editUrl ?? null),
       behind: stores.behind.includes(s.kind),
     })),
   );
