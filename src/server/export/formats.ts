@@ -31,8 +31,11 @@ const links = (shop: CsvShop, ids: (string | null)[]) =>
     return url ? [url] : [];
   });
 
+/** The product's details, minus its colour list when the colours are variants of their own. */
+const details = (p: ListingProduct) => p.attributes.filter((a) => !(p.variants && isColorAttribute(a.name)));
+
 const plainDescription = (p: ListingProduct) =>
-  [p.shortDescription.trim(), p.description.trim(), ...p.attributes.map((a) => `${a.name}: ${a.value}`)]
+  [p.shortDescription.trim(), p.description.trim(), ...details(p).map((a) => `${a.name}: ${a.value}`)]
     .filter(Boolean)
     .join("\n\n")
     .slice(0, META_DESCRIPTION_MAX);
@@ -147,7 +150,6 @@ const wooList = (values: string[]) => values.map((v) => v.trim().replace(/,/g, "
 
 /** WooCommerce's product importer (Products → Import): simple products, or variable ones by colour. */
 export function wooCsv(products: ListingProduct[], shop: CsvShop): string {
-  const details = (p: ListingProduct) => p.attributes.filter((a) => !(p.variants && isColorAttribute(a.name)));
   // every row needs the same columns, so there are as many attribute columns as the longest list needs
   const attrCount = Math.max(0, ...products.map((p) => details(p).length + (p.variants ? 1 : 0)));
   const attrHeader = Array.from({ length: attrCount }, (_, i) => [

@@ -16,6 +16,7 @@ import type { JobState } from "@/lib/job-state";
 import { cn } from "@/lib/utils";
 import { nextListing, numberRepeats, REVIEWABLE } from "@/lib/review-next";
 import { requestLocale } from "@/server/step-text";
+import { connectedStores } from "@/server/stores/targets";
 
 export async function generateMetadata(): Promise<Metadata> {
   return { title: (await getTranslations("done"))("title") };
@@ -44,10 +45,15 @@ export default async function DonePage({ params }: PageProps<"/job/[id]/done">) 
   const state = await loadJobState(viewer.workspace, id, await requestLocale());
   if (!state) notFound();
   const ws = forWorkspace(viewer.workspace.id);
+  // a demo store's admin isn't the seller's to open, so its drafts get no store link
+  const demoStores = new Set((await connectedStores(viewer.workspace)).filter((s) => s.demo).map((s) => s.kind));
   const saved = await Promise.all(
     state.listings
       .filter((l) => l.status === "in_store" || l.status === "posted")
-      .map(async (l) => ({ listing: l, stores: await savedIn(ws, id, l.id) })),
+      .map(async (l) => ({
+        listing: l,
+        stores: (await savedIn(ws, id, l.id)).filter((s) => !demoStores.has(s.kind)),
+      })),
   );
   const several = new Set(saved.flatMap((s) => s.stores.map((x) => x.kind))).size > 1;
   if (!saved.length) redirect(`/job/${id}`);
@@ -80,6 +86,8 @@ export default async function DonePage({ params }: PageProps<"/job/[id]/done">) 
               <p className="text-muted-foreground">{t("body", { title: saved[0]!.listing.title ?? "" })}</p>
             )}
           </div>
+
+          {demoStores.size > 0 && <p className="text-sm text-muted-foreground">{t("demoStore")}</p>}
 
           {saved.length > 1 && (
             <ul className="divide-y rounded-lg border text-left">

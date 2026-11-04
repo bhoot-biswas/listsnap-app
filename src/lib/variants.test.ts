@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { listingVariants, Variants } from "./variants";
+import { isColorAttribute, listingVariants, Variants } from "./variants";
 
 const A = "11111111-1111-4111-8111-111111111111";
 const B = "22222222-2222-4222-8222-222222222222";
@@ -38,5 +38,15 @@ describe("Variants", () => {
     expect(Variants.safeParse([row(A, "Red", false), row(B, "Blue", false)]).success).toBe(false);
     expect(Variants.safeParse([row(A, "Red"), row(B, "red")]).success).toBe(false);
     expect(Variants.safeParse([row(A, "Red"), row(B, "red", false)]).success).toBe(true);
+  });
+});
+
+describe("isColorAttribute", () => {
+  it.each(["Color", "colour", "Colours", "Colors", " Available colours ", "রং", "রঙ"])("matches %j", (name) => {
+    expect(isColorAttribute(name)).toBe(true);
+  });
+
+  it.each(["Embroidery Colors", "Handle Color", "Fabric"])("leaves %j alone", (name) => {
+    expect(isColorAttribute(name)).toBe(false);
   });
 });

@@ -1,3 +1,4 @@
+import { listingCounts } from "@/lib/listing-counts";
 import "server-only";
 import { z } from "zod";
 import { REELS_PER_DAY } from "@/server/db/limits";
@@ -20,7 +21,7 @@ const STATUSES = ["processing", "needs_review", "ready", "in_store", "posted", "
 export const getShopSummary = defineOp({
   name: "getShopSummary",
   description:
-    "Read where the shop stands: how many listings have each status, AI photos and reels left today, the online stores it saves drafts to, and the connected Facebook Page and Instagram account.",
+    "Read where the shop stands: how many listings it has in total and with each status, AI photos and reels left today, the online stores it saves drafts to, and the connected Facebook Page and Instagram account.",
   input: z.object({}),
   effect: "read",
   async run({ workspace, ws }) {
@@ -34,7 +35,7 @@ export const getShopSummary = defineOp({
       ok: true,
       value: {
         shop: workspace.name,
-        listingsByStatus: counts,
+        ...listingCounts(counts),
         aiPhotosLeftToday: Math.max(0, workspace.limits.images - usage.images),
         reelsLeftToday: Math.max(0, REELS_PER_DAY - usage.reels),
         stores: stores.map((s) => ({

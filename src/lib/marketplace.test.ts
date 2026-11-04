@@ -36,6 +36,21 @@ describe("marketplaceFields", () => {
     expect(f.description).toBe("Bright red saree.\n\nরং: লাল, নীল");
   });
 
+  it("leaves out the AI's colour list when the seller chose colours, so an unticked one isn't offered", () => {
+    const f = marketplaceFields(
+      {
+        ...text,
+        description: "",
+        attributes: [
+          { name: "Colours", value: "Maroon, Navy, Mint" },
+          { name: "Sleeves", value: "3/4" },
+        ],
+      },
+      { price: null, category: "Sarees", colours: ["Maroon", "Navy"], coloursLabel: "Colours" },
+    );
+    expect(f.description).toBe("Bright red saree.\n\nSleeves: 3/4\n\nColours: Maroon, Navy");
+  });
+
   it("maps free-text categories by keyword", () => {
     expect(marketplaceCategory("Silver jewellery")).toBe("Jewelry & Accessories");
     expect(marketplaceCategory("Men's panjabi")).toBe("Men's Clothing & Shoes");
