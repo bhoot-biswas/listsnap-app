@@ -1,3 +1,4 @@
+import { isColorAttribute } from "@/lib/variants";
 import { z } from "zod";
 
 /**
@@ -89,7 +90,8 @@ export function marketplaceFields(
       text.shortDescription.trim(),
       text.description.trim(),
       text.attributes
-        .filter((a) => a.name.trim() && a.value.trim())
+        // the seller's own colours come next, so an unticked one isn't offered here
+        .filter((a) => a.name.trim() && a.value.trim() && !(extra.colours.length && isColorAttribute(a.name)))
         .map((a) => `${a.name}: ${a.value}`)
         .join("\n"),
       extra.colours.length ? `${extra.coloursLabel}: ${extra.colours.join(", ")}` : "",

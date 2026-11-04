@@ -868,7 +868,6 @@
     "defaultCategory": "Default category",
     "defaultCategoryHint": "Used when your store has no category that matches the product.",
     "createCategories": "Let ListSnap create a matching category",
-    "demoStore": "No store yet? Use the demo store for now",
     "errors": {
       "url": "Enter your store’s web address, like https://myshop.com.",
       "keys": "Paste both the consumer key and the consumer secret.",
@@ -919,7 +918,6 @@
     "keyHint": "Key ••••{hint}",
     "defaultCategory": "Default category: {name}",
     "noDefaultCategory": "No default category",
-    "demoStore": "Demo store",
     "demoShopBody": "Demo shops save their drafts to our test store.",
     "usingDemoBody": "You’re saving drafts to our test store for now. Connect your own store any time.",
     "testNow": "Test now",
@@ -1136,6 +1134,7 @@
     "stockField": "Stock",
     "stockHint": "Leave empty to not track stock.",
     "colors": "Colors",
+    "colorOffHint": "Colors you unticked aren't sold, but your descriptions may still mention them. Check the text below.",
     "colorsHint": "Each color becomes an option on one product in your store. Leave a price empty to use the price above.",
     "sellColor": "Sell {color}",
     "colorName": "Color name",

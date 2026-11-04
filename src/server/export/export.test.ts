@@ -122,7 +122,7 @@ describe("listing kit text", () => {
     const text = marketplaceText(product(), { price: 1200, category: "Sarees", colours: ["Red", "Blue"] }, labels);
     expect(text.startsWith("\uFEFFTITLE\r\nRed Jamdani Saree\r\n\r\nPRICE\r\n1200\r\n\r\nCATEGORY\r\n")).toBe(true);
     expect(text).toContain("CATEGORY\r\nWomen's Clothing & Shoes\r\n\r\nCONDITION\r\nNew");
-    expect(text).toContain("Fabric: cotton\r\nColor: red\r\n\r\nColours: Red, Blue");
+    expect(text).toContain("Fabric: cotton\r\n\r\nColours: Red, Blue");
     expect(text).toContain("TAGS\r\nsaree, jamdani");
     expect(text.endsWith("---\r\nMarketplace is for personal items.\r\n")).toBe(true);
     expect(text).not.toMatch(/[^\r]\n/);

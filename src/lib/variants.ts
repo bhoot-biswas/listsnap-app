@@ -59,5 +59,5 @@ export function listingVariants(
   );
 }
 
-/** Spark often lists every colour as one "Color" detail; the variation attribute replaces it. */
-export const isColorAttribute = (name: string) => /^colou?r$/i.test(name.trim());
+/** Spark often lists every colour as one detail, under any of these names; the variation attribute replaces it. */
+export const isColorAttribute = (name: string) => /^(available\s+)?(colou?rs?|রং|রঙ)$/i.test(name.trim());

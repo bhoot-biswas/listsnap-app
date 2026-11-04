@@ -103,6 +103,8 @@ export function VariantFields({
           );
         })}
       </ul>
+      {/* the descriptions are the seller's free text, so ListSnap can't safely edit the colour out */}
+      {variants.some((v) => !v.on) && <p className="text-sm text-warning">{t("colorOffHint")}</p>}
       {problem && (
         <p role="alert" className="text-sm font-medium text-destructive">
           {t(problem)}
