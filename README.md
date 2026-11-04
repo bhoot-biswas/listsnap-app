@@ -6,15 +6,14 @@ ListSnap is for small social-commerce sellers in Bangladesh. One phone photo, a 
 
 **Demo video:** [watch ListSnap on YouTube](https://youtu.be/QWnTnwDFm-o)
 
-![A sample photo on a cluttered table, its clean cutout and its studio photo](.github/readme/before-after.jpg)
+<img src=".github/readme/before-after.jpg" alt="A sample photo on a cluttered table, its clean cutout and its studio photo" width="600">
 
 _From the demo shop's sample listings: the seller-style photo (itself made with Muse Image for the demo), the SAM 3.1 cutout and the studio photo._
 
-![The Review page with an editable English listing, photos, price and Save draft to store](.github/readme/review.jpg)
-
 <p>
-  <img src=".github/readme/dashboard-phone-bn.jpg" alt="The dashboard on a phone, in Bangla" width="260">
-  <img src=".github/readme/review-phone-bn.jpg" alt="The Bangla listing on the Review page, on a phone" width="260">
+  <img src=".github/readme/review.jpg" alt="The Review page with an editable English listing, photos, price and Save draft to store" width="420">
+  <img src=".github/readme/dashboard-phone-bn.jpg" alt="The dashboard on a phone, in Bangla" width="122">
+  <img src=".github/readme/review-phone-bn.jpg" alt="The Bangla listing on the Review page, on a phone" width="122">
 </p>
 
 ## Try it
