@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ImagePlus, Loader2, SendHorizontal, X } from "lucide-react";
+import { ImagePlus, Loader2, SendHorizontal, Square, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CHAT_MESSAGE_MAX, CHAT_PHOTOS_MAX } from "@/lib/schemas/chat";
@@ -15,7 +15,8 @@ import { MediaImg } from "@/components/app/media-img";
  * send buttons below. With a keyboard Enter sends and Shift+Enter starts a new line; on a
  * touch screen Enter is a new line and the Send button sends, since a phone keyboard has
  * no Shift+Enter. Spoken words join the text as they're heard, so the seller sees them
- * before they're sent. Photos and the mic work while the assistant answers; only sending waits.
+ * before they're sent. Photos and the mic work while the assistant answers; only sending
+ * waits, and the Send button is the Stop button until then.
  */
 export function ChatComposer({
   chat,
@@ -41,7 +42,7 @@ export function ChatComposer({
   const [dictating, setDictating] = useState(false);
   // what was typed before the mic went on; the spoken words go after it
   const typed = useRef("");
-  const { busy, uploading, photos } = chat;
+  const { busy, following, uploading, photos } = chat;
 
   const submit = () => !dictating && chat.send(chat.draft, newChat);
 
@@ -133,15 +134,32 @@ export function ChatComposer({
           }}
           onWords={(text) => chat.setDraft(typed.current ? `${typed.current} ${text}` : text)}
         />
-        <Button
-          type="submit"
-          size="icon"
-          className="size-11 shrink-0 rounded-full md:size-9"
-          disabled={busy || dictating || uploading > 0 || (!chat.draft.trim() && !photos.length)}
-        >
-          <SendHorizontal className="size-4" aria-hidden="true" />
-          <span className="sr-only">{t("send")}</span>
-        </Button>
+        {busy || following ? (
+          <Button
+            type="button"
+            size="icon"
+            className="size-11 shrink-0 rounded-full md:size-9"
+            // a turn can't be stopped until the server has stored its message, and a
+            // second Stop is pointless; waiting here also keeps a double tap on Send
+            // from stopping the turn it just started
+            disabled={!chat.canStop}
+            title={t("stop")}
+            onClick={chat.stop}
+          >
+            <Square className="size-3.5 fill-current" aria-hidden="true" />
+            <span className="sr-only">{t("stop")}</span>
+          </Button>
+        ) : (
+          <Button
+            type="submit"
+            size="icon"
+            className="size-11 shrink-0 rounded-full md:size-9"
+            disabled={dictating || uploading > 0 || (!chat.draft.trim() && !photos.length)}
+          >
+            <SendHorizontal className="size-4" aria-hidden="true" />
+            <span className="sr-only">{t("send")}</span>
+          </Button>
+        )}
       </div>
     </form>
   );
