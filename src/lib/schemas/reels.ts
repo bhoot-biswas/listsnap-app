@@ -25,10 +25,15 @@ export const ReelVariables = z.object({
   cta: z.string().min(1).max(40),
   look1Label: z.string().max(24),
   look2Label: z.string().max(24),
+  // "Fabric: Cotton" from the listing's own attributes; short enough for one line of the reel
+  fact1: z.string().max(34),
+  fact2: z.string().max(34),
+  fact3: z.string().max(34),
   ground: hex,
-  ink: hex,
   accent: hex,
-  gold: hex,
+  // a photo shown earlier in the reel, so the template crops it close
+  look1Repeat: z.enum(["no", "yes"]),
+  look2Repeat: z.enum(["no", "yes"]),
   lang: ReelLang,
 });
 export type ReelVariables = z.infer<typeof ReelVariables>;

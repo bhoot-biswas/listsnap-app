@@ -646,7 +646,7 @@
         },
         "reels": {
           "q": "How do reels work?",
-          "a": "On Review, open Extras and make a reel in English or Bangla: a 12-second video from your ticked photos, title and price. With Facebook connected, Post this reel shows the caption and where it goes; nothing is posted until you press Post reel."
+          "a": "On Review, open Extras and make a reel in English or Bangla: a 12-second video from your ticked photos, title, price and details. With Facebook connected, Post this reel shows the caption and where it goes; nothing is posted until you press Post reel."
         },
         "facebook": {
           "q": "I don't have a website. Can I still use ListSnap?",
@@ -1225,7 +1225,7 @@
     },
     "reels": {
       "title": "Reel",
-      "intro": "A 12-second video for Instagram and Facebook Reels, made from your ticked photos, title and price.",
+      "intro": "A 12-second video for Instagram and Facebook Reels, made from your ticked photos, title, price and details.",
       "lang": {
         "en": "English",
         "bn": "Bangla"

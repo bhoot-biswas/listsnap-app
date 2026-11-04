@@ -24,6 +24,8 @@ export interface ReelPhotos {
   labels: [Look | null, Look | null];
   /** True when any photo used is an AI scene, so the reel carries the same label. */
   aiScene: boolean;
+  /** Whether each middle photo was already shown, because the listing has few photos. */
+  repeats: [boolean, boolean];
 }
 
 const AI_SCENES = (kind: string) => kind === "lifestyle" || lookOf(kind) !== null;
@@ -55,6 +57,7 @@ export function pickPhotos(media: ReelPhoto[], mainId: string): ReelPhotos {
     product,
     labels: [lookOf(kindOf(look1)), lookOf(kindOf(look2))],
     aiScene: used.some((id) => AI_SCENES(kindOf(id))),
+    repeats: [look1 === hero, look2 === hero || look2 === look1],
   };
 }
 
@@ -63,7 +66,22 @@ export function reelPrice(bdt: number, lang: ReelLang): string {
   return `৳${new Intl.NumberFormat(lang === "bn" ? "bn-BD" : "en-US").format(bdt)}`;
 }
 
-const DEFAULT_COLORS = { ground: "#F3E9D2", ink: "#3B1F14", accent: "#7A1F2B", gold: "#D9A441" };
+const FACT_MAX = 34;
+
+/**
+ * Up to three of the listing's saved attributes, as lines for the reel. One that won't fit
+ * on a line is skipped, not cut: half a fact tells a buyer nothing.
+ */
+export function reelFacts(attributes: { name: string; value: string }[] = []): [string, string, string] {
+  const [a = "", b = "", c = ""] = attributes
+    .map((f) => ({ name: f.name.trim(), value: f.value.trim() }))
+    .filter((f) => f.name && f.value)
+    .map((f) => `${f.name}: ${f.value}`)
+    .filter((line) => line.length <= FACT_MAX);
+  return [a, b, c];
+}
+
+const DEFAULT_COLORS = { ground: "#EFEEEA", accent: "#161616" };
 
 const luminance = (hex: string) => {
   const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
@@ -72,19 +90,16 @@ const luminance = (hex: string) => {
 
 /**
  * Brand-kit colours have no roles, so they are given one by lightness: the lightest
- * becomes the ground and the darkest the accent, but only when they're light or dark
- * enough for text to read on them. Anything else keeps the template's own colours.
+ * becomes the ground and the darkest the accent (words and the button), but only when
+ * they're light or dark enough to read on each other. Anything else keeps the template's own colours.
  */
 export function reelColors(kit: string[]): typeof DEFAULT_COLORS {
   const sorted = [...kit].sort((a, b) => luminance(b) - luminance(a));
   const light = sorted[0];
   const dark = sorted.at(-1);
-  const middle = sorted.length > 2 ? sorted[1] : undefined;
   return {
     ground: light && luminance(light) > 0.7 ? light : DEFAULT_COLORS.ground,
-    ink: DEFAULT_COLORS.ink,
     accent: dark && luminance(dark) < 0.3 ? dark : DEFAULT_COLORS.accent,
-    gold: middle ?? DEFAULT_COLORS.gold,
   };
 }
 
@@ -96,10 +111,13 @@ export function reelVariables(input: {
   priceBdt: number;
   shop: string;
   labels: [Look | null, Look | null];
+  attributes?: { name: string; value: string }[];
+  repeats?: [boolean, boolean];
   kit: string[];
 }): ReelVariables {
   const words = WORDS[input.lang];
   const label = (l: Look | null) => (l ? words.review.looks.names[l] : "");
+  const [fact1, fact2, fact3] = reelFacts(input.attributes);
   return ReelVariables.parse({
     // the end card and the opening both show the title; keep it within the box at any length
     title: input.title.length > 80 ? `${input.title.slice(0, 79).trimEnd()}…` : input.title,
@@ -108,7 +126,12 @@ export function reelVariables(input: {
     cta: words.review.reels.cta,
     look1Label: label(input.labels[0]),
     look2Label: label(input.labels[1]),
+    fact1,
+    fact2,
+    fact3,
     ...reelColors(input.kit),
+    look1Repeat: input.repeats?.[0] ? "yes" : "no",
+    look2Repeat: input.repeats?.[1] ? "yes" : "no",
     lang: input.lang,
   });
 }

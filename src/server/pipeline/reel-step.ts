@@ -16,7 +16,8 @@ import { listingPrice } from "@/lib/schemas/review";
  */
 export async function reelStep(ctx: ListingStepContext, lang: ReelLang, template: ReelTemplate): Promise<ReelResult> {
   const { ws, workspace, listing } = ctx;
-  const text = listing.fields_json?.[lang] as { title?: string } | undefined;
+  const text = listing.fields_json?.[lang] as
+    { title?: string; attributes?: { name: string; value: string }[] } | undefined;
   if (!text?.title) throw new StepError(lang === "bn" ? "noBanglaText" : "noTitle");
   const en = ListingText.safeParse(listing.fields_json?.en);
   const priceBdt = listingPrice(
@@ -27,7 +28,8 @@ export async function reelStep(ctx: ListingStepContext, lang: ReelLang, template
   if (priceBdt === null) throw new StepError("addPriceFirst");
 
   const [items, media] = await Promise.all([ws.items(listing.job_id), ws.listingMedia([listing.id])]);
-  const mainId = items.find((i) => i.id === listing.item_ids_json[0])?.cutout_media_id;
+  const first = items.find((i) => i.id === listing.item_ids_json[0]);
+  const mainId = first?.cutout_media_id;
   if (!mainId) throw new StepError("mainImageMissing");
   const photos = pickPhotos(
     media.map((m) => ({ id: m.id, kind: m.kind, selected: m.selected === 1 })),
@@ -38,6 +40,8 @@ export async function reelStep(ctx: ListingStepContext, lang: ReelLang, template
   );
   if (files.some((f) => !f)) throw new StepError("reelPhotoMissing");
   const [hero, look1, look2, product] = files.map((f) => f!.data);
+  // older listings have no clear-background copy; the reel then uses the photo itself
+  const cutout = first?.cutout_png_media_id ? await readMedia(ws.id, first.cutout_png_media_id) : null;
 
   const variables = reelVariables({
     lang,
@@ -45,6 +49,8 @@ export async function reelStep(ctx: ListingStepContext, lang: ReelLang, template
     priceBdt,
     shop: workspace.name,
     labels: photos.labels,
+    attributes: text.attributes,
+    repeats: photos.repeats,
     kit: workspace.settings.brandKit.colors,
   });
 
@@ -58,7 +64,7 @@ export async function reelStep(ctx: ListingStepContext, lang: ReelLang, template
   const reel = await video()
     .renderReel(
       { workspaceId: ws.id, jobId: listing.job_id, step: "reel" },
-      { template, photos: { hero, look1, look2, product }, variables },
+      { template, photos: { hero, look1, look2, product, cutout: cutout?.data ?? null }, variables },
     )
     .catch(async (err: unknown) => {
       await ws.releaseReel();

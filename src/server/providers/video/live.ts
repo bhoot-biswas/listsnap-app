@@ -70,14 +70,41 @@ async function stage(dir: string, template: string, photos: ReelPhotoFiles) {
   await mkdir(path.join(dir, "assets/img"), { recursive: true });
   for (const [from, to] of ASSETS) await copyFile(fromRoot(from), path.join(dir, "assets", to));
   // photos are re-encoded at the size the frame needs, so a large PNG cutout can't slow the render
-  for (const [name, data] of Object.entries(photos)) {
-    const jpeg = await sharp(data)
-      .resize({ width: 1600, height: 1600, fit: "inside" })
+  for (const name of ["hero", "look1", "look2"] as const) {
+    // the scene cards are nearly square; sharp keeps the busiest part of a photo, not just the middle
+    const jpeg = await sharp(photos[name])
       .flatten({ background: "#ffffff" })
+      .resize({ width: 1380, height: 1290, fit: "cover", position: sharp.strategy.attention })
+      .sharpen({ sigma: 0.6 })
       .jpeg({ quality: 90 })
       .toBuffer();
     await writeFile(path.join(dir, "assets/img", `${name}.jpg`), jpeg);
   }
+  await writeFile(path.join(dir, "assets/img/product.png"), await productPicture(photos));
+}
+
+/** A clear-background picture of the product: trimmed to its edges so it fills its place in the frame. */
+async function productPicture({ cutout, product }: ReelPhotoFiles) {
+  const fit = { width: 1400, height: 1400, fit: "inside" } as const;
+  if (cutout) {
+    // trimming fails on an image with nothing to trim, and the cutout is still fine as it is
+    const trimmed = await sharp(cutout)
+      .trim()
+      .png()
+      .toBuffer()
+      .catch(() => cutout);
+    return sharp(trimmed).resize(fit).png().toBuffer();
+  }
+  const size = 1100;
+  const corners = Buffer.from(
+    `<svg width="${size}" height="${size}"><rect width="${size}" height="${size}" rx="52" fill="#fff"/></svg>`,
+  );
+  return sharp(product)
+    .flatten({ background: "#ffffff" })
+    .resize({ width: size, height: size, fit: "cover", position: sharp.strategy.attention })
+    .composite([{ input: corners, blend: "dest-in" }])
+    .png()
+    .toBuffer();
 }
 
 export const liveVideo: VideoProvider = {
