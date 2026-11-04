@@ -12,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /** Sample photos offered in demo shops; the files are in public/samples/. */
-const SAMPLES = ["saree", "bangles", "kurti"] as const;
+const SAMPLES = ["saree", "kantha", "tray"] as const;
 
 /** S4 New listing, basic: take or upload up to 5 photos of one product. */
 export default async function SnapPage() {
