@@ -6,6 +6,16 @@ ListSnap is for small social-commerce sellers in Bangladesh. One phone photo, a 
 
 **Demo video:** [watch ListSnap on YouTube](https://youtu.be/QWnTnwDFm-o)
 
+<img src=".github/readme/before-after.jpg" alt="A sample photo on a cluttered table, its clean cutout and its studio photo" width="600">
+
+_From the demo shop's sample listings: the seller-style photo (itself made with Muse Image for the demo), the SAM 3.1 cutout and the studio photo._
+
+<p>
+  <img src=".github/readme/review.jpg" alt="The Review page with an editable English listing, photos, price and Save draft to store" width="420">
+  <img src=".github/readme/dashboard-phone-bn.jpg" alt="The dashboard on a phone, in Bangla" width="122">
+  <img src=".github/readme/review-phone-bn.jpg" alt="The Bangla listing on the Review page, on a phone" width="122">
+</p>
+
 ## Try it
 
 - **Hosted:** open [getlistsnap.com](https://getlistsnap.com) and choose **Try the demo shop** on the sign-in page. It needs no account or password. A demo shop starts with three sample listings, offers sample photos on Snap, saves drafts to our test store and ends after 24 hours. Each visitor has daily limits on listings and AI calls.
