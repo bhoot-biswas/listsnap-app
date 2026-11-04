@@ -1125,6 +1125,7 @@
       "settingsLink": "Settings"
     },
     "titleField": "Title",
+    "titleRequired": "Add a title. Your last one stays saved until you do.",
     "shortField": "Short description",
     "descriptionField": "Description",
     "categoryField": "Category",
@@ -1170,6 +1171,8 @@
     "saved": "Saved",
     "saveError": "Couldn’t save. Retrying…",
     "saveInvalid": "Couldn’t save this. Check the price, stock and text lengths.",
+    "titleBlankEn": "Add English title",
+    "titleBlankBn": "Add Bangla title",
     "offline": "Offline, will save",
     "saveToStore": "Save draft to store",
     "postOnFacebook": "Post on Facebook",

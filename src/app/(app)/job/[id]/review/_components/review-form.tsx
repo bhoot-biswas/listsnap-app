@@ -206,6 +206,8 @@ export function ReviewForm({
   const selected = new Set(edit.selectedMediaIds);
   const outside = edit.priceBdt !== null && (edit.priceBdt < hint.low || edit.priceBdt > hint.high);
   const text: TextValue | null = lang === "en" ? edit.en : edit.bn;
+  // the blank title can be on the tab that isn't showing, so the status line names it
+  const blankTitle = !edit.en.title.trim() ? "en" : edit.bn && !edit.bn.title.trim() ? "bn" : null;
 
   const priceAndColors = (
     <div className="space-y-5">
@@ -432,7 +434,8 @@ export function ReviewForm({
               t("storeMissing", { stores: stores.missing.map((k) => STORE_NAMES[k]).join(" · ") })}
           </p>
         )}
-        <div className="flex items-center justify-between gap-3">
+        {/* wraps so a longer status gets its own line instead of a squeezed column beside the buttons */}
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
           <p role="status" aria-live="polite" className="flex items-center gap-1.5 text-sm text-muted-foreground">
             {state === "saving" && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
             {state === "saved" && <Check className="size-4 text-success" aria-hidden="true" />}
@@ -444,7 +447,9 @@ export function ReviewForm({
                 : state === "offline"
                   ? t("offline")
                   : state === "invalid"
-                    ? t("saveInvalid")
+                    ? blankTitle
+                      ? t(blankTitle === "en" ? "titleBlankEn" : "titleBlankBn")
+                      : t("saveInvalid")
                     : t("saveError")}
           </p>
           <div className="flex items-center gap-2 max-sm:flex-1">
