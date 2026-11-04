@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { ReelVariables } from "@/lib/schemas/reels";
-import { pickPhotos, reelColors, reelPrice, reelVariables } from "./inputs";
+import { pickPhotos, reelColors, reelFacts, reelPrice, reelVariables } from "./inputs";
 
 const photo = (id: string, kind: string, selected = true) => ({ id, kind, selected });
 
@@ -25,12 +25,20 @@ describe("reel inputs", () => {
       product: "s",
       labels: ["eid", "boishakh"],
       aiScene: true,
+      repeats: [false, false],
     });
   });
 
   it("uses only ticked photos, never the banner, and falls back to the main image", () => {
     const p = pickPhotos([photo("s", "studio", false), photo("b", "banner"), photo("e", "look_eid", false)], "main");
-    expect(p).toMatchObject({ hero: "main", look1: "main", look2: "main", product: "main", aiScene: false });
+    expect(p).toMatchObject({
+      hero: "main",
+      look1: "main",
+      look2: "main",
+      product: "main",
+      aiScene: false,
+      repeats: [true, true],
+    });
     expect(p.labels).toEqual([null, null]);
   });
 
@@ -45,15 +53,28 @@ describe("reel inputs", () => {
     expect(reelPrice(125000, "en")).toBe("৳125,000");
   });
 
+  it("turns the first three attributes that fit a line into facts", () => {
+    expect(
+      reelFacts([
+        { name: "Fabric", value: "Cotton" },
+        { name: "Design", value: "Central lotus with a wide paisley border" },
+        { name: "Size", value: " " },
+        { name: "Work", value: "Hand embroidery" },
+        { name: "Color", value: "Maroon" },
+        { name: "Fit", value: "Regular" },
+      ]),
+    ).toEqual(["Fabric: Cotton", "Work: Hand embroidery", "Color: Maroon"]);
+    expect(reelFacts()).toEqual(["", "", ""]);
+  });
+
   it("gives brand colours a role only when text stays readable on them", () => {
     expect(reelColors(["#7A1F2B", "#D9A441", "#F3E9D2"])).toMatchObject({
       ground: "#F3E9D2",
       accent: "#7A1F2B",
-      gold: "#D9A441",
     });
-    // a mid-grey is neither light enough for a ground nor dark enough for the price pill
-    expect(reelColors(["#808080"])).toMatchObject({ ground: "#F3E9D2", accent: "#7A1F2B" });
-    expect(reelColors([])).toMatchObject({ ground: "#F3E9D2", gold: "#D9A441" });
+    // a mid-grey is neither light enough for a ground nor dark enough for words and the button
+    expect(reelColors(["#808080"])).toEqual({ ground: "#EFEEEA", accent: "#161616" });
+    expect(reelColors([])).toEqual({ ground: "#EFEEEA", accent: "#161616" });
   });
 
   it("fills the template in either language and keeps every value within its limit", () => {
@@ -63,10 +84,19 @@ describe("reel inputs", () => {
       priceBdt: 900,
       shop: "Nakshi Loom",
       labels: ["eid", null],
+      attributes: [{ name: "Fabric", value: "Cotton" }],
       kit: [],
     });
     expect(en.title.length).toBeLessThanOrEqual(80);
-    expect(en).toMatchObject({ cta: "Message us to order", look1Label: "Eid", look2Label: "", lang: "en" });
+    expect(en).toMatchObject({
+      cta: "Message us to order",
+      look1Label: "Eid",
+      look2Label: "",
+      fact1: "Fabric: Cotton",
+      fact2: "",
+      look1Repeat: "no",
+      lang: "en",
+    });
     const bn = reelVariables({
       lang: "bn",
       title: "লাল শাড়ি",

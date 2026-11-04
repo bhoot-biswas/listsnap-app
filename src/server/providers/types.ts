@@ -384,6 +384,8 @@ export interface ReelPhotoFiles {
   look1: Buffer;
   look2: Buffer;
   product: Buffer;
+  /** The product on a clear background, when the listing has one. */
+  cutout: Buffer | null;
 }
 
 export interface VideoProvider {

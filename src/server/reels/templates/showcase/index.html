@@ -1,8 +1,9 @@
 <!doctype html>
 <!--
-  The "showcase" reel: 1080×1920, 12 s, silent. Four photos are written next to this file
-  as assets/img/{hero,look1,look2,product}.jpg before each render, so no variable is a
-  path or a URL. Text arrives as variables and is set with textContent only.
+  The "showcase" reel: 1080×1920, 12 s, silent. Four pictures are written next to this file
+  as assets/img/{hero,look1,look2}.jpg and assets/img/product.png before each render, so no
+  variable is a path or a URL. product.png has a clear background: the seller's cutout, or
+  their photo with rounded corners when there is no cutout. Text arrives as variables and is set with textContent only.
 -->
 <html
   lang="en"
@@ -13,10 +14,13 @@
     {"id":"cta","type":"string","label":"Call to action","default":"Message us to order","maxLength":40},
     {"id":"look1Label","type":"string","label":"Second photo label","default":"Eid","maxLength":24},
     {"id":"look2Label","type":"string","label":"Third photo label","default":"Pohela Boishakh","maxLength":24},
-    {"id":"ground","type":"color","label":"Ground","default":"#F3E9D2"},
-    {"id":"ink","type":"color","label":"Ink","default":"#3B1F14"},
-    {"id":"accent","type":"color","label":"Accent","default":"#7A1F2B"},
-    {"id":"gold","type":"color","label":"Second accent","default":"#D9A441"},
+    {"id":"fact1","type":"string","label":"First fact","default":"Fabric: Silk blend","maxLength":34},
+    {"id":"fact2","type":"string","label":"Second fact","default":"Work: Gold zari butti","maxLength":34},
+    {"id":"fact3","type":"string","label":"Third fact","default":"Colour: Red","maxLength":34},
+    {"id":"ground","type":"color","label":"Ground","default":"#EFEEEA"},
+    {"id":"accent","type":"color","label":"Accent","default":"#161616"},
+    {"id":"look1Repeat","type":"enum","label":"Second photo repeats an earlier one","default":"no","options":[{"value":"no","label":"No"},{"value":"yes","label":"Yes"}]},
+    {"id":"look2Repeat","type":"enum","label":"Third photo repeats an earlier one","default":"no","options":[{"value":"no","label":"No"},{"value":"yes","label":"Yes"}]},
     {"id":"lang","type":"enum","label":"Language","default":"en","options":[{"value":"en","label":"English"},{"value":"bn","label":"Bangla"}]},
     {"id":"guides","type":"enum","label":"Safe-zone guides","default":"off","options":[{"value":"off","label":"Off"},{"value":"on","label":"On"}]}
   ]'
@@ -34,67 +38,73 @@
       @font-face { font-family: "LS Bangla"; src: url("assets/fonts/hind-latin-400.woff2") format("woff2"); font-weight: 400; unicode-range: U+0000-00FF, U+2000-206F; }
       @font-face { font-family: "LS Bangla"; src: url("assets/fonts/hind-latin-600.woff2") format("woff2"); font-weight: 600; unicode-range: U+0000-00FF, U+2000-206F; }
 
-      body { margin: 0; background: #F3E9D2; }
+      body { margin: 0; background: #EFEEEA; }
       #root {
-        position: relative; width: 100%; height: 100%; overflow: hidden;
-        background: var(--ground); color: var(--ink);
+        position: relative; width: 100%; height: 100%; overflow: hidden; color: var(--accent);
+        /* a studio sweep: light falls on the middle, so the part under Reels' buttons isn't a flat blank */
+        background: radial-gradient(ellipse 900px 1100px at 50% 42%, color-mix(in srgb, var(--ground) 45%, #fff), var(--ground));
         /* Bricolage has no ৳; Hind does, and a bare Linux server has no system font with it */
         font-family: "LS Display", "LS Bangla", sans-serif;
       }
       #root.bn { font-family: "LS Bangla", "LS Display", sans-serif; }
-      .clip { position: absolute; inset: 0; }
 
       /*
        * Safe zone: Reels covers the top with the header, the bottom quarter with the caption
-       * and buttons, and the right edge with like/share. Every word stays inside
-       * x 80–940, y 290–1440; only photos may sit under the overlays.
+       * and buttons, and the right edge with like/share. Every word stays inside y 290–1440
+       * and x 140–940, which also keeps centred text in the true middle of the frame.
        */
-      .shop-row { position: absolute; left: 80px; width: 860px; top: 300px; display: flex; justify-content: center; z-index: 5; }
+      .center { position: absolute; left: 140px; width: 800px; text-align: center; }
       .shop {
-        padding: 10px 26px; border-radius: 999px; background: var(--ground); color: var(--ink);
-        font-size: 30px; font-weight: 600; letter-spacing: 0.14em; text-transform: uppercase;
+        top: 296px; font-size: 30px; font-weight: 500; letter-spacing: 0.24em; text-transform: uppercase;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
       }
-      #root.bn .shop { letter-spacing: 0.02em; font-size: 34px; }
-      /* photos run full-bleed under the header and fade into the ground */
-      .frame { position: absolute; left: 0; top: 0; width: 1080px; height: 1230px; overflow: hidden; }
-      .frame img { width: 100%; height: 100%; object-fit: cover; display: block; }
-      .frame::after {
-        content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 260px;
-        background: linear-gradient(to bottom, transparent, var(--ground));
+      #root.bn .shop { letter-spacing: 0.02em; font-size: 36px; font-weight: 400; }
+      /* one product carries through the reel; it moves between scenes instead of being cut away */
+      #product { position: absolute; left: 150px; top: 370px; width: 780px; height: 720px; z-index: 2; }
+      #product img {
+        width: 100%; height: 100%; object-fit: contain; display: block;
+        filter: drop-shadow(0 34px 34px rgba(0, 0, 0, 0.22));
       }
-      .textbox {
-        position: absolute; left: 80px; width: 860px; top: 1250px; height: 182px;
-        display: flex; align-items: center; justify-content: center; text-align: center;
-      }
-      .title { font-size: 76px; line-height: 1.08; font-weight: 700; letter-spacing: -0.01em; text-wrap: balance; }
-      #root.bn .title { line-height: 1.3; font-weight: 600; letter-spacing: 0; }
-      .chip {
-        position: absolute; left: 80px; top: 390px; padding: 14px 30px; border-radius: 999px;
-        background: var(--ground); color: var(--accent); font-size: 40px; font-weight: 700;
-      }
-      .chip:empty { display: none; }
-      #root.bn .chip { font-weight: 600; }
-      .pill {
-        display: inline-block; background: var(--accent); color: var(--ground);
-        font-size: 92px; font-weight: 700; padding: 10px 64px 16px; border-radius: 999px;
-      }
-      #root.bn .pill { font-weight: 600; padding: 6px 64px 14px; }
-      .card {
-        position: absolute; left: 230px; top: 370px; width: 620px; height: 620px;
-        background: #fff; border-radius: 36px; overflow: hidden; box-shadow: 0 30px 80px rgba(0, 0, 0, 0.18);
-      }
+      .fitbox { display: flex; align-items: center; justify-content: center; }
+      .title { font-weight: 500; letter-spacing: -0.02em; text-wrap: balance; }
+      #root.bn .title { font-weight: 600; letter-spacing: 0; line-height: 1.26; }
+      #a-box { top: 1130px; height: 290px; }
+      #a-title { font-size: 76px; line-height: 1.1; }
+
+      /* the seller's scene photos, side by side on a track that slides */
+      #deck { position: absolute; left: 80px; top: 390px; width: 920px; height: 860px; border-radius: 44px; overflow: hidden; z-index: 1; }
+      #track { display: flex; gap: 40px; width: 3040px; height: 100%; }
+      .card { position: relative; flex: none; width: 920px; height: 860px; overflow: hidden; }
       .card img { width: 100%; height: 100%; object-fit: cover; display: block; }
-      .end-title {
-        position: absolute; left: 80px; width: 860px; top: 1020px; height: 170px;
-        display: flex; align-items: center; justify-content: center; text-align: center;
+      .card.close img { transform: scale(1.7); }
+      #card-1.close img { transform-origin: 30% 30%; }
+      #card-2.close img { transform-origin: 70% 70%; }
+      .chip {
+        position: absolute; left: 32px; bottom: 32px; padding: 12px 30px 14px; border-radius: 999px;
+        background: var(--ground); color: var(--accent); font-size: 42px; font-weight: 500;
       }
-      .end-price { position: absolute; left: 80px; width: 860px; top: 1210px; text-align: center; }
-      .end-price .pill { font-size: 80px; }
-      .cta {
-        position: absolute; left: 80px; width: 860px; top: 1360px; text-align: center;
-        font-size: 44px; font-weight: 600; color: var(--accent);
+      #root.bn .chip { font-weight: 600; }
+      .chip:empty { display: none; }
+      #b-price { top: 1272px; font-size: 128px; line-height: 1.08; font-weight: 500; letter-spacing: -0.03em; }
+      #root.bn #b-price { font-weight: 600; letter-spacing: 0; }
+
+      #facts { top: 1040px; display: flex; flex-wrap: wrap; justify-content: center; gap: 18px; }
+      .fact { border: 2px solid var(--accent); border-radius: 999px; padding: 12px 34px 14px; font-size: 42px; font-weight: 500; }
+      #root.bn .fact { font-weight: 400; }
+      .fact:empty { display: none; }
+      #c-box { top: 1040px; height: 300px; }
+      #c-title { font-size: 66px; line-height: 1.12; }
+
+      #d-box { top: 925px; height: 150px; }
+      #d-title { font-size: 54px; line-height: 1.14; }
+      #root.bn #d-title { font-size: 52px; }
+      #d-price { top: 1085px; font-size: 128px; line-height: 1.08; font-weight: 500; letter-spacing: -0.03em; }
+      #root.bn #d-price { font-weight: 600; letter-spacing: 0; }
+      #d-cta {
+        left: 190px; width: 700px; top: 1262px; padding: 26px 30px 30px; border-radius: 999px; box-sizing: border-box;
+        background: var(--accent); color: var(--ground); font-size: 46px; font-weight: 500; white-space: nowrap;
       }
-      .rule { position: absolute; left: 470px; width: 140px; height: 6px; top: 1000px; border-radius: 3px; background: var(--gold); }
+      #root.bn #d-cta { font-weight: 600; }
 
       #guides { position: absolute; inset: 0; pointer-events: none; display: none; z-index: 10; }
       #guides.on { display: block; }
@@ -103,32 +113,30 @@
   </head>
   <body>
     <div id="root" data-composition-id="reel" data-start="0" data-width="1080" data-height="1920" data-duration="12">
-      <div class="shop-row"><div id="shop" class="shop"></div></div>
+      <div id="shop" class="center shop"></div>
+      <div id="product"><img src="assets/img/product.png" alt="" /></div>
 
-      <section id="scene-a" class="clip" data-start="0" data-duration="3.4" data-track-index="0">
-        <div class="frame"><img id="a-img" src="assets/img/hero.jpg" alt="" /></div>
-        <div class="textbox"><div id="a-title" class="title fit"></div></div>
-      </section>
+      <div id="a-box" class="center fitbox"><div id="a-title" class="title fit"></div></div>
 
-      <section id="scene-b" class="clip" data-start="3" data-duration="3.4" data-track-index="1">
-        <div class="frame"><img id="b-img" src="assets/img/look1.jpg" alt="" /></div>
-        <div id="b-chip" class="chip"></div>
-        <div class="textbox"><span id="b-price" class="pill"></span></div>
-      </section>
+      <div id="deck">
+        <div id="track">
+          <div id="card-0" class="card"><img src="assets/img/hero.jpg" alt="" /></div>
+          <div id="card-1" class="card"><img src="assets/img/look1.jpg" alt="" /><div id="chip-1" class="chip"></div></div>
+          <div id="card-2" class="card"><img src="assets/img/look2.jpg" alt="" /><div id="chip-2" class="chip"></div></div>
+        </div>
+      </div>
+      <div id="b-price" class="center"></div>
 
-      <section id="scene-c" class="clip" data-start="6" data-duration="3.2" data-track-index="2">
-        <div class="frame"><img id="c-img" src="assets/img/look2.jpg" alt="" /></div>
-        <div id="c-chip" class="chip"></div>
-        <div class="textbox" data-layout-allow-overlap><span id="c-price" class="pill"></span></div>
-      </section>
+      <div id="facts" class="center">
+        <div id="fact1" class="fact"></div>
+        <div id="fact2" class="fact"></div>
+        <div id="fact3" class="fact"></div>
+      </div>
+      <div id="c-box" class="center fitbox"><div id="c-title" class="title fit"></div></div>
 
-      <section id="scene-d" class="clip" data-start="8.8" data-duration="3.2" data-track-index="3">
-        <div id="d-card" class="card"><img id="d-img" src="assets/img/product.jpg" alt="" /></div>
-        <div id="d-rule" class="rule"></div>
-        <div class="end-title"><div id="d-title" class="title fit"></div></div>
-        <div id="d-price" class="end-price"><span class="pill" id="d-price-text"></span></div>
-        <div id="d-cta" class="cta"></div>
-      </section>
+      <div id="d-box" class="center fitbox"><div id="d-title" class="title fit"></div></div>
+      <div id="d-price" class="center"></div>
+      <div id="d-cta" class="center"></div>
 
       <div id="guides">
         <div style="left:0;right:0;top:0;height:290px"></div>
@@ -140,18 +148,25 @@
     <script>
       const v = window.__hyperframes.getVariables();
       const root = document.getElementById("root");
-      for (const k of ["ground", "ink", "accent", "gold"]) root.style.setProperty(`--${k}`, v[k]);
+      for (const k of ["ground", "accent"]) root.style.setProperty(`--${k}`, v[k]);
       if (v.lang === "bn") { root.classList.add("bn"); root.lang = "bn"; }
       if (v.guides === "on") document.getElementById("guides").classList.add("on");
       // textContent only: a variable is always shown as text, never parsed as HTML
       const put = (id, s) => { document.getElementById(id).textContent = s; };
       put("shop", v.shop);
       put("a-title", v.title); put("d-title", v.title);
-      put("b-chip", v.look1Label); put("c-chip", v.look2Label);
-      put("b-price", v.price); put("c-price", v.price); put("d-price-text", v.price);
+      put("chip-1", v.look1Label); put("chip-2", v.look2Label);
+      put("b-price", v.price); put("d-price", v.price);
+      put("fact1", v.fact1); put("fact2", v.fact2); put("fact3", v.fact3);
       put("d-cta", v.cta);
+      // a listing with few photos repeats one; a close-up of it reads as a new shot, not a mistake
+      if (v.look1Repeat === "yes") document.getElementById("card-1").classList.add("close");
+      if (v.look2Repeat === "yes") document.getElementById("card-2").classList.add("close");
+      // no facts saved: the details scene names the product instead of standing empty
+      const hasFacts = Boolean(v.fact1 || v.fact2 || v.fact3);
+      if (!hasFacts) put("c-title", v.title);
 
-      // shrink a title until it fits its box, so a long name never spills onto the price
+      // shrink a title until it fits its box, so a long name never spills over the price
       function fit(el) {
         const box = el.parentElement;
         let size = parseFloat(getComputedStyle(el).fontSize);
@@ -164,26 +179,45 @@
       document.fonts.ready.then(() => {
         document.querySelectorAll(".fit").forEach(fit);
         const tl = gsap.timeline({ paused: true });
-        // A: the hero photo, slow push-in, title rises
-        tl.fromTo("#shop", { opacity: 0, y: -20 }, { opacity: 1, y: 0, duration: 0.6, ease: "power2.out" }, 0.1);
-        tl.fromTo("#a-img", { scale: 1.14 }, { scale: 1.02, duration: 3.4, ease: "none" }, 0);
-        tl.fromTo("#a-title", { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 0.7, ease: "power3.out" }, 0.35);
-        // B: second photo fades over A, its label and the price pop in
-        tl.fromTo("#scene-b", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 3);
-        tl.fromTo("#b-img", { scale: 1.02, xPercent: 2 }, { scale: 1.1, xPercent: -2, duration: 3.4, ease: "none" }, 3);
-        tl.fromTo("#b-chip", { x: -40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, ease: "power3.out" }, 3.4);
-        tl.fromTo("#b-price", { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.5, ease: "back.out(2)" }, 3.7);
-        // C: third photo, same rhythm; the price stays put so the eye isn't asked to re-find it
-        tl.fromTo("#scene-c", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 6);
-        tl.fromTo("#c-img", { scale: 1.1, xPercent: -2 }, { scale: 1.02, xPercent: 2, duration: 3.2, ease: "none" }, 6);
-        tl.fromTo("#c-chip", { x: -40, opacity: 0 }, { x: 0, opacity: 1, duration: 0.5, ease: "power3.out" }, 6.4);
-        // D: the real product on white, then title, price and the ask
-        tl.fromTo("#scene-d", { opacity: 0 }, { opacity: 1, duration: 0.4 }, 8.8);
-        tl.fromTo("#d-card", { y: 70, scale: 0.96 }, { y: 0, scale: 1, duration: 0.7, ease: "power3.out" }, 8.8);
-        tl.fromTo("#d-rule", { scaleX: 0 }, { scaleX: 1, duration: 0.5, ease: "power2.out" }, 9.2);
-        tl.fromTo("#d-title", { y: 36, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: "power2.out" }, 9.3);
-        tl.fromTo("#d-price", { y: 36, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: "power2.out" }, 9.6);
-        tl.fromTo("#d-cta", { opacity: 0 }, { opacity: 1, duration: 0.5 }, 9.7);
+        // words and photos ease up and away, so nothing ever jumps or ghosts over something else
+        const show = (el, at, y = 36) =>
+          tl.fromTo(el, { y, opacity: 0 }, { y: 0, opacity: 1, duration: 0.5, ease: "power3.out" }, at);
+        const hide = (el, at) => tl.to(el, { y: -20, opacity: 0, duration: 0.28, ease: "power2.in" }, at);
+
+        tl.fromTo("#shop", { opacity: 0 }, { opacity: 1, duration: 0.6 }, 0.1);
+
+        // opening: the product arrives and settles, its name below it
+        tl.fromTo("#product", { y: 70, scale: 0.92, opacity: 0 }, { y: 0, scale: 1, opacity: 1, duration: 0.8, ease: "power3.out" }, 0.1);
+        tl.to("#product", { scale: 1.04, duration: 1.7, ease: "none" }, 0.9);
+        show("#a-title", 0.4);
+        hide("#a-box", 2.5);
+        tl.to("#product", { y: -40, scale: 0.96, opacity: 0, duration: 0.32, ease: "power2.in" }, 2.5);
+
+        // price: the seller's scene photos pass one by one while the price holds still
+        show("#deck", 2.85, 50);
+        show("#b-price", 3.05);
+        tl.to("#track", { x: -960, duration: 0.55, ease: "expo.inOut" }, 3.95);
+        tl.to("#track", { x: -1920, duration: 0.55, ease: "expo.inOut" }, 5.1);
+        hide("#deck", 6.15);
+        hide("#b-price", 6.15);
+
+        // details: the product returns smaller, turned a little, with the listing's own facts
+        tl.set("#product", { y: -50, rotation: -4, scale: 0.78 }, 6.3);
+        tl.to("#product", { opacity: 1, duration: 0.4, ease: "power2.out" }, 6.35);
+        tl.to("#product", { rotation: 0, scale: 0.82, duration: 2.15, ease: "none" }, 6.35);
+        if (hasFacts) {
+          tl.fromTo(".fact", { y: 30, opacity: 0 }, { y: 0, opacity: 1, duration: 0.45, stagger: 0.14, ease: "power3.out" }, 6.55);
+          hide("#facts", 8.45);
+        } else {
+          show("#c-box", 6.55);
+          hide("#c-box", 8.45);
+        }
+
+        // end: the product rises to make room, then one plain ask that holds to the last frame
+        tl.to("#product", { y: -115, scale: 0.7, duration: 0.6, ease: "power3.inOut" }, 8.5);
+        show("#d-box", 8.85);
+        show("#d-price", 9.0);
+        show("#d-cta", 9.15);
         window.__timelines["reel"] = tl;
       });
     </script>
