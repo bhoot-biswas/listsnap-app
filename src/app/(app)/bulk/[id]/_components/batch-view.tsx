@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { CircleAlert, Pause, Play } from "lucide-react";
 import { TopBar } from "@/components/app/top-bar";
@@ -32,12 +33,21 @@ export function BatchView({
 }) {
   const t = useTranslations("bulk");
   const tCommon = useTranslations("common");
-  const { state, running, paused, offline, stalled, resume, pause, reload } = useBatchRunner(
+  const { state, running, paused, offline, stalled, settled, resume, pause, reload } = useBatchRunner(
     initial,
     autoStart,
     watchOnly,
   );
   const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  // before the runner's first step it isn't running yet, but it isn't paused either
+  const going = running || (!paused && !stalled && !settled);
+
+  // the menu's needs-review count comes from the server, and this page never reloads
+  const router = useRouter();
+  useEffect(() => {
+    if (settled) router.refresh();
+  }, [settled, router]);
 
   const rows = state.rows;
   // the same rule the runner uses: the first two unfinished jobs, while it runs
@@ -85,7 +95,7 @@ export function BatchView({
           </div>
           {left > 0 &&
             !offline &&
-            (running ? (
+            (going ? (
               <Button variant="outline" size="lg" onClick={pause}>
                 <Pause />
                 {t("pause")}
@@ -124,7 +134,7 @@ export function BatchView({
           )}
         </div>
 
-        {state.watch && <WatchPanel batchId={state.id} watch={state.watch} running={running} onRetried={resume} />}
+        {state.watch && <WatchPanel batchId={state.id} watch={state.watch} working={going} onRetried={resume} />}
 
         {/* a dropped connection isn't the seller's Pause: the app's offline banner says so, and it carries on by itself */}
         {offline ? null : stalled ? (

@@ -182,7 +182,7 @@ export function useBatchRunner(initial: BatchState, autoStart: boolean, watchOnl
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return { state, running, paused, offline, stalled, resume, pause, reload: load };
+  return { state, running, paused, offline, stalled, settled, resume, pause, reload: load };
 }
 
 /** Keeps Pause and Resume on the batch; a dropped request leaves this tab's own pause in place. */

@@ -33,6 +33,8 @@ export interface BatchSummaryRow {
   ready: number;
   needs_review: number;
   in_store: number;
+  video_media_id: string | null;
+  watch_status: string | null;
 }
 
 const COUNTS = `
@@ -135,7 +137,9 @@ export function batchQueries(ws: string) {
 
     async batches(limit = 50): Promise<BatchSummaryRow[]> {
       const rows = await select<BatchSummaryRow>(
-        `SELECT b.id, b.total, b.created_at, ${COUNTS}
+        `SELECT b.id, b.total, b.created_at, b.video_media_id, ${COUNTS},
+                (SELECT bs.status FROM batch_steps bs
+                  WHERE bs.batch_id = b.id AND bs.step = 'watch' AND bs.target = '-') AS watch_status
            FROM batches b LEFT JOIN jobs j ON j.batch_id = b.id AND j.workspace_id = b.workspace_id
           WHERE b.workspace_id = ? GROUP BY b.id ORDER BY b.created_at DESC LIMIT ?`,
         [ws, limit],

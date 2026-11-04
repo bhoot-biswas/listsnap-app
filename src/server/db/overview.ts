@@ -240,7 +240,11 @@ export function overviewQueries(ws: string) {
         // catalog and look-again run whenever the seller asks, days later, and would stretch the span
         selectOne<{ s: number | null }>(
           `SELECT AVG(span) AS s FROM (
-             SELECT TIMESTAMPDIFF(MICROSECOND, MIN(js.started_at), MAX(js.finished_at)) / 1e6 AS span
+             SELECT (TIMESTAMPDIFF(MICROSECOND, MIN(js.started_at), MAX(js.finished_at))
+                     -- a seller's time choosing between items comes off: the gap before writing starts
+                     - GREATEST(0, COALESCE(TIMESTAMPDIFF(MICROSECOND,
+                         MAX(IF(js.step IN ('listen', 'plan', 'segment', 'group'), js.finished_at, NULL)),
+                         MIN(IF(js.step IN ('write', 'translate', 'render'), js.started_at, NULL))), 0))) / 1e6 AS span
                FROM job_steps js JOIN jobs j ON j.id = js.job_id
               WHERE js.workspace_id = ? AND j.workspace_id = ? AND j.status = 'ready'
                 AND js.step IN ('plan', 'segment', 'group', 'listen', 'write', 'translate', 'render')

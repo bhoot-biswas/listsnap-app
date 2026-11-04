@@ -46,6 +46,16 @@ export interface WooConnectionView {
 }
 
 /** "myshop.com/" → "https://myshop.com". Keeps http:// only when typed, so the HTTPS check can flag it. */
+/** Whether normaliseStoreUrl can read it. */
+export const isStoreUrl = (input: string): boolean => {
+  try {
+    normaliseStoreUrl(input);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 export function normaliseStoreUrl(input: string): string {
   const trimmed = input.trim().replace(/\/+$/, "");
   const withScheme = /^https?:\/\//i.test(trimmed) ? trimmed : `https://${trimmed}`;

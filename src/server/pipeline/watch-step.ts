@@ -118,7 +118,8 @@ async function watchVideo(
     .map((t) => `[${time(t.startMs)}–${time(t.endMs)} s] ${t.text}`)
     .join("\n");
   const products = await baseten().watch(call, small, timed);
-  if (!products.length) throw new StepError("noProductsInVideo", { permanent: true });
+  // nothing heard is the likelier reason, and filming the products again wouldn't fix that
+  if (!products.length) throw new StepError(timed ? "noProductsInVideo" : "noSpeechInVideo", { permanent: true });
   return products;
 }
 

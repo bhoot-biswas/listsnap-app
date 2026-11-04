@@ -285,7 +285,7 @@
     "ask": {
       "label": "Ask ListSnap",
       "placeholder": "Ask ListSnap about your shop…",
-      "placeholderReview": "{n, plural, one {Ask why # listing needs review…} other {Ask why # listings need review…}}",
+      "placeholderReview": "{n, plural, one {Why # needs review?} other {Why # need review?}}",
       "photo": "Add a photo in the Assistant",
       "send": "Ask"
     }
@@ -1415,6 +1415,9 @@
       "go": "{count, plural, one {Upload # photo} other {Upload # photos}}",
       "cancel": "Cancel"
     },
+    "videoRow": "Video",
+    "videoWorking": "Watching your video…",
+    "videoFailed": "We couldn't read this video. Open it to try again.",
     "video": {
       "watching": "Watching your video…",
       "paused": "Paused before watching your video.",
@@ -1640,6 +1643,7 @@
       "voiceNoteMissing": "The voice note file is missing.",
       "videoMissing": "The video file is missing.",
       "videoUnreadable": "We couldn't play this video. Try filming it again.",
+      "noSpeechInVideo": "We couldn't hear anyone in this video. Film it again and say each product's price as you show it.",
       "noProductsInVideo": "We couldn't find any products in this video. Film each product clearly for a few seconds.",
       "metaAuth": "Facebook no longer accepts ListSnap's access. Connect Facebook again in Connections.",
       "metaPermission": "Facebook didn't give ListSnap permission to post there. Connect Facebook again and allow every permission.",
