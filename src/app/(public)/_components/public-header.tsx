@@ -20,7 +20,8 @@ export async function PublicHeader() {
     <header className="flex items-center justify-between gap-3 py-2">
       <Link href="/" className="flex min-h-11 items-center gap-2">
         <Logo className="size-8" />
-        <span className="font-heading text-xl font-semibold">ListSnap</span>
+        {/* the smallest phones can't fit the name beside the way in; the logo keeps the link's name */}
+        <span className="font-heading text-xl font-semibold max-[380px]:sr-only">ListSnap</span>
       </Link>
       <nav aria-label={t("nav")} className="hidden items-center gap-1 rounded-full border bg-card/40 p-1 md:flex">
         <Link href="/#how" className={navLink}>
@@ -34,8 +35,9 @@ export async function PublicHeader() {
         <LanguageSwitch />
         {viewer ? (
           <ButtonLink href="/dashboard" className="h-11 rounded-full md:h-9">
-            {t("openShop")}
-            <ArrowRight aria-hidden="true" />
+            <span className="sm:hidden">{t("openShopShort")}</span>
+            <span className="max-sm:hidden">{t("openShop")}</span>
+            <ArrowRight className="max-sm:hidden" aria-hidden="true" />
           </ButtonLink>
         ) : (
           <ButtonLink href="/sign-in" variant="outline" className="h-11 rounded-full md:h-9">

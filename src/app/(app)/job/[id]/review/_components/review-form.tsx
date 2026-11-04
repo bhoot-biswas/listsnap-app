@@ -297,7 +297,7 @@ export function ReviewForm({
             ← {t("back")}
           </Link>
         )}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <ArchiveButton kind="listing" id={listingId} archived={archived} />
           <ListingChat listingId={listingId} initial={chat.items} running={chat.running} beforeSend={saver.flush} />
         </div>
@@ -435,7 +435,7 @@ export function ReviewForm({
           </p>
         )}
         {/* wraps so a longer status gets its own line instead of a squeezed column beside the buttons */}
-        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+        <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-2 sm:gap-x-3">
           <p role="status" aria-live="polite" className="flex items-center gap-1.5 text-sm text-muted-foreground">
             {state === "saving" && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}
             {state === "saved" && <Check className="size-4 text-success" aria-hidden="true" />}
@@ -452,7 +452,8 @@ export function ReviewForm({
                       : t("saveInvalid")
                     : t("saveError")}
           </p>
-          <div className="flex items-center gap-2 max-sm:flex-1">
+          {/* on a phone the buttons join the row above, so a long Save label wraps alone, under Export */}
+          <div className="flex items-center gap-2 max-sm:contents">
             <ExportMenu
               listingIds={[listingId]}
               hasWebsite={hasWebsite}
