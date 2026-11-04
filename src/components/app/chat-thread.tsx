@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslations } from "next-intl";
-import { ArrowDown, Check, ChevronRight, Loader2, RotateCw, Square } from "lucide-react";
+import { ArrowDown, Check, ChevronRight, Loader2, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { ChatItem } from "@/lib/schemas/chat";
@@ -100,19 +100,11 @@ export function ChatThread({
         </Button>
       )}
       {status && (
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <p className="flex items-center gap-2 text-xs text-muted-foreground">
-            <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
-            {status}
-            {chat.since !== null && <Elapsed since={chat.since} />}
-          </p>
-          {chat.canStop && (
-            <Button type="button" variant="outline" size="sm" onClick={chat.stop}>
-              <Square aria-hidden="true" />
-              {t("stop")}
-            </Button>
-          )}
-        </div>
+        <p className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Loader2 className="size-3.5 animate-spin" aria-hidden="true" />
+          {status}
+          {chat.since !== null && <Elapsed since={chat.since} />}
+        </p>
       )}
       {error && (
         <div role="alert" className="flex flex-wrap items-center gap-x-3 gap-y-1">
