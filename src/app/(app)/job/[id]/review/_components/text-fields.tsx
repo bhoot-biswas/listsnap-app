@@ -56,6 +56,7 @@ export function TextFields({
   const set = <K extends keyof TextValue>(key: K, v: TextValue[K]) => onChange({ ...value, [key]: v });
   const id = (name: string) => `${lang}-${name}`;
   const langProps = lang === "bn" ? { lang: "bn" } : {};
+  const titleBlank = !value.title.trim();
   const assist = (field: "title" | "short_description" | "description", label: string) => (
     <FieldAssist
       listingId={listingId}
@@ -86,8 +87,15 @@ export function TextFields({
           value={value.title}
           onChange={(e) => set("title", e.target.value)}
           maxLength={200}
+          aria-invalid={titleBlank || undefined}
+          aria-describedby={titleBlank ? id("title-required") : undefined}
           className="h-11"
         />
+        {titleBlank && (
+          <p id={id("title-required")} className="text-sm text-destructive">
+            {t("titleRequired")}
+          </p>
+        )}
         {assist("title", t("titleField"))}
       </div>
 

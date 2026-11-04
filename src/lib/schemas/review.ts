@@ -13,7 +13,8 @@ export const SHORT_MAX = 160;
 const Attribute = z.object({ name: z.string().trim().max(60), value: z.string().trim().max(200) });
 
 const Text = {
-  title: z.string().trim().max(200),
+  // required: Review, the stores and the exports can't read a listing without its title
+  title: z.string().trim().min(1).max(200),
   short_description: z.string().trim().max(600),
   description: z.string().trim().max(8000),
   attributes: z.array(Attribute).max(30),
