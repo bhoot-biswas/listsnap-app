@@ -52,5 +52,6 @@ test("a demo seller exports a Needs review listing and can't save a blank title"
 
   await page.reload();
   await expect(page.getByRole("heading", { name: "Review listing" })).toBeVisible();
-  await expect(page.locator("#en-title")).toHaveValue(before);
+  // :visible, because React can briefly keep a hidden copy of a page it's still streaming in
+  await expect(page.locator("#en-title:visible")).toHaveValue(before);
 });
