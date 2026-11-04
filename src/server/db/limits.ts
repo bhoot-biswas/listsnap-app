@@ -45,14 +45,15 @@ export function limitQueries(ws: string) {
     },
 
     /**
-     * A new demo shop's sample listings, counted like listings it made today so the
-     * usage meter agrees with the Dashboard. No limit check: the shop was just created.
+     * A new demo shop's samples, each one listing with one AI photo, counted like ones it
+     * made today so the usage meters agree with the Dashboard and the Usage history. No limit
+     * check: the shop was just created.
      */
-    async countSampleListings(n: number) {
+    async countSamples(n: number) {
       await execute(
-        `INSERT INTO usage_daily (workspace_id, date, listings) VALUES (?, ${DHAKA_TODAY}, ?)
-           ON DUPLICATE KEY UPDATE listings = listings + VALUES(listings)`,
-        [ws, n],
+        `INSERT INTO usage_daily (workspace_id, date, listings, images) VALUES (?, ${DHAKA_TODAY}, ?, ?)
+           ON DUPLICATE KEY UPDATE listings = listings + VALUES(listings), images = images + VALUES(images)`,
+        [ws, n, n],
       );
     },
 

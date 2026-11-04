@@ -13,17 +13,17 @@ import type { WatchView } from "@/lib/batch-state";
 export function WatchPanel({
   batchId,
   watch,
-  running,
+  working: runnerWorking,
   onRetried,
 }: {
   batchId: string;
   watch: WatchView;
-  running: boolean;
+  working: boolean;
   onRetried: () => void;
 }) {
   const t = useTranslations("bulk.video");
   const [retrying, setRetrying] = useState(false);
-  const working = watch.status !== "done" && !watch.exhausted && running;
+  const working = watch.status !== "done" && !watch.exhausted && runnerWorking;
 
   return (
     <section aria-live="polite" className="flex items-start gap-3 rounded-xl border bg-card p-4">

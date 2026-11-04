@@ -12,7 +12,7 @@ import { forWorkspace } from "@/server/db/scope";
 import { loadJobState } from "@/server/pipeline/job-state";
 import type { StoreResult } from "@/server/pipeline/store-step";
 import { STORE_KINDS, STORE_NAMES, storeStep, type StoreKind } from "@/lib/stores";
-import type { JobState } from "@/lib/job-state";
+import { makingSeconds } from "@/lib/job-time";
 import { cn } from "@/lib/utils";
 import { nextListing, numberRepeats, REVIEWABLE } from "@/lib/review-next";
 import { requestLocale } from "@/server/step-text";
@@ -23,13 +23,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 /** Time from upload to the last model call; store saves don't count. Null for jobs nothing was timed on. */
-function makingSeconds(state: JobState): number | null {
-  const calls = state.calls.filter((c) => c.step !== "store");
-  if (!calls.length) return null;
-  const end = Math.max(...calls.map((c) => Date.parse(c.at) + c.ms));
-  return Math.max(1, Math.round((end - Date.parse(state.createdAt)) / 1000));
-}
-
 /** Where each store saved the listing; an older WooCommerce result has no productRef but has the link. */
 async function savedIn(ws: ReturnType<typeof forWorkspace>, jobId: string, listingId: string) {
   const results = await Promise.all(
@@ -60,7 +53,7 @@ export default async function DonePage({ params }: PageProps<"/job/[id]/done">) 
 
   const t = await getTranslations("done");
   const tReview = await getTranslations("review");
-  const seconds = makingSeconds(state);
+  const seconds = makingSeconds(state.createdAt, state.calls);
   // one photo, several products: lead to the next one not saved yet, not back to Snap
   const next = nextListing(
     numberRepeats(

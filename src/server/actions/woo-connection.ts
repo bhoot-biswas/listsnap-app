@@ -9,7 +9,7 @@ import { forWorkspace } from "@/server/db/scope";
 import { markOnboarded } from "@/server/db/workspaces";
 import { woo } from "@/server/providers";
 import { encryptWooKeys, resolveWooStore, wooSettings } from "@/server/stores/woo-store";
-import { normaliseStoreUrl, WooSettings, type WooCheckResult } from "@/lib/woo-connection";
+import { isStoreUrl, normaliseStoreUrl, WooSettings, type WooCheckResult } from "@/lib/woo-connection";
 
 /**
  * Connecting a WooCommerce store, from onboarding and from Connections. "Test" only
@@ -26,7 +26,8 @@ export type ConnectState = {
 const Form = z.object({
   intent: z.enum(["test", "save"]),
   next: z.enum(["onboarding", "connections"]),
-  url: z.string().trim().min(3).max(255),
+  // first, so a bad address is reported as that and not as the keys below it
+  url: z.string().trim().min(3).max(255).refine(isStoreUrl),
   key: z.string().trim().min(8).max(200),
   secret: z.string().trim().min(8).max(200),
   defaultCategory: z.string().optional(),

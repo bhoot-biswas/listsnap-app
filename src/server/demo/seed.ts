@@ -19,7 +19,7 @@ const sampleFile = (name: string) =>
 export async function seedDemoWorkspace(workspaceId: string): Promise<void> {
   const ws = forWorkspace(workspaceId);
   for (const sample of DEMO_SAMPLES) await seedSample(ws, sample);
-  await ws.countSampleListings(DEMO_SAMPLES.length);
+  await ws.countSamples(DEMO_SAMPLES.length);
 }
 
 async function seedSample(ws: WorkspaceScope, s: DemoSample): Promise<void> {

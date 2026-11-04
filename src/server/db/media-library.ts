@@ -45,7 +45,10 @@ const TRACED = (kinds: readonly string[]) => `
   LEFT JOIN photos pm ON pm.id = im.photo_id
   LEFT JOIN items ic ON ic.cutout_png_media_id = m.id
   LEFT JOIN photos pc ON pc.id = ic.photo_id
- WHERE m.workspace_id = ? AND m.kind IN (${kinds.map(() => "?").join(",")})`;
+ WHERE m.workspace_id = ? AND m.kind IN (${kinds.map(() => "?").join(",")})
+   -- cutouts of a photo still waiting for the seller's choice aren't a listing's yet
+   AND (COALESCE(im.id, ic.id) IS NULL OR EXISTS (
+     SELECT 1 FROM listings lj WHERE lj.job_id = COALESCE(pm.job_id, pc.job_id)))`;
 
 // an archived listing's or job's photos leave the library with it
 const ARCHIVED_AT = `COALESCE(l.archived_at, (SELECT j.archived_at FROM jobs j

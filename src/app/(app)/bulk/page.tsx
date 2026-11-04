@@ -1,3 +1,4 @@
+import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getFormatter, getTranslations } from "next-intl/server";
@@ -51,24 +52,37 @@ export default async function BulkPage() {
             {batches.map((b) => {
               // a photo waiting for the seller's choice isn't done yet
               const done = b.jobs - b.processing - b.waiting;
+              // a video has no photos until it has been watched, so its own state is the news
+              const watching = !!b.video_media_id && b.jobs === 0;
               return (
                 <li key={b.id}>
                   <Link href={`/bulk/${b.id}`} className="flex min-h-16 items-center gap-4 px-4 py-3 hover:bg-muted/60">
                     <div className="min-w-0 flex-1 space-y-1">
                       <p className="font-medium">
-                        {t("photos", { count: b.jobs })}{" "}
+                        {watching ? t("videoRow") : t("photos", { count: b.jobs })}{" "}
                         <span className="font-normal text-muted-foreground">
                           · {relativeTime(format, b.created_at)}
                         </span>
                       </p>
-                      <p className="text-sm text-muted-foreground">
-                        {t("summary", { done, total: b.jobs })}
-                        {b.waiting > 0 && ` · ${t("choosingShort", { count: b.waiting })}`}
-                        {b.ready > 0 && ` · ${b.ready} ${tStatus("ready")}`}
-                        {b.needs_review > 0 && ` · ${b.needs_review} ${tStatus("needs_review")}`}
-                        {b.in_store > 0 && ` · ${b.in_store} ${tStatus("in_store")}`}
-                        {b.failed > 0 && ` · ${b.failed} ${tStatus("failed")}`}
-                      </p>
+                      {watching ? (
+                        <p
+                          className={cn(
+                            "text-sm text-muted-foreground",
+                            b.watch_status === "failed" && "text-destructive",
+                          )}
+                        >
+                          {b.watch_status === "failed" ? t("videoFailed") : t("videoWorking")}
+                        </p>
+                      ) : (
+                        <p className="text-sm text-muted-foreground">
+                          {t("summary", { done, total: b.jobs })}
+                          {b.waiting > 0 && ` · ${t("choosingShort", { count: b.waiting })}`}
+                          {b.ready > 0 && ` · ${format.number(b.ready)} ${tStatus("ready")}`}
+                          {b.needs_review > 0 && ` · ${format.number(b.needs_review)} ${tStatus("needs_review")}`}
+                          {b.in_store > 0 && ` · ${format.number(b.in_store)} ${tStatus("in_store")}`}
+                          {b.failed > 0 && ` · ${format.number(b.failed)} ${tStatus("failed")}`}
+                        </p>
+                      )}
                     </div>
                     <ChevronRight className="size-4 text-muted-foreground" aria-hidden="true" />
                   </Link>
