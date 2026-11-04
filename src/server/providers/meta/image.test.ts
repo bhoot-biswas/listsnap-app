@@ -94,6 +94,12 @@ describe("editImage with several images", () => {
 });
 
 describe("backgroundPrompt", () => {
+  it("rules out the backdrop paper's own edges, which it once drew", () => {
+    const { prompt } = backgroundPrompt("studio", "side", null);
+    expect(prompt).not.toContain("paper sweep");
+    expect(prompt).toContain("no curled or visible edges");
+  });
+
   it("colours the banner from the brief but leaves studio backdrops plain", () => {
     expect(backgroundPrompt("banner", "top_down", brief).prompt).toContain("in cream, warm wood, soft green tones");
     expect(backgroundPrompt("banner", "top_down", null).prompt).toContain("in soft warm neutral tones");

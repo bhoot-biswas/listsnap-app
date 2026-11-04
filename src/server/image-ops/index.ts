@@ -122,6 +122,23 @@ export async function photoCheck(photo: Buffer, boxes: Box[]): Promise<PhotoChec
   return { fillPercent, sharp: isSharp, exposure, hints };
 }
 
+/**
+ * The product's own outline flattened to a thin band and blurred. An oval under a folded
+ * quilt or a tote left a gap that made them hover; this follows the shape of the base.
+ */
+async function squashedShadow(product: Buffer, width: number, height: number, strength: number, blur: number) {
+  const alpha = await sharp(product).extractChannel(3).resize(width, height, { fit: "fill" }).raw().toBuffer();
+  const shade = Buffer.alloc(width * height * 4);
+  for (let i = 0; i < width * height; i++) shade[i * 4 + 3] = Math.round(alpha[i]! * strength);
+  const pad = blur * 3;
+  const input = await sharp(shade, { raw: { width, height, channels: 4 } })
+    .extend({ top: pad, bottom: pad, left: pad, right: pad, background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .blur(blur)
+    .png()
+    .toBuffer();
+  return { input, pad, height };
+}
+
 /** A product composited onto a background, with a soft shadow under it. */
 export async function compositeOnBackground(
   background: Buffer,
@@ -137,7 +154,10 @@ export async function compositeOnBackground(
 ): Promise<Buffer> {
   const { width, height, scale = 0.7, centerX = 0.5 } = opts;
   const bg = await sharp(background).resize(width, height, { fit: "cover" }).png().toBuffer();
-  const p = await sharp(product)
+  const cutout = (await sharp(product).metadata()).hasAlpha === true;
+  const contact = opts.shadow === "contact" && cutout;
+  // a contact shadow has to meet the product's real base, not the empty margin of its file
+  const p = await (contact ? sharp(product).trim() : sharp(product))
     .resize(Math.round(width * scale), Math.round(height * scale), { fit: "inside" })
     .png()
     .toBuffer({ resolveWithObject: true });
@@ -145,7 +165,22 @@ export async function compositeOnBackground(
   const top =
     opts.shadow === "drop"
       ? Math.round((height - p.info.height) / 2)
-      : Math.max(0, Math.round(height * 0.86 - p.info.height));
+      : Math.max(0, Math.round(height * (contact ? 0.88 : 0.86) - p.info.height));
+  if (contact) {
+    const { width: pw, height: ph } = p.info;
+    const flat = Math.max(14, Math.round(ph * 0.09));
+    const spread = await squashedShadow(p.data, pw, flat, 0.28, 22);
+    const dark = await squashedShadow(p.data, pw, Math.max(8, Math.round(flat * 0.45)), 0.5, 6);
+    const place = (s: { input: Buffer; pad: number; height: number }, lift: number) => ({
+      input: s.input,
+      left: left - s.pad,
+      top: Math.round(top + ph - s.height / 2 - lift) - s.pad,
+    });
+    return sharp(bg)
+      .composite([place(spread, 0), place(dark, flat * 0.12), { input: p.data, left, top }])
+      .jpeg({ quality: 88, mozjpeg: true })
+      .toBuffer();
+  }
   if (opts.shadow === "drop" && p.info.channels === 4) {
     // a real cutout casts its own outline, a little down and right, as daylight from above would
     const { width: pw, height: ph } = p.info;
