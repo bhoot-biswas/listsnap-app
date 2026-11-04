@@ -13,6 +13,9 @@ concurrency:
 jobs:
   check:
     runs-on: ubuntu-24.04
+    # a hung step would otherwise hold up every later run on main for GitHub's default 6 hours;
+    # recent passing runs took under 12 minutes, and a deploy waits 15 for one
+    timeout-minutes: 15
     services:
       db:
         image: mariadb:11.4
