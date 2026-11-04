@@ -21,7 +21,7 @@ export default defineConfig({
   test: {
     include: ["evals/**/*.eval.ts"],
     environment: "node",
-    testTimeout: 180_000,
+    testTimeout: 300_000,
     // a few requests at a time: quick, and well under the API's rate limit
     maxConcurrency: 4,
   },

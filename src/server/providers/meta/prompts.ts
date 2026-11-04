@@ -48,6 +48,11 @@ export function saidText(said: SellerFacts | null): string {
     " The seller described this product in a voice note. These are facts from the seller, so use them over " +
     "anything the photo suggests: put sizes, material and colours in the attributes and description, and the " +
     "notes in the description where a buyer needs them. Don't repeat the price or stock in the text, and don't " +
-    `ask the seller to check what they said. The seller said: ${JSON.stringify(said)}`
+    "ask the seller to check what they said, with one exception. If it clearly can't be the product in this photo, " +
+    "because they named a different kind of product or a plainly different colour, the note or the photo may be " +
+    "the wrong one: make your first check_notes entry start 'You said', name what they said and what the photo " +
+    "shows, and lower the confidence. Close colours (red and maroon, cream and off-white) aren't a clash, and " +
+    "neither is anything a photo can't show, such as fabric, size, price or stock. " +
+    `The seller said: ${JSON.stringify(said)}`
   );
 }
