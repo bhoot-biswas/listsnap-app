@@ -4,6 +4,8 @@
 
 ListSnap is for small social-commerce sellers in Bangladesh. One phone photo, a voice note or a short video of the products becomes a Shopify or WooCommerce draft with a written listing, clean cutouts, studio photos and a reel for Facebook and Instagram, in English and Bangla. Built for the Meta Global AI Developer Hackathon (Indie track, "Build for Your World").
 
+**Demo video:** [watch ListSnap on YouTube](https://youtu.be/QWnTnwDFm-o)
+
 ## Try it
 
 - **Hosted:** open [getlistsnap.com](https://getlistsnap.com) and choose **Try the demo shop** on the sign-in page. It needs no account or password. A demo shop starts with three sample listings, offers sample photos on Snap, saves drafts to our test store and ends after 24 hours. Each visitor has daily limits on listings and AI calls.
